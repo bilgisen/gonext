@@ -3,7 +3,7 @@ import { Alert } from './alert';
 import { Markdown } from './markdown';
 
 const noNetlifyContextAlert = `
-For full functionality, either run this site locally via \`netlify dev\`
+Merhaba For full functionality, either run this site locally via \`netlify dev\`
 ([see docs](https://docs.netlify.com/cli/local-development/")) or deploy it to Netlify.
 `;
 
