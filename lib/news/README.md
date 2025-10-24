@@ -45,7 +45,7 @@ cp .env.example .env
 ```env
 # Required
 NEWS_API_URL=https://goen.onrender.com/api/v1/news
-DATABASE_URL=your_neon_database_url
+NETLIFY_DATABASE_URL=your_neon_database_url
 
 # Optional
 LOG_LEVEL=1  # 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR

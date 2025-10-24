@@ -65,14 +65,14 @@ LOG_LEVEL=1  # 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
 
   // Ask for database URL
   console.log('\n📊 Database Configuration:');
-  const databaseUrl = await question('Enter your Neon DATABASE_URL: ');
+  const databaseUrl = await question('Enter your Neon NETLIFY_DATABASE_URL: ');
 
   if (databaseUrl.trim()) {
     // Replace placeholder with actual URL
-    envContent = envContent.replace(/# DATABASE_URL=/, `DATABASE_URL=${databaseUrl}`);
+    envContent = envContent.replace(/# NETLIFY_DATABASE_URL=/, `NETLIFY_DATABASE_URL=${databaseUrl}`);
   } else {
     // Use default if provided
-    envContent = envContent.replace(/# DATABASE_URL=your_neon_database_url/, `DATABASE_URL=postgresql://neondb_owner:npg_kYNXp2z8xQSa@ep-small-bread-aexnzn73-pooler.c-2.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require`);
+    envContent = envContent.replace(/# NETLIFY_DATABASE_URL=your_neon_database_url/, `NETLIFY_DATABASE_URL=postgresql://neondb_owner:npg_kYNXp2z8xQSa@ep-small-bread-aexnzn73-pooler.c-2.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require`);
   }
 
   // Ask for API URL
