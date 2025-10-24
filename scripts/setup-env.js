@@ -52,7 +52,7 @@ NEWS_API_URL=https://goen.onrender.com/api/v1/news
 LOG_LEVEL=1  # 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
 
 # Database Configuration (add your Neon DB URL)
-# DATABASE_URL=
+# NETLIFY_DATABASE_URL=
 
 # Netlify Configuration (for image uploads)
 # NETLIFY_BLOBS_ACCESS_TOKEN=
