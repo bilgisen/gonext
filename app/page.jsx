@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { Card } from 'components/card';
-import { ContextAlert } from 'components/context-alert';
-import { Markdown } from 'components/markdown';
-import { RandomQuote } from 'components/random-quote';
-import { getNetlifyContext } from 'utils';
+import { Card } from '../components/card';
+import { ContextAlert } from '../components/context-alert';
+import { Markdown } from '../components/markdown';
+import { RandomQuote } from '../components/random-quote';
+import { getNetlifyContext } from '../utils';
 
 const contextExplainer = `
 Merhaba. The card below is rendered on the server based on the value of \`process.env.CONTEXT\` 
