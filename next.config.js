@@ -5,6 +5,8 @@ const nextConfig = {
   serverExternalPackages: ['@netlify/neon'],
   // Fix for module resolution in app directory
   transpilePackages: [],
+  // Turbopack configuration for Next.js 16
+  turbopack: {},
   // Configure path aliases
   webpack: (config) => {
     config.resolve.alias = {
