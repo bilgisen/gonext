@@ -234,7 +234,11 @@ export async function uploadToNetlifyCDN(
 
     // Try to upload to Netlify Blobs
     try {
-      const store = getStore('news-images');
+      const store = getStore({
+        name: 'news-images',
+        siteID: process.env.NETLIFY_SITE_ID,
+        token: process.env.NETLIFY_AUTH_TOKEN
+      });
 
       // Create a Blob from the processed buffer
       const blob = new Blob([new Uint8Array(processedBuffer)], {
