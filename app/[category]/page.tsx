@@ -4,7 +4,7 @@ import { CategoryNewsList } from './CategoryNewsList';
 
 interface CategoryPageProps {
     params: Promise<{ category: string }>;
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
     const { category } = await params;
+    const searchParamsObj = await searchParams as { [key: string]: string | string[] | undefined };
     const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1);
 
     return (
@@ -50,7 +51,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             {/* News List */}
             <div className="container mx-auto px-4 py-8">
                 <Suspense fallback={<CategoryNewsSkeleton />}>
-                    <CategoryNewsList category={category} searchParams={searchParams} />
+                    <CategoryNewsList category={category} searchParams={searchParamsObj} />
                 </Suspense>
             </div>
         </div>

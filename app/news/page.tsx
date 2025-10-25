@@ -4,12 +4,15 @@ import { NewsListClient } from './NewsListClient';
 import { urlHelpers } from '../../lib/urlFilters';
 
 interface NewsListPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
 export async function generateMetadata({ searchParams }: NewsListPageProps): Promise<Metadata> {
+  // Handle Promise-based searchParams
+  const params = await searchParams as { [key: string]: string | string[] | undefined };
+
   const filters = urlHelpers.parseNewsFilters(new URLSearchParams(
-    Object.entries(searchParams).map(([key, value]) =>
+    Object.entries(params).map(([key, value]) =>
       Array.isArray(value) ? [key, value[0]] : [key, value || '']
     ).filter(([_, value]) => value)
   ));
@@ -41,9 +44,12 @@ export async function generateMetadata({ searchParams }: NewsListPageProps): Pro
   };
 }
 
-export default function NewsListPage({ searchParams }: NewsListPageProps) {
+export default async function NewsListPage({ searchParams }: NewsListPageProps) {
+  // Handle Promise-based searchParams
+  const params = await searchParams as { [key: string]: string | string[] | undefined };
+
   const filters = urlHelpers.parseNewsFilters(new URLSearchParams(
-    Object.entries(searchParams).map(([key, value]) =>
+    Object.entries(params).map(([key, value]) =>
       Array.isArray(value) ? [key, value[0]] : [key, value || '']
     ).filter(([_, value]) => value)
   ));
@@ -75,7 +81,7 @@ export default function NewsListPage({ searchParams }: NewsListPageProps) {
           )}
           {filters.search && (
             <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
-              Search: "{filters.search}"
+              Search: &quot;{filters.search}&quot;
             </span>
           )}
         </div>

@@ -4,7 +4,7 @@ import { TagNewsList } from './TagNewsList';
 
 interface TagPageProps {
     params: Promise<{ tag: string }>;
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
 export async function generateMetadata({ params }: TagPageProps): Promise<Metadata> {
@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
 
 export default async function TagPage({ params, searchParams }: TagPageProps) {
     const { tag } = await params;
+    const searchParamsObj = await searchParams as { [key: string]: string | string[] | undefined };
     const formattedTag = tag.charAt(0).toUpperCase() + tag.slice(1).replace(/-/g, ' ');
 
     return (
@@ -50,7 +51,7 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
             {/* News List */}
             <div className="container mx-auto px-4 py-8">
                 <Suspense fallback={<TagNewsSkeleton />}>
-                    <TagNewsList tag={tag} searchParams={searchParams} />
+                    <TagNewsList tag={tag} searchParams={searchParamsObj} />
                 </Suspense>
             </div>
         </div>

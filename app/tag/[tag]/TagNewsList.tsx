@@ -95,7 +95,7 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         return (
             <div className="text-center py-12">
                 <div className="text-gray-600 dark:text-gray-400 mb-4">
-                    No news found with "{tag}" tag
+                    No news found with &quot;{tag}&quot; tag
                 </div>
                 <div className="space-x-4">
                     <button
