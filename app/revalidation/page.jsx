@@ -56,24 +56,55 @@ export default async function Page() {
 }
 
 async function RandomWikiArticle() {
-    const randomWiki = await fetch(randomWikiUrl, {
-        next: { revalidate: revalidateTTL, tags: [tagName] }
-    });
+    let content = null;
+    let error = null;
 
-    const content = await randomWiki.json();
+    try {
+        const randomWiki = await fetch(randomWikiUrl, {
+            next: { revalidate: revalidateTTL, tags: [tagName] }
+        });
+
+        if (!randomWiki.ok) {
+            throw new Error(`Wikipedia API returned ${randomWiki.status}: ${randomWiki.statusText}`);
+        }
+
+        content = await randomWiki.json();
+    } catch (err) {
+        error = err.message;
+        console.error('Error fetching Wikipedia article:', err);
+    }
+
+    if (error || !content) {
+        return (
+            <Card className="max-w-2xl">
+                <h3 className="text-2xl text-red-600">Error Loading Article</h3>
+                <p className="text-red-500">
+                    {error || 'Failed to load random Wikipedia article. Please try again later.'}
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                    This might be due to API rate limits or temporary service issues.
+                </p>
+            </Card>
+        );
+    }
+
     let extract = content.extract;
-    if (extract.length > maxExtractLength) {
-        extract = extract.slice(0, extract.slice(0, maxExtractLength).lastIndexOf(' ')) + ' [...]';
+    if (extract && extract.length > maxExtractLength) {
+        const truncated = extract.slice(0, maxExtractLength);
+        const lastSpaceIndex = truncated.lastIndexOf(' ');
+        extract = (lastSpaceIndex > 0 ? truncated.slice(0, lastSpaceIndex) : truncated) + ' [...]';
     }
 
     return (
         <Card className="max-w-2xl">
-            <h3 className="text-2xl text-neutral-900">{content.title}</h3>
-            <div className="text-lg font-bold">{content.description}</div>
-            <p className="italic">{extract}</p>
-            <a target="_blank" rel="noopener noreferrer" href={content.content_urls.desktop.page}>
-                From Wikipedia
-            </a>
+            <h3 className="text-2xl text-neutral-900">{content.title || 'Unknown Title'}</h3>
+            <div className="text-lg font-bold">{content.description || 'No description available'}</div>
+            <p className="italic">{extract || 'No extract available'}</p>
+            {content.content_urls?.desktop?.page && (
+                <a target="_blank" rel="noopener noreferrer" href={content.content_urls.desktop.page}>
+                    From Wikipedia
+                </a>
+            )}
         </Card>
     );
 }

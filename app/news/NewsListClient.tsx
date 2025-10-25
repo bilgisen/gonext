@@ -1,3 +1,4 @@
+// app/news/NewsListClient.tsx
 'use client';
 
 import { useState } from 'react';
