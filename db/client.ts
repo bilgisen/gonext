@@ -1,3 +1,4 @@
+// db/client.ts
 // Load environment variables explicitly for Next.js compatibility
 import { config } from 'dotenv';
 import { drizzle } from "drizzle-orm/neon-http";

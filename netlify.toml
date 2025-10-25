@@ -28,3 +28,14 @@
   from = "/static/*"
   to = "/static/:splat"
   status = 200
+
+# Netlify Image CDN configuration for remote images
+[images]
+  remote_images = [
+    "https://image.dunya.com/.*",
+    "https://cdn.example.com/.*",
+    "https://images.unsplash.com/.*",
+    "https://*.dunya.com/.*"
+  ]
+  max_size = "10mb"
+  min_size = "1kb"

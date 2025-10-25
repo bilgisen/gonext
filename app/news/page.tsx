@@ -1,3 +1,4 @@
+// app/news/page.tsx
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { NewsListClient } from './NewsListClient';

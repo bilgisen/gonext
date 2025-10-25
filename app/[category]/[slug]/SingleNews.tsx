@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { newsKeys } from '@/lib/queries/queryKeys';
-import { getNewsById, newsService } from '@/lib/api/externalApiClient';
+import { useNewsDetail, useNews } from '@/hooks/queries/useExternalQueries';
 import { Breadcrumb } from '@/components/navigation/Breadcrumb';
 
 interface SingleNewsProps {
@@ -12,19 +12,11 @@ interface SingleNewsProps {
 }
 
 export function SingleNews({ category, slug }: SingleNewsProps) {
-    // First try to get news by slug, fallback to ID
-    const { data: newsItem, isLoading, error } = useQuery({
-        queryKey: newsKeys.detail(slug),
-        queryFn: () => getNewsById(slug),
-        staleTime: 10 * 60 * 1000, // 10 minutes for single news
-    });
+    // Use the new TanStack Query hooks that fetch from API routes
+    const { data: newsItem, isLoading, error } = useNewsDetail(slug);
 
-    // Get related news
-    const { data: relatedNews } = useQuery({
-        queryKey: newsKeys.list({ category, limit: 4 }),
-        queryFn: () => newsService.getNews({ category, limit: 4 }),
-        staleTime: 5 * 60 * 1000,
-    });
+    // Get related news using category filter
+    const { data: relatedNews } = useNews({ category, limit: 4 });
 
     if (error) {
         return (

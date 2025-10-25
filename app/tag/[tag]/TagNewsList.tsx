@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { newsKeys } from '@/lib/queries/queryKeys';
-import { getNewsList } from '@/lib/api/externalApiClient';
+import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers } from '@/lib/urlFilters';
 import { NewsCard } from '@/app/[category]/NewsCard';
 import type { NewsFilters } from '@/lib/urlFilters';
@@ -23,6 +23,7 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         )),
     });
 
+    // Use the new TanStack Query hooks that fetch from API routes
     const {
         data,
         fetchNextPage,
@@ -30,17 +31,7 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         isFetchingNextPage,
         isLoading,
         error,
-    } = useInfiniteQuery({
-        queryKey: newsKeys.tag(tag),
-        queryFn: ({ pageParam = 1 }) =>
-            getNewsList({ ...filters, page: pageParam }),
-        initialPageParam: 1,
-        getNextPageParam: (lastPage, pages) => {
-            if (!lastPage?.has_more) return undefined;
-            return pages.length + 1;
-        },
-        staleTime: 5 * 60 * 1000, // 5 minutes
-    });
+    } = useInfiniteNews(filters);
 
     const handleLoadMore = () => {
         if (hasNextPage && !isFetchingNextPage) {

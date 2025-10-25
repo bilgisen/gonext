@@ -160,16 +160,26 @@ class DatabaseApiClient {
   }
 
   async getNewsById(id: string): Promise<NewsItem> {
-    const numericId = parseInt(id, 10);
-    if (isNaN(numericId)) {
-      throw new Error(`Invalid news ID: ${id}`);
-    }
-
-    const dbNewsItem = await db
+    // First try to find by slug (for Next.js routing)
+    let dbNewsItem = await db
       .select()
       .from(news)
-      .where(eq(news.id, numericId))
+      .where(eq(news.slug, id))
       .limit(1);
+
+    // If not found by slug, try by numeric ID
+    if (dbNewsItem.length === 0) {
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error(`Invalid news identifier: ${id}`);
+      }
+
+      dbNewsItem = await db
+        .select()
+        .from(news)
+        .where(eq(news.id, numericId))
+        .limit(1);
+    }
 
     if (dbNewsItem.length === 0) {
       throw new Error(`News item not found: ${id}`);

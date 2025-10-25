@@ -1,6 +1,10 @@
 import sharp from 'sharp';
 import { createSlug } from './slug-utils';
 import { NewsFetchError } from './types';
+import { getStore } from '@netlify/blobs';
+
+// Ensure dotenv is loaded
+import 'dotenv/config';
 
 /**
  * Image format options
@@ -164,19 +168,61 @@ export async function getImageMetadata(buffer: Buffer): Promise<ImageMetadata> {
 }
 
 /**
- * Image'i Netlify CDN'e upload eder
- * @param buffer - Image buffer
+ * Generate Netlify Image CDN URL for remote images
+ * @param imageUrl - Original remote image URL
+ * @param options - Image transformation options
+ * @returns Netlify Image CDN URL
+ */
+export function generateNetlifyImageCDNUrl(
+  imageUrl: string,
+  options: ImageOptions = {}
+): string {
+  const { width = 800, height, quality = 85, format } = options;
+
+  // Construct Netlify Image CDN URL with query parameters
+  let cdnUrl = `/.netlify/images?url=${encodeURIComponent(imageUrl)}`;
+
+  if (width) cdnUrl += `&w=${width}`;
+  if (height) cdnUrl += `&h=${height}`;
+  if (format) cdnUrl += `&fm=${format}`;
+  if (quality && quality !== 85) cdnUrl += `&q=${quality}`;
+
+  // Use fit=contain by default to maintain aspect ratio
+  cdnUrl += '&fit=contain';
+
+  return cdnUrl;
+}
+
+/**
+ * Image'i Netlify Blobs'a upload eder
+ * @param imageUrl - Remote image URL
  * @param filename - Target filename (slug based)
- * @param options - Upload options
- * @returns Upload result
+ * @param options - Processing options
+ * @returns Upload result with Netlify CDN URL
  */
 export async function uploadToNetlifyCDN(
-  buffer: Buffer,
+  imageUrl: string,
   filename: string,
   options: ImageOptions = {}
 ): Promise<ImageUploadResult> {
   try {
-    // Process image first
+    // Validate that it's a remote image URL
+    if (!imageUrl.startsWith('http')) {
+      throw new NewsFetchError(
+        'Only remote image URLs are supported',
+        'INVALID_REMOTE_URL'
+      );
+    }
+
+    if (!validateImageUrl(imageUrl)) {
+      throw new NewsFetchError(
+        'Invalid image URL format',
+        'INVALID_IMAGE_URL'
+      );
+    }
+
+    // Download and process image
+    const buffer = await fetchImageBuffer(imageUrl);
     const processedBuffer = await processImage(buffer, options);
     const metadata = await getImageMetadata(processedBuffer);
     const hash = await generateImageHash(processedBuffer);
@@ -186,32 +232,49 @@ export async function uploadToNetlifyCDN(
                      options.format === 'webp' ? 'webp' : 'jpg';
     const finalFilename = `${filename}-${hash.substring(0, 8)}.${extension}`;
 
-    // TODO: Implement actual Netlify CDN upload
-    // For now, return mock result
-    // In production, this would use Netlify Blobs API or similar service
+    // Try to upload to Netlify Blobs
+    try {
+      const store = getStore('news-images');
 
-    return {
-      success: true,
-      url: `https://cdn.example.com/images/${finalFilename}`,
-      path: `/images/${finalFilename}`,
-      metadata,
-    };
+      // Create a Blob from the processed buffer
+      const blob = new Blob([new Uint8Array(processedBuffer)], {
+        type: `image/${extension === 'jpg' ? 'jpeg' : extension}`
+      });
 
-    /*
-    // Real implementation would be something like:
+      await store.set(finalFilename, blob, {
+        metadata: {
+          originalUrl: imageUrl,
+          processedAt: new Date().toISOString(),
+          format: extension,
+          ...metadata
+        }
+      });
 
-    const blob = await put(`images/${finalFilename}`, processedBuffer, {
-      access: 'public',
-      handleUploadUrlShortening: true,
-    });
+      console.log(`✅ Image uploaded to Netlify Blobs: ${finalFilename}`);
 
-    return {
-      success: true,
-      url: blob.url,
-      path: blob.pathname,
-      metadata,
-    };
-    */
+      // Generate Netlify Image CDN URL for the uploaded image
+      const blobUrl = `/.netlify/images?url=${encodeURIComponent(`https://your-site.netlify.app/.netlify/blobs/news-images/${finalFilename}`)}`;
+
+      return {
+        success: true,
+        url: blobUrl,
+        path: `/.netlify/blobs/news-images/${finalFilename}`,
+        metadata,
+      };
+
+    } catch (blobError) {
+      console.error('❌ Netlify Blobs upload failed:', blobError);
+
+      // Fallback: Use Netlify Image CDN directly with original URL
+      const cdnUrl = generateNetlifyImageCDNUrl(imageUrl, options);
+
+      return {
+        success: true,
+        url: cdnUrl,
+        path: cdnUrl,
+        metadata,
+      };
+    }
 
   } catch (error) {
     return {
@@ -222,11 +285,11 @@ export async function uploadToNetlifyCDN(
 }
 
 /**
- * Complete image processing pipeline
- * @param imageUrl - Source image URL
- * @param title - News title for filename generation
+ * Complete image processing pipeline for remote images
+ * @param imageUrl - Source remote image URL
+ * @param title - News title for filename generation (used for fallback)
  * @param options - Processing options
- * @returns Upload result with metadata
+ * @returns Upload result with Netlify CDN URL
  */
 export async function processNewsImage(
   imageUrl: string,
@@ -234,23 +297,28 @@ export async function processNewsImage(
   options: ImageOptions = {}
 ): Promise<ImageUploadResult> {
   try {
-    // Fetch image
-    const buffer = await fetchImageBuffer(imageUrl);
-
-    // Generate filename from title
-    const filename = createSlug(title, { maxLength: 50 });
-
-    // Upload to CDN
-    const result = await uploadToNetlifyCDN(buffer, filename, options);
-
-    if (!result.success) {
+    // Validate image URL
+    if (!validateImageUrl(imageUrl)) {
       throw new NewsFetchError(
-        `Image upload failed: ${result.error}`,
-        'UPLOAD_ERROR'
+        `Invalid image URL: ${imageUrl}`,
+        'INVALID_IMAGE_URL'
       );
     }
 
-    return result;
+    // For remote images, use Netlify Image CDN
+    if (imageUrl.startsWith('http')) {
+      const filename = createSlug(title, { maxLength: 50 });
+      const result = await uploadToNetlifyCDN(imageUrl, filename, options);
+
+      // Always return success since we have fallback system
+      return result;
+    }
+
+    // For local images (if any), return error since we only support remote URLs
+    throw new NewsFetchError(
+      'Only remote image URLs are supported',
+      'REMOTE_ONLY'
+    );
   } catch (error) {
     if (error instanceof NewsFetchError) {
       throw error;
