@@ -1,46 +1,46 @@
 # News Fetch System
 
-Perfect news fetching system for GoNext haber uygulaması. External API'den haberleri çeker, duplicate kontrolü yapar, kategorileri otomatik tespit eder, image processing yapar ve database'e kaydeder.
+Perfect news fetching system for GoNext news application. Fetches news from external API, performs duplicate checking, automatically detects categories, processes images, and saves to database.
 
-## 🚀 Özellikler
+## 🚀 Features
 
-- ✅ **Smart Duplicate Detection**: `source_guid` ve `source_id` ile duplicate kontrolü
-- ✅ **Automatic Category Extraction**: URL'den kategori tespiti (örn: `/sirketler/` → "Business")
-- ✅ **Image Processing**: Sharp ile image optimization ve Netlify CDN upload
-- ✅ **Slug Generation**: SEO-friendly URL slug'ları (Türkçe karakter desteği)
-- ✅ **Error Handling**: Comprehensive error handling ve retry logic
-- ✅ **Performance Monitoring**: Memory usage ve performance tracking
-- ✅ **Batch Processing**: Large dataset'ler için batch processing
-- ✅ **Validation**: Zod ile type-safe validation
+- ✅ **Smart Duplicate Detection**: Duplicate checking with `source_guid` and `source_id`
+- ✅ **Automatic Category Extraction**: Category detection from URLs (e.g: `/sirketler/` → "Business")
+- ✅ **Image Processing**: Image optimization and Netlify CDN upload with Sharp
+- ✅ **Slug Generation**: SEO-friendly URL slugs (Turkish character support)
+- ✅ **Error Handling**: Comprehensive error handling and retry logic
+- ✅ **Performance Monitoring**: Memory usage and performance tracking
+- ✅ **Batch Processing**: Batch processing for large datasets
+- ✅ **Validation**: Type-safe validation with Zod
 
-## 📁 Dosya Yapısı
+## 📁 File Structure
 
 ```
 lib/news/
 ├── index.ts              # Main orchestrator functions
-├── types.ts              # TypeScript types ve schemas
+├── types.ts              # TypeScript types and schemas
 ├── api-client.ts         # External API client
 ├── category-utils.ts     # Category extraction utilities
 ├── slug-utils.ts         # Slug generation utilities
 ├── duplicate-check.ts    # Duplicate detection
-├── image-processor.ts    # Image processing ve CDN upload
+├── image-processor.ts    # Image processing and CDN upload
 ├── db-operations.ts      # Database operations
-└── error-handler.ts      # Error handling ve logging
+└── error-handler.ts      # Error handling and logging
 ```
 
-## 🛠️ Kurulum ve Konfigürasyon
+## 🛠️ Installation and Configuration
 
 ### 1. Environment Variables
 
 ```bash
-# .env dosyasını oluştur
+# Create .env file
 npm run setup:env
 
-# Veya manuel olarak .env dosyası oluştur:
+# Or manually create .env file:
 cp .env.example .env
 ```
 
-`.env` dosyasında gerekli değişkenler:
+Required variables in `.env` file:
 
 ```env
 # Required
@@ -57,11 +57,11 @@ BATCH_DELAY=2000
 ### 2. Database Migration
 
 ```bash
-# Migration'ları çalıştır (eğer yoksa)
+# Run migrations (if not exists)
 npx drizzle-kit migrate
 ```
 
-## 💻 Kullanım
+## 💻 Usage
 
 ### CLI Tools
 
@@ -69,19 +69,19 @@ npx drizzle-kit migrate
 # Environment setup
 npm run setup:env
 
-# System status kontrolü
+# System status check
 npm run news:fetch -- --status
 
-# 50 haber çek (incremental)
+# Fetch 50 news (incremental)
 npm run news:fetch
 
-# 100 haber çek
+# Fetch 100 news
 npm run news:fetch -- --limit 100
 
-# Batch processing (200 haber, 25'er batch)
+# Batch processing (200 news, 25 per batch)
 npm run news:fetch -- --limit 200 --batch 25
 
-# Force fetch (duplicate kontrolü olmadan)
+# Force fetch (without duplicate checking)
 npm run news:fetch -- --force --limit 50
 
 # Help
@@ -110,13 +110,13 @@ const status = await getSystemStatus();
 ### Test
 
 ```bash
-# Test script'i çalıştır
+# Run test script
 npm run test:news
 ```
 
 ## 🔧 API Response Format
 
-API'den beklenen format:
+Expected format from API:
 
 ```typescript
 {
@@ -145,18 +145,18 @@ API'den beklenen format:
 
 ## 🗄️ Database Schema
 
-Haberler aşağıdaki tablolara kaydedilir:
+News are saved to the following tables:
 
-- `news`: Ana haber tablosu
-- `categories`: Kategoriler (otomatik oluşturulur)
-- `tags`: Etiketler (otomatik oluşturulur)
-- `media`: Image'lar (Netlify CDN)
-- `sources`: Haber kaynakları
-- `import_logs`: Import geçmişi
+- `news`: Main news table
+- `categories`: Categories (auto-generated)
+- `tags`: Tags (auto-generated)
+- `media`: Images (Netlify CDN)
+- `sources`: News sources
+- `import_logs`: Import history
 
-## 🔍 Kategori Mapping
+## 🔍 Category Mapping
 
-URL'den otomatik kategori tespiti:
+Automatic category detection from URLs:
 
 | URL Pattern | Category |
 |-------------|----------|
@@ -188,19 +188,19 @@ const errorLogs = logger.getLogs(LogLevel.ERROR);
 
 ## 🐛 Error Handling
 
-Sistem şu error türlerini handle eder:
+System handles these error types:
 
-- `NewsFetchError`: Genel API hataları
-- `ValidationError`: Validation hataları
-- `DuplicateError`: Duplicate haberler
-- `ImageFetchError`: Image processing hataları
+- `NewsFetchError`: General API errors
+- `ValidationError`: Validation errors
+- `DuplicateError`: Duplicate news articles
+- `ImageFetchError`: Image processing errors
 
 ## 🔄 Retry Logic
 
-Otomatik retry mechanism:
+Automatic retry mechanism:
 
 ```typescript
-// 3 kez dene, exponential backoff ile
+// Retry 3 times with exponential backoff
 await ErrorHandler.withRetry(
   () => fetchNewsFromApi(),
   'news_fetch',
@@ -211,20 +211,20 @@ await ErrorHandler.withRetry(
 
 ## 🚨 Rate Limiting
 
-API'yi yormamak için built-in rate limiting:
+Built-in rate limiting to avoid overwhelming the API:
 
 ```typescript
-// Batch'ler arasında 2 saniye bekle
+// Wait 2 seconds between batches
 await new Promise(resolve => setTimeout(resolve, 2000));
 ```
 
 ## 🖼️ Image Processing
 
-Image'lar otomatik olarak:
+Images are automatically:
 
-1. Sharp ile optimize edilir
-2. Netlify CDN'e upload edilir
-3. Database'e metadata ile kaydedilir
+1. Optimized with Sharp
+2. Uploaded to Netlify CDN
+3. Saved to database with metadata
 
 ```typescript
 const result = await processNewsImage(
@@ -237,8 +237,8 @@ const result = await processNewsImage(
 ## 📈 Performance
 
 - **Memory Monitoring**: Critical memory threshold detection
-- **Performance Metrics**: Operation timing ve success rates
-- **Batch Processing**: Large dataset'ler için optimized
+- **Performance Metrics**: Operation timing and success rates
+- **Batch Processing**: Optimized for large datasets
 - **Connection Pooling**: Database connection optimization
 
 ## 🔧 Development
@@ -256,7 +256,7 @@ npm run build
 
 ## 📝 TODO
 
-- [ ] Unit tests ekleme
+- [ ] Add unit tests
 - [ ] Integration tests
 - [ ] API documentation (Swagger)
 - [ ] Admin dashboard for monitoring

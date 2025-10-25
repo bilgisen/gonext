@@ -1,0 +1,161 @@
+'use client';
+
+import { useState } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { newsKeys } from '@/lib/queries/queryKeys';
+import { getNewsList } from '@/lib/api/externalApiClient';
+import { urlHelpers } from '@/lib/urlFilters';
+import { NewsCard } from './NewsCard';
+import type { NewsFilters } from '@/lib/urlFilters';
+
+interface CategoryNewsListProps {
+    category: string;
+    searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export function CategoryNewsList({ category, searchParams }: CategoryNewsListProps) {
+    const [filters, setFilters] = useState<NewsFilters>({
+        category,
+        ...urlHelpers.parseNewsFilters(new URLSearchParams(
+            Object.entries(searchParams).map(([key, value]) =>
+                Array.isArray(value) ? [key, value[0]] : [key, value || '']
+            ).filter(([_, value]) => value)
+        )),
+    });
+
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        error,
+    } = useInfiniteQuery({
+        queryKey: newsKeys.list(filters),
+        queryFn: ({ pageParam = 1 }) =>
+            getNewsList({ ...filters, page: pageParam }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, pages) => {
+            if (!lastPage?.has_more) return undefined;
+            return pages.length + 1;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    const handleLoadMore = () => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="flex gap-4">
+                                <div className="shrink-0 w-32 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                                <div className="flex-1 space-y-3">
+                                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                                    <div className="flex gap-2">
+                                        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-12">
+                <div className="text-red-600 dark:text-red-400 mb-4">
+                    Failed to load {category} news
+                </div>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    const allNews = data?.pages.flatMap(page => page.items) || [];
+
+    if (allNews.length === 0) {
+        return (
+            <div className="text-center py-12">
+                <div className="text-gray-600 dark:text-gray-400 mb-4">
+                    No news found in {category} category
+                </div>
+                <div className="space-x-4">
+                    <button
+                        onClick={() => window.location.href = '/news'}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                        View All News
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8">
+            {/* Filter Summary */}
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Showing {data?.pages[0]?.total || 0} articles in
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                        category
+                    </span>
+                </div>
+            </div>
+
+            {/* News List */}
+            <div className="space-y-6">
+                {allNews.map((news) => (
+                    <NewsCard
+                        key={news.id}
+                        news={news}
+                        showCategory={false}
+                    />
+                ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasNextPage && (
+                <div className="text-center py-8">
+                    <button
+                        onClick={handleLoadMore}
+                        disabled={isFetchingNextPage}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {isFetchingNextPage ? 'Loading...' : `Load More ${category} News`}
+                    </button>
+                </div>
+            )}
+
+            {/* Loading indicator for infinite scroll */}
+            {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+            )}
+        </div>
+    );
+}

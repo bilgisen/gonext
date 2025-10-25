@@ -1,9 +1,63 @@
-import type { CategoryMapping } from './types';
+// External API Response Types
+export interface NewsItem {
+  id: string;
+  source_guid: string;
+  source_id: string;
+  seo_title: string;
+  seo_description: string;
+  tldr: string[];
+  content_md: string;
+  category: string;
+  tags: string[];
+  image: string;
+  image_title: string;
+  image_desc: string;
+  original_url: string;
+  file_path: string;
+  created_at: string;
+  published_at: string;
+  updated_at: string;
+  slug?: string;
+  read_time?: number;
+  is_bookmarked?: boolean;
+}
 
-/**
- * Category mapping for extracting categories from URL paths
- * Example: https://www.dunya.com/sirketler/ -> "sirketler" -> "Business"
- */
+export interface NewsListResponse {
+  items: NewsItem[];
+  total: number;
+  page: number;
+  limit: number;
+  has_more: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  color?: string;
+  news_count?: number;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  news_count?: number;
+}
+
+export interface SearchSuggestion {
+  query: string;
+  count: number;
+  category?: string;
+}
+
+// Category mapping types (from lib/news/category-utils.ts)
+export type CategoryMapping = {
+  [key: string]: string;
+};
+
+// Category mapping for URL path extraction
 export const CATEGORY_MAPPINGS: CategoryMapping = {
   // Business & Finance
   'sirketler': 'Business',
@@ -161,11 +215,7 @@ export const CATEGORY_MAPPINGS: CategoryMapping = {
   'bahce': 'Lifestyle',
 };
 
-/**
- * Extract category from URL path
- * @param url - Original URL (e.g: https://www.dunya.com/sirketler/intel-haberi)
- * @returns Category string or 'General' fallback
- */
+// Category utility functions
 export function extractCategoryFromUrl(url: string): string {
   try {
     const urlObj = new URL(url);
@@ -196,11 +246,6 @@ export function extractCategoryFromUrl(url: string): string {
   }
 }
 
-/**
- * Extract category from multiple URLs and return the most popular one
- * @param urls - Array of URLs
- * @returns Most matching category
- */
 export function extractCategoryFromUrls(urls: string[]): string {
   const categories = urls.map(extractCategoryFromUrl);
 
@@ -214,15 +259,108 @@ export function extractCategoryFromUrls(urls: string[]): string {
     .sort(([,a], [,b]) => b - a)[0]?.[0] || 'General';
 }
 
-/**
- * Create category slug for URL
- * @param category - Category name
- * @returns URL-friendly slug
- */
 export function createCategorySlug(category: string): string {
   return category.toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .trim();
+}
+
+// Local Database Types
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  avatar?: string;
+  preferences: UserPreferences;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  language: string;
+  notifications: boolean;
+  reading_time_goal: number;
+  favorite_categories: string[];
+}
+
+export interface Bookmark {
+  id: string;
+  user_id: string;
+  news_id: string;
+  news_data: NewsItem; // Denormalized for offline access
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SearchHistory {
+  id: string;
+  user_id: string;
+  query: string;
+  category?: string;
+  results_count: number;
+  created_at: string;
+}
+
+export interface ReadingHistory {
+  id: string;
+  user_id: string;
+  news_id: string;
+  read_time_seconds: number;
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// API Response Wrappers
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    has_more: boolean;
+  };
+}
+
+// Filter and Sort Types
+export interface NewsFilters {
+  category?: string;
+  tag?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'date' | 'popularity' | 'relevance';
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
+export interface SearchFilters {
+  category?: string;
+  tag?: string;
+  limit?: number;
+  page?: number;
+}
+
+export interface BookmarkFilters {
+  page?: number;
+  limit?: number;
+  sortBy?: 'date' | 'title';
+}
+
+// Error Types
+export interface ApiError {
+  message: string;
+  code: string;
+  status: number;
+  details?: Record<string, any>;
 }

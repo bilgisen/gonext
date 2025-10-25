@@ -1,25 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getResourceSize } from '../../utils';
 
 export function ImageWithSizeOverlay({ src, srcSet, sizes, overlayPosition }) {
     const imageRef = useRef();
     const [imgSize, setImgSize] = useState(undefined);
 
-    const handleImageLoad = useCallback(() => {
+    useEffect(() => {
         const imgElement = imageRef.current;
         if (imgElement?.complete) {
             const size = getResourceSize(imgElement?.currentSrc);
             setImgSize(size);
-        } else {
-            setImgSize(undefined);
         }
-    }, []);
+    }, [src]); // Only depend on src change
 
-    useEffect(() => {
-        handleImageLoad();
-    }, [handleImageLoad]);
+    const handleImageLoad = () => {
+        const imgElement = imageRef.current;
+        if (imgElement) {
+            const size = getResourceSize(imgElement.currentSrc);
+            setImgSize(size);
+        }
+    };
 
     return (
         <div className="relative">
@@ -31,7 +33,14 @@ export function ImageWithSizeOverlay({ src, srcSet, sizes, overlayPosition }) {
                 >{`Size: ${Math.ceil(imgSize / 1024)}KB`}</span>
             )}
 
-            <img src={src} srcSet={srcSet} sizes={sizes} alt="Corgi" onLoad={handleImageLoad} ref={imageRef} />
+            <img
+                src={src}
+                srcSet={srcSet}
+                sizes={sizes}
+                alt="Corgi"
+                onLoad={handleImageLoad}
+                ref={imageRef}
+            />
         </div>
     );
 }

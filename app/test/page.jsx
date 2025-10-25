@@ -30,29 +30,29 @@ export default async function TestPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🧪 Test Sayfası - Database Haberler
+            🧪 Test Page - Database News
           </h1>
           <p className="text-gray-600">
-            Database&apos;den çekilen haberler listesi
+            News list fetched from database
           </p>
         </div>
 
         {/* Database Connection Test */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            📊 Database Bağlantısı
+            📊 Database Connection
           </h2>
 
           {dbError ? (
             <div className="bg-red-50 border border-red-200 rounded p-4">
-              <h3 className="font-semibold text-red-800 mb-2">❌ Bağlantı Hatası</h3>
+              <h3 className="font-semibold text-red-800 mb-2">❌ Connection Error</h3>
               <p className="text-red-700 text-sm">{dbError}</p>
             </div>
           ) : (
             <div className="bg-green-50 border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-800 mb-2">✅ Bağlantı Başarılı</h3>
+              <h3 className="font-semibold text-green-800 mb-2">✅ Connection Successful</h3>
               <p className="text-green-700 text-sm">
-                Database&apos;e başarıyla bağlandı. @netlify/neon kullanıldı.
+                Successfully connected to database using @netlify/neon.
               </p>
             </div>
           )}
@@ -61,7 +61,7 @@ export default async function TestPage() {
         {/* News Data */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            📰 Haberler ({newsData.length})
+            📰 News Articles ({newsData.length})
           </h2>
 
           {newsData.length > 0 ? (
@@ -79,9 +79,9 @@ export default async function TestPage() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">Henüz haber bulunmuyor.</p>
+              <p className="text-gray-500">No news articles found yet.</p>
               <p className="text-sm text-gray-400 mt-2">
-                npm run news:fetch komutu ile haber çekebilirsiniz.
+                You can fetch news using the npm run news:fetch command.
               </p>
             </div>
           )}
@@ -90,14 +90,14 @@ export default async function TestPage() {
         {/* Simple Test */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            ✅ Sayfa Çalışıyor!
+            ✅ Page Working!
           </h2>
           <p className="text-gray-600 mb-4">
-            Next.js sayfası başarıyla render edildi.
+            Next.js page rendered successfully.
           </p>
 
           <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
-            <h3 className="font-semibold text-blue-800 mb-2">🔧 Test Komutları</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">🔧 Test Commands</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
                 <code className="bg-gray-100 px-2 py-1 rounded">npm run test:db</code>
@@ -105,7 +105,7 @@ export default async function TestPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <code className="bg-gray-100 px-2 py-1 rounded">npm run news:fetch</code>
-                <span className="text-blue-700">Haber çekme</span>
+                <span className="text-blue-700">Fetch news</span>
               </div>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default async function TestPage() {
               href="/"
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              Ana Sayfaya Dön
+              Go to Home
             </Link>
           </div>
         </div>
