@@ -42,16 +42,9 @@ export function normalizeImageUrl(url: string): string {
   } catch {
     // If URL parsing fails, just return the original URL
   }
-
-  // If it's an S3 URL, extract the key and convert to Netlify Blobs format
-  const s3Match = url.match(/s3\.[^/]+\/3a3e9ce3-d5df-4556-b315-3765909dc963\/site%3Anews-images\/([^?]+)/);
-  if (s3Match) {
-    const imageKey = decodeURIComponent(s3Match[1]);
-    const siteId = '3a3e9ce3-d5df-4556-b315-3765909dc963';
-    return `https://${siteId}.netlify.app/.netlify/blobs/site/${imageKey}`;
-  }
-
-  // If it's an HTTP URL but not from our S3, return as is
+  
+  // If we can't process the URL, return it as is
+  return url;
   if (url.startsWith('http')) {
     return url;
   }

@@ -1,7 +1,7 @@
 // netlify/edge-functions/blob-image.js
-import { getStore } from "@netlify/blogs";
+import { getStore } from "@netlify/blobs";
 
-export default async (request, context) => {
+const handler = async (request) => {
   // Get the URL and extract the key from query parameters
   const url = new URL(request.url);
   const key = url.searchParams.get("id");
@@ -38,7 +38,10 @@ export default async (request, context) => {
     console.error("Error retrieving blob:", error);
     return new Response("Internal server error", { status: 500 });
   }
+  return response;
 };
+
+export default handler;
 
 export const config = {
   path: "/api/blob-image",
