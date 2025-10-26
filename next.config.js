@@ -51,9 +51,6 @@ const nextConfig = {
     unoptimized: process.env.NODE_ENV === 'development',
   },
   
-  // For local development, enable static exports for Netlify
-  output: process.env.NETLIFY ? 'export' : undefined,
-  
   // Enable React strict mode
   reactStrictMode: true,
   
