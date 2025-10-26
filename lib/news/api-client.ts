@@ -1,4 +1,5 @@
 import { NewsApiResponse, NewsApiItem, NewsFetchError } from './types';
+import { syncNewsImages } from './image-sync';
 
 /**
  * Test mode - local JSON file'dan mı okusun?
@@ -73,7 +74,8 @@ async function withRetry<T>(
  */
 export async function fetchNewsFromApi(
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
+  syncImages: boolean = true
 ): Promise<NewsApiResponse> {
   const url = new URL(NEWS_API_URL);
   url.searchParams.set('limit', limit.toString());

@@ -13,7 +13,7 @@ We automatically handle provisioning, configuration, and access control for you.
 
 ## How CRUD operations work
 
-Each blob belongs to a single site. A site can have multiple namespaces for blobs. We call these _stores_. This allows you to, for example, have the key `my-key` exist as an object in a store for `file-uploads` and separately as an object in a store for `json-uploads` with different data. Every blob must be associated with a store, even if a site is not using multiple namespaces. 
+Each blob belongs to a single site. A site can have multiple namespaces for blobs. We call these _stores_. This allows you to, for example, have the key my-key exist as an object in a store for file-uploads and separately as an object in a store for json-uploads with different data. Every blob must be associated with a store, even if a site is not using multiple namespaces. 
 
 You can perform CRUD operations for Netlify Blobs from the following Netlify features:
 
@@ -37,7 +37,7 @@ For more advanced use cases - such as those that require complex queries, concur
 
 ## API reference
 
-To use the Netlify Blobs API, first install the `@netlify/blobs` module using the [package manager of your choice](/build/configure-builds/manage-dependencies#javascript-dependencies):
+To use the Netlify Blobs API, first install the @netlify/blobs module using the [package manager of your choice](/build/configure-builds/manage-dependencies#javascript-dependencies):
 
 ```bash
 npm install @netlify/blobs
@@ -45,7 +45,7 @@ npm install @netlify/blobs
 
 Then use the below methods in your functions, edge functions, or build plugins. 
 
-### `getStore`
+### getStore 
 
 Opens a site-wide store for reading and writing blobs. Data added to that store will be persisted on new deploys, available on all [deploy contexts](/deploy/deploy-overview#branches-and-deploys) and accessible from from [Functions](/build/functions/overview), [Edge Functions](/build/edge-functions/overview) and [Build Plugins](/extend/install-and-use/build-plugins).
 
@@ -53,7 +53,7 @@ Opens a site-wide store for reading and writing blobs. Data added to that store 
 const store = getStore(name, { siteID, token })
 ```
 
-> **Note - SiteID same as Project ID:** Your `SiteID` appears as the Project ID in the Netlify app UI at `app.netlify.com`. To find this ID in the Netlify UI, go to 
+> **Note - SiteID same as Project ID:** Your SiteID appears as the Project ID in the Netlify app UI at app.netlify.com. To find this ID in the Netlify UI, go to 
 ### NavigationPath Component:
 
 Project configuration > General > Project information
@@ -61,16 +61,16 @@ Project configuration > General > Project information
 
 #### Parameters
 
-- **`name`:** the name of the store; this can be any string that adheres to the [store naming requirements](/build/data-and-storage/netlify-blobs/#requirements-and-limitations)
-- **`siteID`** (optional)**:** the ID of the Netlify site associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins. You can also set the `siteID` to the ID of another site you own to access its blobs via the `getStore` method.
+- **name:** the name of the store; this can be any string that adheres to the [store naming requirements](/build/data-and-storage/netlify-blobs/#requirements-and-limitations)
+- **siteID** (optional)**:** the ID of the Netlify site associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins. You can also set the siteID to the ID of another site you own to access its blobs via the getStore method.
 
-> **Note - SiteID same as Project ID:** Your `SiteID` appears as the Project ID in the Netlify app UI at `app.netlify.com`. To find this ID in the Netlify UI, go to 
+> **Note - SiteID same as Project ID:** Your SiteID appears as the Project ID in the Netlify app UI at app.netlify.com. To find this ID in the Netlify UI, go to 
 ### NavigationPath Component:
 
 Project configuration > General > Project information
 , and copy the value for **Project ID**.
 
-- **`token`** (optional)**:** a [Netlify Personal Access Token](/api-and-cli-guides/cli-guides/get-started-with-cli#obtain-a-token-in-the-netlify-ui) that grants access to Blobs on the given site; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
+- **token** (optional)**:** a [Netlify Personal Access Token](/api-and-cli-guides/cli-guides/get-started-with-cli#obtain-a-token-in-the-netlify-ui) that grants access to Blobs on the given site; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
 
 ### Tip - Find your Netlify site ID
 
@@ -84,7 +84,7 @@ Project configuration > General > Project information
 
 An instance of a store on which you can [get](#get), [set](#set) or [delete](#delete) blobs.
 
-### `getDeployStore`
+### getDeployStore 
 
 Opens a [deploy-specific store](#deploy-specific-stores) for reading and writing blobs. Data added to that store will be scoped to a specific deploy, available on all [deploy contexts](/deploy/deploy-overview#branches-and-deploys) and accessible from from [Functions](/build/functions/overview), [Edge Functions](/build/edge-functions/overview) and [Build Plugins](/extend/install-and-use/build-plugins).
 
@@ -92,7 +92,7 @@ Opens a [deploy-specific store](#deploy-specific-stores) for reading and writing
 const store = getDeployStore(name, { deployID, region, siteID, token })
 ```
 
-> **Note - SiteID same as Project ID:** Your `SiteID` appears as the Project ID in the Netlify app UI at `app.netlify.com`. To find this ID in the Netlify UI, go to 
+> **Note - SiteID same as Project ID:** Your SiteID appears as the Project ID in the Netlify app UI at app.netlify.com. To find this ID in the Netlify UI, go to 
 ### NavigationPath Component:
 
 Project configuration > General > Project information
@@ -100,24 +100,24 @@ Project configuration > General > Project information
 
 #### Parameters
 
-- **`name`:** the name of the store; this can be any string that adheres to the [store naming requirements](/build/data-and-storage/netlify-blobs/#requirements-and-limitations)
-- **`deployID`** (optional)**:** the ID of the Netlify deploy associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
-- **`region`** (optional)**:** the [region](#regions) associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
-- **`siteID`** (optional)**:** the ID of the Netlify site associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins.
+- **name:** the name of the store; this can be any string that adheres to the [store naming requirements](/build/data-and-storage/netlify-blobs/#requirements-and-limitations)
+- **deployID** (optional)**:** the ID of the Netlify deploy associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
+- **region** (optional)**:** the [region](#regions) associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
+- **siteID** (optional)**:** the ID of the Netlify site associated with the store; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins.
 
-> **Note - SiteID same as Project ID:** Your `SiteID` appears as the Project ID in the Netlify app UI at `app.netlify.com`. To find this ID in the Netlify UI, go to 
+> **Note - SiteID same as Project ID:** Your SiteID appears as the Project ID in the Netlify app UI at app.netlify.com. To find this ID in the Netlify UI, go to 
 ### NavigationPath Component:
 
 Project configuration > General > Project information
 , and copy the value for **Project ID**.
 
-- **`token`** (optional)**:** a [Netlify Personal Access Token](/api-and-cli-guides/cli-guides/get-started-with-cli#obtain-a-token-in-the-netlify-ui) that grants access to Blobs on the given site; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
+- **token** (optional)**:** a [Netlify Personal Access Token](/api-and-cli-guides/cli-guides/get-started-with-cli#obtain-a-token-in-the-netlify-ui) that grants access to Blobs on the given site; this is set automatically when you use Blobs from Functions, Edge Functions or Build Plugins
 
 #### Return value
 
 An instance of a store on which you can [get](#get), [set](#set) or [delete](#delete) blobs.
 
-### `set`
+### set 
 
 Creates an object with the given key and value. If an entry with the given key already exists, its value is overwritten.
 
@@ -127,18 +127,18 @@ await store.set(key, value, { metadata, onlyIfMatch, onlyIfNew })
 
 #### Parameters
 
-- **`key`:** a string representing the object key
-- **`value`:** the value as an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob), or string
-- **`metadata`** (optional)**:** a JSON object with arbitrary metadata to attach to the object
-- **`onlyIfMatch`** (optional)**:** when set, the write will only succeed if the entry exists and has an [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) matching this value
-- **`onlyIfNew`** (optional)**:** when set, the write will only succeed if the entry does not exist
+- **key:** a string representing the object key
+- **value:** the value as an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer), [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob), or string
+- **metadata** (optional)**:** a JSON object with arbitrary metadata to attach to the object
+- **onlyIfMatch** (optional)**:** when set, the write will only succeed if the entry exists and has an [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) matching this value
+- **onlyIfNew** (optional)**:** when set, the write will only succeed if the entry does not exist
 
 #### Return value
 
-A `Promise` that resolves with an object containing the following properties:
+A Promise that resolves with an object containing the following properties:
 
-- **`modified`** (boolean): Whether the operation has actually generated a new entry
-- **`etag`** (string): The [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the entry, if the operation has generated a new entry; if not, this property will be omitted
+- **modified** (boolean): Whether the operation has actually generated a new entry
+- **etag** (string): The [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the entry, if the operation has generated a new entry; if not, this property will be omitted
 
 #### Example
 
@@ -150,7 +150,7 @@ This example shows how you might use Netlify Blobs to persist user-generated upl
 ``` ts
 
 export default async (req: Request, context: Context) => {
-  // Accessing the request as `multipart/form-data`.
+  // Accessing the request as multipart/form-data.
   const form = await req.formData();
   const file = form.get("file") as File;
 
@@ -171,7 +171,7 @@ export default async (req: Request, context: Context) => {
 ``` ts
 
 export default async (req: Request, context: Context) => {
-  // Accessing the request as `multipart/form-data`.
+  // Accessing the request as multipart/form-data.
   const form = await req.formData();
   const file = form.get("file") as File;
 
@@ -206,7 +206,7 @@ export const onPostBuild = async () => {
 ```
 </TabItem>
 
-The example below shows how you can use the `onlyIfMatch` and `onlyIfNew` properties to do atomic, conditional writes.
+The example below shows how you can use the onlyIfMatch and onlyIfNew properties to do atomic, conditional writes.
 
 ### Tabs Component:
 
@@ -237,7 +237,7 @@ export default async (req: Request, context: Context) => {
 export default async (req: Request, context: Context) => {
   const emails = getStore("emails");
   
-  // `myLocalCache` is a stub for a local cache implementation you
+  // myLocalCache is a stub for a local cache implementation you
   // might implement.
   const { data, etag } = myLocalCache.get("jane@netlify.com")
 
@@ -266,7 +266,7 @@ export default async (req: Request, context: Context) => {
 ```
 </TabItem>
 
-### `setJSON`
+### setJSON 
 
 Convenience method for creating a JSON-serialized object. If an entry with the given key already exists, its value is overwritten.
 
@@ -276,18 +276,18 @@ setJSON(key, value, { metadata, onlyIfMatch, onlyIfNew })
 
 #### Parameters
 
-- **`key`:** a string representing the object key
-- **`value`:** any value that is [serializable to JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
-- **`metadata`** (optional)**:** a JSON object with arbitrary metadata to attach to the object
-- **`onlyIfMatch`** (optional)**:** when set, the write will only succeed if the entry exists and has an [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) matching this value
-- **`onlyIfNew`** (optional)**:** when set, the write will only succeed if the entry does not exist
+- **key:** a string representing the object key
+- **value:** any value that is [serializable to JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
+- **metadata** (optional)**:** a JSON object with arbitrary metadata to attach to the object
+- **onlyIfMatch** (optional)**:** when set, the write will only succeed if the entry exists and has an [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) matching this value
+- **onlyIfNew** (optional)**:** when set, the write will only succeed if the entry does not exist
 
 #### Return value
 
-A `Promise` that resolves with an object containing the following properties:
+A Promise that resolves with an object containing the following properties:
 
-- **`modified`** (boolean): Whether the operation has actually generated a new entry
-- **`etag`** (string): The [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the entry, if the operation has generated a new entry; if not, this property will be omitted
+- **modified** (boolean): Whether the operation has actually generated a new entry
+- **etag** (string): The [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the entry, if the operation has generated a new entry; if not, this property will be omitted
 
 #### Example
 
@@ -356,7 +356,7 @@ export const onPostBuild = async () => {
 ```
 </TabItem>
 
-### `get`
+### get 
 
 Retrieves an object with the given key.
 
@@ -366,20 +366,20 @@ await store.get(key, { consistency, type })
 
 #### Parameters
 
-- **`key`:** a string representing the object key
-- **`consistency`** (optional)**:** a string representing the [consistency model](#consistency) for the operation
-- **`type`** (optional)**:** the format in which the object should be returned - the default format is a string but you can specify one of the following values instead:
-  - **`arrayBuffer`:** returns the entry as an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
-  - **`blob`:** returns the entry as a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
-  - **`json`:** parses the entry as JSON and returns the resulting object
-  - **`stream`:** returns the entry as a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
-  - **`text`:** default, returns the entry as a string of plain text
+- **key:** a string representing the object key
+- **consistency** (optional)**:** a string representing the [consistency model](#consistency) for the operation
+- **type** (optional)**:** the format in which the object should be returned - the default format is a string but you can specify one of the following values instead:
+  - **arrayBuffer:** returns the entry as an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+  - **blob:** returns the entry as a [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+  - **json:** parses the entry as JSON and returns the resulting object
+  - **stream:** returns the entry as a [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
+  - **text:** default, returns the entry as a string of plain text
 
 #### Return value
 
-A `Promise` that resolves with the blob in the format specified by `type`: `ArrayBuffer`, `Blob`, `Object`, `ReadableStream` or a string.
+A Promise that resolves with the blob in the format specified by type: ArrayBuffer, Blob, Object, ReadableStream or a string.
 
-If an object with the given key is not found, a `Promise` that resolves with `null` is returned.
+If an object with the given key is not found, a Promise that resolves with null is returned.
 
 #### Example
 
@@ -398,7 +398,7 @@ export default async (req: Request, context: Context) => {
   const entry = await uploads.get(key);
 
   if (entry === null) {
-    return new Response(`Could not find entry with key ${key}`, {
+    return new Response(Could not find entry with key ${key}, {
       status: 404
     });
   }
@@ -419,7 +419,7 @@ export default async (req: Request, context: Context) => {
   const entry = await uploads.get(key);
 
   if (entry === null) {
-    return new Response(`Could not find entry with key ${key}`, {
+    return new Response(Could not find entry with key ${key}, {
       status: 404
     });
   }
@@ -445,7 +445,7 @@ export const onPostBuild = async () => {
 ```
 </TabItem>
 
-### `getWithMetadata`
+### getWithMetadata 
 
 Retrieves an object along with its metadata.
 
@@ -457,25 +457,25 @@ await store.getWithMetadata(key, { consistency, etag, type })
 
 #### Parameters
 
-- **`key`:** a string representing the object key
-- **`consistency`** (optional)**:** a string representing the [consistency model](#consistency) for the operation
-- **`etag`** (optional)**:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [`ETag` value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of any version of this blob you may have cached  - this allows you to do [conditional requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Conditional_requests)
-- **`type`** (optional)**:** the format in which the object should be returned - the default format is a string but you can specify one of the following values instead:
-  - **`arrayBuffer`:** returns the entry as an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
-  - **`blob`:** returns the entry as a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
-  - **`json`:** parses the entry as JSON and returns the resulting object
-  - **`stream`:** returns the entry as a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
-  - **`text`:** default, returns the entry as a string of plain text
+- **key:** a string representing the object key
+- **consistency** (optional)**:** a string representing the [consistency model](#consistency) for the operation
+- **etag** (optional)**:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [ETag value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of any version of this blob you may have cached  - this allows you to do [conditional requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Conditional_requests)
+- **type** (optional)**:** the format in which the object should be returned - the default format is a string but you can specify one of the following values instead:
+  - **arrayBuffer:** returns the entry as an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+  - **blob:** returns the entry as a [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+  - **json:** parses the entry as JSON and returns the resulting object
+  - **stream:** returns the entry as a [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
+  - **text:** default, returns the entry as a string of plain text
 
 #### Return value
 
-A `Promise` that resolves with an object containing the following properties:
+A Promise that resolves with an object containing the following properties:
 
-- **`data`:** the blob contents in the format specified by the `type` parameter, or `null` if the `etag` property is the same as the `etag` parameter (meaning the cached object is still fresh)
-- **`etag`:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [`ETag` value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the object
-- **`metadata`:** object with arbitrary metadata
+- **data:** the blob contents in the format specified by the type parameter, or null if the etag property is the same as the etag parameter (meaning the cached object is still fresh)
+- **etag:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [ETag value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the object
+- **metadata:** object with arbitrary metadata
 
-If an object with the given key is not found, a `Promise` that resolves with `null` is returned.
+If an object with the given key is not found, a Promise that resolves with null is returned.
 
 #### Example
 
@@ -494,7 +494,7 @@ export default async (req: Request, context: Context) => {
   const { data, metadata } = await uploads.getWithMetadata(key);
 
   if (entry === null) {
-    return new Response(`Could not find entry with key ${key}`, {
+    return new Response(Could not find entry with key ${key}, {
       status: 404
     });
   }
@@ -515,7 +515,7 @@ export default async (req: Request, context: Context) => {
   const { data, metadata } = await uploads.getWithMetadata(key);
 
   if (entry === null) {
-    return new Response(`Could not find entry with key ${key}`, {
+    return new Response(Could not find entry with key ${key}, {
       status: 404
     });
   }
@@ -565,11 +565,11 @@ export default async (req: Request, context: Context) => {
   });
 
   if (etag === cachedETag) {
-    // `data` is `null` because the local blob is fresh
+    // data is null because the local blob is fresh
     return new Response("Still fresh");
   }
 
-  // `data` contains the new blob, store it locally alongside the new ETag
+  // data contains the new blob, store it locally alongside the new ETag
   writeInMockCache("my-key", data, etag);
 
   return new Response("Updated");
@@ -594,11 +594,11 @@ export default async (req: Request, context: Context) => {
   });
 
   if (etag === cachedETag) {
-    // `data` is `null` because the local blob is fresh
+    // data is null because the local blob is fresh
     return new Response("Still fresh");
   }
 
-  // `data` contains the new blob, store it locally alongside the new ETag
+  // data contains the new blob, store it locally alongside the new ETag
   writeInMockCache("my-key", data, etag);
 	
   return new Response("Updated");
@@ -612,9 +612,9 @@ export default async (req: Request, context: Context) => {
 
 You can use object metadata to create client-side expiration logic. To delete blobs you consider expired, do the following:
 
-1. [`set` your objects with metadata](#set) that you can base the expiration logic on, such as a timestamp
-2. `getWithMetadata` to check if an object is expired
-3. [`delete`](#delete) the expired object
+1. [set your objects with metadata](#set) that you can base the expiration logic on, such as a timestamp
+2. getWithMetadata to check if an object is expired
+3. [delete](#delete) the expired object
 
 ### Collapsible Component:
 
@@ -629,14 +629,14 @@ export default async (req: Request, context: Context) => {
   const uploads = getStore("file-uploads");
   const key = "my-key";
 
-  // Set the entry with an `expiration` metadata property
+  // Set the entry with an expiration metadata property
   await uploads.set(key, await req.text(), {
     metadata: {
       expiration: new Date("2024-01-01").getTime()
     }
   });
 
-  // Read the entry and compare the `expiration` metadata
+  // Read the entry and compare the expiration metadata
   // property against the current timestamp
   const entry = await uploads.getWithMetadata(key);
 
@@ -667,14 +667,14 @@ export default async (req: Request, context: Context) => {
   const uploads = getStore("file-uploads");
   const key = "my-key";
 
-  // Set the entry with an `expiration` metadata property
+  // Set the entry with an expiration metadata property
   await uploads.set(key, await req.text(), {
     metadata: {
       expiration: new Date("2024-01-01").getTime()
     }
   });
 
-  // Read the entry and compare the `expiration` metadata
+  // Read the entry and compare the expiration metadata
   // property against the current timestamp
   const entry = await uploads.getWithMetadata(key);
 
@@ -702,7 +702,7 @@ export default async (req: Request, context: Context) => {
 
 ---
 
-### `getMetadata`
+### getMetadata 
 
 Retrieves the metadata for an object, if the object exists.
 
@@ -714,24 +714,24 @@ await store.getMetadata(key, { consistency, etag, type })
 
 #### Parameters
 
-- **`key`:** a string representing the object key
-- **`consistency`** (optional)**:** a string representing the [consistency model](#consistency) for the operation
-- **`etag`** (optional)**:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [`ETag` value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of any version of this blob you may have cached  - this allows you to do [conditional requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Conditional_requests)
-- **`type`** (optional)**:** the format in which the object should be returned - the default format is a string but you can specify one of the following values instead:
-  - **`arrayBuffer`:** returns the entry as an [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
-  - **`blob`:** returns the entry as a [`Blob`](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
-  - **`json`:** parses the entry as JSON and returns the resulting object
-  - **`stream`:** returns the entry as a [`ReadableStream`](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
-  - **`text`:** default, returns the entry as a string of plain text
+- **key:** a string representing the object key
+- **consistency** (optional)**:** a string representing the [consistency model](#consistency) for the operation
+- **etag** (optional)**:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [ETag value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of any version of this blob you may have cached  - this allows you to do [conditional requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Conditional_requests)
+- **type** (optional)**:** the format in which the object should be returned - the default format is a string but you can specify one of the following values instead:
+  - **arrayBuffer:** returns the entry as an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+  - **blob:** returns the entry as a [Blob](https://developer.mozilla.org/en-US/docs/Web/API/Blob)
+  - **json:** parses the entry as JSON and returns the resulting object
+  - **stream:** returns the entry as a [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream)
+  - **text:** default, returns the entry as a string of plain text
 
 #### Return value
 
-A `Promise` that resolves with an object containing the following properties:
+A Promise that resolves with an object containing the following properties:
 
-- **`metadata`:** object with arbitrary metadata
-- **`etag`:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [`ETag` value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the object
+- **metadata:** object with arbitrary metadata
+- **etag:** an opaque quoted string, possibly prefixed by a weakness indicator, representing the [ETag value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) of the object
 
-If an object with the given key is not found, a `Promise` that resolves with `null` is returned.
+If an object with the given key is not found, a Promise that resolves with null is returned.
 
 #### Example
 
@@ -795,7 +795,7 @@ export const onPostBuild = async () => {
 ```
 </TabItem>
 
-### `list`
+### list 
 
 Returns a list of blobs in a given store.
 
@@ -805,16 +805,16 @@ await store.list({ directories, paginate, prefix })
 
 #### Parameters
 
-- **`directories`** (optional)**:** a boolean that indicates whether keys with the `/` character should be treated as directories, returning a list of sub-directories at a given level rather than all the keys inside them
-- **`paginate`** (optional)**:** a boolean that specifies whether you want to [handle pagination manually](#manual-pagination) - by default, it is handled automatically
-- **`prefix`** (optional)**:** a string for filtering down the entries; when specified, only the entries whose key starts with that prefix are returned
+- **directories** (optional)**:** a boolean that indicates whether keys with the / character should be treated as directories, returning a list of sub-directories at a given level rather than all the keys inside them
+- **paginate** (optional)**:** a boolean that specifies whether you want to [handle pagination manually](#manual-pagination) - by default, it is handled automatically
+- **prefix** (optional)**:** a string for filtering down the entries; when specified, only the entries whose key starts with that prefix are returned
 
 #### Return value
 
-A `Promise` that resolves with an object containing the following properties:
+A Promise that resolves with an object containing the following properties:
 
-- **`blobs`:** an array of blobs that match the query parameters, shown as objects with `etag` and `key` properties, which represent an object's [`ETag` value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) and key, respectively
-- **`directories`:** an array of strings representing any directories matching the query parameters
+- **blobs:** an array of blobs that match the query parameters, shown as objects with etag and key properties, which represent an object's [ETag value](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) and key, respectively
+- **directories:** an array of strings representing any directories matching the query parameters
 
 #### Example
 
@@ -832,7 +832,7 @@ export default async (req: Request, context: Context) => {
   // [ { etag: "\"etag1\"", key: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" }, { etag: "\"etag2\"", key: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed" } ]
   console.log(blobs);
 
-  return new Response(`Found ${blobs.length} blobs`);
+  return new Response(Found ${blobs.length} blobs);
 };
 ```
 </TabItem>
@@ -847,7 +847,7 @@ export default async (req: Request, context: Context) => {
   // [ { etag: "\"etag1\"", key: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" }, { etag: "\"etag2\"", key: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed" } ]
   console.log(blobs);
 
-  return new Response(`Found ${blobs.length} blobs`);
+  return new Response(Found ${blobs.length} blobs);
 };
 ```
 </TabItem>
@@ -869,9 +869,9 @@ export const onPostBuild = async () => {
 
 Optionally, you can group blobs together under a common prefix and then browse them hierarchically when listing a store. This is similar to grouping files in a directory. To browse hierarchically, do the following:
 
-1. Group keys hierarchically with the `/` character in your key names.
-2. List entries hierarchically with the `directories` parameter.
-3. Drill down into a specific directory with the `prefix` parameter.
+1. Group keys hierarchically with the / character in your key names.
+2. List entries hierarchically with the directories parameter.
+3. Drill down into a specific directory with the prefix parameter.
 
 ### Collapsible Component:
 
@@ -889,7 +889,7 @@ bird.jpg
 
 #### Pagination
 
-By default, `list` will return all five keys.
+By default, list will return all five keys.
 
 <Tabs>
 
@@ -909,7 +909,7 @@ export default async (req: Request, context: Context) => {
   // ]
   console.log(blobs);
 
-  return new Response(`Found ${blobs.length} blobs`);
+  return new Response(Found ${blobs.length} blobs);
 };
 ```
 </TabItem>
@@ -930,7 +930,7 @@ export default async (req: Request, context: Context) => {
   // ]
   console.log(blobs);
 
-  return new Response(`Found ${blobs.length} blobs`);
+  return new Response(Found ${blobs.length} blobs);
 };
 ```
 </TabItem>
@@ -956,7 +956,7 @@ export const onPostBuild = async () => {
 
 </Tabs>
 
-To list entries hierarchically, set the `directories` parameter to `true`.
+To list entries hierarchically, set the directories parameter to true.
 
 <Tabs>
 
@@ -973,7 +973,7 @@ export default async (req: Request, context: Context) => {
   // [ "cats", "dogs" ]
   console.log(directories);
 
-  return new Response(`Found ${blobs.length} blobs and ${directories.length} directories`);
+  return new Response(Found ${blobs.length} blobs and ${directories.length} directories);
 };
 ```
 </TabItem>
@@ -991,7 +991,7 @@ export default async (req: Request, context: Context) => {
   // [ "cats", "dogs" ]
   console.log(directories);
 
-  return new Response(`Found ${blobs.length} blobs and ${directories.length} directories`);
+  return new Response(Found ${blobs.length} blobs and ${directories.length} directories);
 };
 ```
 </TabItem>
@@ -1014,7 +1014,7 @@ export const onPostBuild = async () => {
 
 </Tabs>
 
-To drill down into a directory and get a list of its items, set the `prefix` parameter to the directory name.
+To drill down into a directory and get a list of its items, set the prefix parameter to the directory name.
 
 <Tabs>
 
@@ -1034,7 +1034,7 @@ export default async (req: Request, context: Context) => {
   // [ ]
   console.log(directories);
 
-  return new Response(`Found ${blobs.length} blobs and ${directories.length} directories`);
+  return new Response(Found ${blobs.length} blobs and ${directories.length} directories);
 };
 ```
 </TabItem>
@@ -1055,7 +1055,7 @@ export default async (req: Request, context: Context) => {
   // [ ]
   console.log(directories);
 
-  return new Response(`Found ${blobs.length} blobs and ${directories.length} directories`);
+  return new Response(Found ${blobs.length} blobs and ${directories.length} directories);
 };
 ```
 </TabItem>
@@ -1081,13 +1081,13 @@ export const onPostBuild = async () => {
 
 </Tabs>
 
-Note that the prefix includes a trailing slash. This ensures that only entries under the `cats` directory are returned. Without a trailing slash, other keys like `catsuit` would also be returned.
+Note that the prefix includes a trailing slash. This ensures that only entries under the cats directory are returned. Without a trailing slash, other keys like catsuit would also be returned.
 
 ---
 
-For performance reasons, the server groups results into pages of up to 1,000 entries. By default, the `list` method automatically retrieves all pages, meaning you'll always get the full list of results.
+For performance reasons, the server groups results into pages of up to 1,000 entries. By default, the list method automatically retrieves all pages, meaning you'll always get the full list of results.
 
- To handle pagination manually, set the `paginate` parameter to `true`. This makes `list` return an [`AsyncIterator`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator), which lets you take full control over the pagination process. This means you can fetch only the data you need when you need it.
+ To handle pagination manually, set the paginate parameter to true. This makes list return an [AsyncIterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator), which lets you take full control over the pagination process. This means you can fetch only the data you need when you need it.
 
 ### Collapsible Component:
 
@@ -1109,7 +1109,7 @@ export default async (req: Request, context: Context) => {
     console.log(entry.blobs);
   }
 
-  return new Response(`Found ${blobCount} blobs`);
+  return new Response(Found ${blobCount} blobs);
 };
 ```
 </TabItem>
@@ -1128,7 +1128,7 @@ export default async (req: Request, context: Context) => {
     console.log(entry.blobs);
   }
 
-  return new Response(`Found ${blobCount} blobs`);
+  return new Response(Found ${blobCount} blobs);
 };
 ```
 </TabItem>
@@ -1147,7 +1147,7 @@ export const onPostBuild = async () => {
     console.log(entry.blobs);
   }
 
-  console.log(`Found ${blobCount} blobs`);
+  console.log(Found ${blobCount} blobs);
 };
 ```
 </TabItem>
@@ -1156,7 +1156,7 @@ export const onPostBuild = async () => {
 
 ---
 
-### `listStores`
+### listStores 
 
 Returns a list of stores for a site. Does not include [deploy-specific stores](/build/data-and-storage/netlify-blobs/#deploy-specific-stores).
 
@@ -1166,13 +1166,13 @@ await listStores({ paginate })
 
 #### Parameters
 
-- **`paginate`** (optional)**:** a boolean that specifies whether you want to [handle pagination manually](#manual-store-pagination) - by default, it is handled automatically
+- **paginate** (optional)**:** a boolean that specifies whether you want to [handle pagination manually](#manual-store-pagination) - by default, it is handled automatically
 
 #### Return value
 
-A `Promise` that resolves with an object containing the following properties:
+A Promise that resolves with an object containing the following properties:
 
-- **`stores`:** an array of strings representing any stores matching the query parameters
+- **stores:** an array of strings representing any stores matching the query parameters
 
 #### Example
 
@@ -1189,7 +1189,7 @@ export default async (req: Request, context: Context) => {
   // [ "file-uploads", "json-uploads" ]
   console.log(stores);
 
-  return new Response(`Found ${stores.length} stores`);
+  return new Response(Found ${stores.length} stores);
 };
 ```
 </TabItem>
@@ -1203,7 +1203,7 @@ export default async (req: Request, context: Context) => {
   // [ "file-uploads", "json-uploads" ]
   console.log(stores);
 
-  return new Response(`Found ${stores.length} stores`);
+  return new Response(Found ${stores.length} stores);
 };
 ```
 </TabItem>
@@ -1222,9 +1222,9 @@ export const onPostBuild = async () => {
 
 #### Pagination
 
-For performance reasons, the server groups results into pages of up to 1,000 stores. By default, the `listStores` method automatically retrieves all pages, meaning you'll always get the full list of results.
+For performance reasons, the server groups results into pages of up to 1,000 stores. By default, the listStores method automatically retrieves all pages, meaning you'll always get the full list of results.
 
- To handle pagination manually, set the `paginate` parameter to `true`. This makes `listStores` return an [`AsyncIterator`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator), which lets you take full control over the pagination process. This means you can fetch only the data you need when you need it.
+ To handle pagination manually, set the paginate parameter to true. This makes listStores return an [AsyncIterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator), which lets you take full control over the pagination process. This means you can fetch only the data you need when you need it.
 
 ### Collapsible Component:
 
@@ -1244,7 +1244,7 @@ export default async (req: Request, context: Context) => {
     console.log(entry.stores);
   }
 
-  return new Response(`Found ${storeCount} stores`);
+  return new Response(Found ${storeCount} stores);
 };
 ```
 </TabItem>
@@ -1261,7 +1261,7 @@ export default async (req: Request, context: Context) => {
     console.log(entry.stores);
   }
 
-  return new Response(`Found ${storeCount} stores`);
+  return new Response(Found ${storeCount} stores);
 };
 ```
 </TabItem>
@@ -1282,7 +1282,7 @@ export const onPostBuild = async () => {
     console.log(entry.stores);
   }
 
-  console.log(`Found ${storeCount} stores`);
+  console.log(Found ${storeCount} stores);
 };
 ```
 </TabItem>
@@ -1291,7 +1291,7 @@ export const onPostBuild = async () => {
 
 ---
 
-### `delete`
+### delete 
 
 Deletes an object with the given key, if one exists.
 
@@ -1301,11 +1301,11 @@ await store.delete(key)
 
 #### Parameters
 
-- **`key`:** a string representing the object key
+- **key:** a string representing the object key
 
 #### Return value
 
-A `Promise` that resolves with `undefined`.
+A Promise that resolves with undefined.
 
 #### Example
 
@@ -1357,7 +1357,7 @@ export const onPostBuild = async () => {
 
 With file-based uploads, you can write blobs to [deploy-specific stores](#deploy-specific-stores) after the build completes and before the deploy starts. This can be useful for authors of frameworks and other tools integrating with Netlify as it does not require a build plugin. 
 
-To make file-based uploads, place blob files in `.netlify/blobs/deploy` in your site's [base directory](/build/configure-builds/overview#definitions). Netlify uploads these files to blob storage maintaining their directory structure. Here is an example file tree:
+To make file-based uploads, place blob files in .netlify/blobs/deploy in your site's [base directory](/build/configure-builds/overview#definitions). Netlify uploads these files to blob storage maintaining their directory structure. Here is an example file tree:
 
 ```
 .netlify/
@@ -1370,11 +1370,11 @@ To make file-based uploads, place blob files in `.netlify/blobs/deploy` in your 
 ```
 
 This uploads the following blobs:
-- `dogs/good-boy.jpg`
-- `cat.jpg`
-- `mouse.jpg`
+- dogs/good-boy.jpg 
+- cat.jpg 
+- mouse.jpg 
 
-To attach metadata to a blob, include a JSON file that prefixes the corresponding blob filename with `$` and has a `.json` extension. For example:
+To attach metadata to a blob, include a JSON file that prefixes the corresponding blob filename with $ and has a .json extension. For example:
 
 ```
 .netlify/
@@ -1389,9 +1389,9 @@ To attach metadata to a blob, include a JSON file that prefixes the correspondin
 ```
 
 This uploads the following blobs:
-- `dogs/good-boy.jpg` with the metadata from `dogs/$good-boy.jpg.json`
-- `cat.jpg` without metadata
-- `mouse.jpg` with the metadata from `$mouse.jpg.json`
+- dogs/good-boy.jpg with the metadata from dogs/$good-boy.jpg.json 
+- cat.jpg without metadata
+- mouse.jpg with the metadata from $mouse.jpg.json 
 
 Metadata files must contain valid JSON or the deploy will fail. Here's an example of valid JSON metadata:
 
@@ -1409,8 +1409,8 @@ You can configure this behavior and opt-in to strong consistency with the [Netli
 
 Choosing the right consistency model depends on your use case and each option comes with tradeoffs:
 
-- if it's important for your application that updates and deletions become immediately available to all readers, you should consider using `strong` consistency, which comes with the cost of slower reads
-- if that is not a hard requirement and you're optimizing for fast reads, you should consider using `eventual` consistency
+- if it's important for your application that updates and deletions become immediately available to all readers, you should consider using strong consistency, which comes with the cost of slower reads
+- if that is not a hard requirement and you're optimizing for fast reads, you should consider using eventual consistency
 
 ### Tabs Component:
 
@@ -1478,11 +1478,11 @@ Visit our [security checklist](/resources/checklists/security-checklist#recommen
 
 ## Deploy-specific stores
 
-The namespaces you make with `getStore` are shared across all deploys of your site. This is required when using Netlify CLI and desirable for most use cases with functions and edge functions because it means that a new production deploy can read previously written data without you having to replicate blobs for each new production deploy. This also means you can test your Deploy Previews with production data. This does, however, mean that you should be careful to avoid scenarios such as a branch deploy deleting blobs that your published deploy depends on. 
+The namespaces you make with getStore are shared across all deploys of your site. This is required when using Netlify CLI and desirable for most use cases with functions and edge functions because it means that a new production deploy can read previously written data without you having to replicate blobs for each new production deploy. This also means you can test your Deploy Previews with production data. This does, however, mean that you should be careful to avoid scenarios such as a branch deploy deleting blobs that your published deploy depends on. 
 
 As mentioned above, build plugins and file-based uploads must write to deploy-specific stores. This requirement makes it so that a deploy that fails cannot overwrite production data. 
 
-To make a deploy-specific namespace with the Netlify Blobs API, use the `getDeployStore` method. 
+To make a deploy-specific namespace with the Netlify Blobs API, use the getDeployStore method. 
 
 ### Tabs Component:
 
@@ -1496,7 +1496,7 @@ export default async (req: Request, context: Context) => {
   const uploads = getDeployStore("file-uploads");
   await uploads.set(key, await req.text());
 
-  return new Response(`Entry added with key ${key}`);
+  return new Response(Entry added with key ${key});
 };
 ```
 </TabItem>
@@ -1511,7 +1511,7 @@ export default async (req: Request, context: Context) => {
   const uploads = getDeployStore("file-uploads");
   await uploads.set(key, await req.text());
 
-  return new Response(`Entry added with key ${key}`);
+  return new Response(Entry added with key ${key});
 };
 ```
 </TabItem>
@@ -1526,7 +1526,7 @@ export const onPostBuild = async () => {
   const uploads = getDeployStore("file-uploads");
   await uploads.set(key, file);
 
-  console.log(`Entry added with key ${key}`);
+  console.log(Entry added with key ${key});
 };
 ```
 </TabItem>
@@ -1539,7 +1539,7 @@ However, [downloading a deploy](/deploy/manage-deploys/manage-deploys-overview#d
 
 By default, deploy-specific stores are located in the same region that your functions have been configured to run in. For a list of available regions, check out  these [region docs](/build/functions/optional-configuration#region). 
 
-You can also manually specify which region to connect to, regardless of your function's region, by passing the region as an option when using the `getDeployStore` method. 
+You can also manually specify which region to connect to, regardless of your function's region, by passing the region as an option when using the getDeployStore method. 
 
 ### Tabs Component:
 
@@ -1553,7 +1553,7 @@ export default async (req: Request, context: Context) => {
   const uploads = getDeployStore({ name: "file-uploads", region: "ap-southeast-2" });
   await uploads.set(key, await req.text());
 
-  return new Response(`Entry added with key ${key}`);
+  return new Response(Entry added with key ${key});
 };
 ```
 </TabItem>
@@ -1568,7 +1568,7 @@ export default async (req: Request, context: Context) => {
   const uploads = getDeployStore({ name: "file-uploads", region: "ap-southeast-2" });
   await uploads.set(key, await req.text());
 
-  return new Response(`Entry added with key ${key}`);
+  return new Response(Entry added with key ${key});
 };
 ```
 </TabItem>
@@ -1583,7 +1583,7 @@ export const onPostBuild = async () => {
   const uploads = getDeployStore({ name: "file-uploads", region: "ap-southeast-2" });
   await uploads.set(key, file);
 
-  console.log(`Entry added with key ${key}`);
+  console.log(Entry added with key ${key});
 };
 ```
 </TabItem>
@@ -1592,7 +1592,7 @@ export const onPostBuild = async () => {
 
 Keep the following requirements in mind while working with Netlify Blobs:
 
-- Netlify Blobs uses the [web platform `fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to make HTTP calls, so Fetch API support is required. This is included with Node.js 18. If for some reason you can't use Node.js 18, you can provide your own Fetch API support by supplying a `fetch` property to the `getStore` or `getDeployStore` method.
+- Netlify Blobs uses the [web platform fetch()](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to make HTTP calls, so Fetch API support is required. This is included with Node.js 18. If for some reason you can't use Node.js 18, you can provide your own Fetch API support by supplying a fetch property to the getStore or getDeployStore method.
 - File-based uploads require [continuous deployment](/deploy/create-deploys#deploy-with-git) or [CLI deploys](/api-and-cli-guides/cli-guides/get-started-with-cli#manual-deploys).
 
 ### Collapsible Component:
@@ -1634,19 +1634,19 @@ export const onPostBuild = async () => {
 
 Keep the following rules in mind when creating namespaces and blobs:
 
-- Store names cannot include the `/` character.
-- Store names cannot include the `:` character.
+- Store names cannot include the / character.
+- Store names cannot include the : character.
 - Store names cannot exceed 64 bytes.
 - Empty keys are not supported.
 - Object keys can include any Unicode characters.
-- Object keys cannot start with the `/` character.
+- Object keys cannot start with the / character.
 - Object keys cannot exceed 600 bytes.
 - An individual object's total size cannot exceed 5 GB.
 - An individual object's metadata size cannot exceed 2 KB.
 
 ### Tip - Most characters use 1 byte
 
-Most Unicode characters with UTF-8 encoding take 1 byte. So, for convenience, you can think of the above size limits as roughly a 64-character limit for store names and a 600-character limit for object keys. But, be aware that some characters take more than one byte. For example, `à` takes 2 bytes.
+Most Unicode characters with UTF-8 encoding take 1 byte. So, for convenience, you can think of the above size limits as roughly a 64-character limit for store names and a 600-character limit for object keys. But, be aware that some characters take more than one byte. For example, à takes 2 bytes.
 
 Keep the following limitations in mind when working with Netlify Blobs:
 
@@ -1658,9 +1658,9 @@ Keep the following limitations in mind when working with Netlify Blobs:
 ## Troubleshooting tips
 
 - **Last write wins.** If two overlapping calls try to write the same object, the last write wins. Netlify Blobs does not include a concurrency control mechanism. To manage the potential for race conditions, you can build an object-locking mechanism into your application.
-- **Store access depends on `@netlify/blobs` module version.** If you wrote to site-wide stores with `@netlify/blobs` version 6.5.0 or earlier, and you then upgrade the module to a more recent version, you will no longer be able to access data in those stores. This is due to an internal change to namespacing logic. You can migrate affected stores by running the following command in the project directory using the latest version of the [Netlify CLI](/api-and-cli-guides/cli-guides/get-started-with-cli). 
+- **Store access depends on @netlify/blobs module version.** If you wrote to site-wide stores with @netlify/blobs version 6.5.0 or earlier, and you then upgrade the module to a more recent version, you will no longer be able to access data in those stores. This is due to an internal change to namespacing logic. You can migrate affected stores by running the following command in the project directory using the latest version of the [Netlify CLI](/api-and-cli-guides/cli-guides/get-started-with-cli). 
 
    ```sh
    netlify recipes blobs-migrate YOUR_STORE_NAME
    ```
-   This makes the migrated store accessible with `@netlify/blobs` module version 7.0.0 and later.
+   This makes the migrated store accessible with @netlify/blobs module version 7.0.0 and later.

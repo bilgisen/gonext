@@ -4,30 +4,149 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Enable Netlify Image CDN and Sharp
+  NEXT_SHARP_PATH = "/node_modules/sharp"
+  ENABLE_IMAGEMAGICK = "true"
 
-# Ensure proper routing for Next.js app directory
+# Enable Netlify Image CDN
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Image optimization with Netlify Image CDN
 [[redirects]]
-  from = "/_next/*"
-  to = "/_next/:splat"
+  from = "/.netlify/images/*"
+  to = "https://api.netlify.com/image/v1/:splat"
+  status = 200
+  force = true
+
+# Handle blob serving with proper caching
+[[redirects]]
+  from = "/api/blobs/*"
+  to = "https://:splat.netlify.app"
+  status = 200
+  force = true
+
+# Cache control for blob storage
+[[headers]]
+  for = "/api/blobs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+# Handle blob listing and operations
+[[redirects]]
+  from = "/.netlify/blobs/*"
+  to = "/api/blobs/:splat"
+  status = 200
+  force = true
+
+# Next.js specific routes
+[[redirects]]
+  from = "/_next/static/*"
+  to = "/_next/static/:splat"
   status = 200
 
-# Handle SPA routing for client-side navigation
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Edge Functions configuration
+[[edge_functions]]
+  function = "blob-image"
+  path = "/api/blob-image"
 
-# API routes should not be redirected
+# Handle API routes
 [[redirects]]
   from = "/api/*"
   to = "/api/:splat"
   status = 200
 
-# Static assets should not be redirected
+# Handle static files
 [[redirects]]
-  from = "/static/*"
-  to = "/static/:splat"
+  from = "/*"
+  to = "/index.html"
   status = 200
+
+# Cache settings for images and assets
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache settings for images
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.jpeg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.avif"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, must-revalidate"
+
+# Allow image optimization from any domain (be more specific in production)
+[images]
+  remote_images = ["**"]
+
+# Enable Netlify Image CDN
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Image optimization settings
+[images]
+  remote_images = [
+    "https://image.dunya.com/**",
+    "https://*.dunya.com/**",
+    "https://i.dunya.com/**"
+  ]
+  remote_patterns = [
+    "^https?:\\/\\/image\\.dunya\\.com\\/.*$",
+    "^https?:\\/\\/.*\\.dunya\\.com\\/.*$",
+    "^https?:\\/\\/i\\.dunya\\.com\\/.*$"
+  ]
+  min_bytes = 1024  # 1KB
+  max_bytes = 10485760  # 10MB
+
+# Netlify Image CDN configuration
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Handle image optimization requests
+[[redirects]]
+  from = "/.netlify/images"
+  to = "/_next/image"
+  status = 200
+  force = true
+  query = {
+    url = ":url",
+    w = ":width",
+    q = "quality"
+  }
+
+# Serve static images directly
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, must-revalidate"
 
 # Netlify Image CDN configuration for remote images
 [images]

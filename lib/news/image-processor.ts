@@ -1,7 +1,8 @@
 import sharp from 'sharp';
 import { createSlug } from './slug-utils';
 import { NewsFetchError } from './types';
-import { getStore } from '@netlify/blobs';
+import { getNewsStore } from '../netlify-store';
+import { uploadNewsImageBuffer } from '../blob-utils';
 
 // Ensure dotenv is loaded
 import 'dotenv/config';
@@ -206,84 +207,101 @@ export async function uploadToNetlifyCDN(
   options: ImageOptions = {}
 ): Promise<ImageUploadResult> {
   try {
+    console.log(`📤 Starting upload for: ${imageUrl}`);
+    
     // Validate that it's a remote image URL
     if (!imageUrl.startsWith('http')) {
-      throw new NewsFetchError(
-        'Only remote image URLs are supported',
-        'INVALID_REMOTE_URL'
-      );
+      const errorMsg = 'Only remote image URLs are supported';
+      console.error(`❌ ${errorMsg}: ${imageUrl}`);
+      return {
+        success: false,
+        error: errorMsg,
+      };
     }
 
     if (!validateImageUrl(imageUrl)) {
-      throw new NewsFetchError(
-        'Invalid image URL format',
-        'INVALID_IMAGE_URL'
-      );
+      const errorMsg = 'Invalid image URL format';
+      console.error(`❌ ${errorMsg}: ${imageUrl}`);
+      return {
+        success: false,
+        error: errorMsg,
+      };
     }
 
     // Download and process image
+    console.log('⬇️  Downloading image...');
     const buffer = await fetchImageBuffer(imageUrl);
+    console.log('✅ Image downloaded, size:', buffer.length, 'bytes');
+    
+    console.log('🔄 Processing image...');
     const processedBuffer = await processImage(buffer, options);
     const metadata = await getImageMetadata(processedBuffer);
     const hash = await generateImageHash(processedBuffer);
+    console.log('✅ Image processed, dimensions:', `${metadata.width}x${metadata.height}`);
 
     // Generate final filename with hash for cache busting
     const extension = options.format === 'png' ? 'png' :
                      options.format === 'webp' ? 'webp' : 'jpg';
     const finalFilename = `${filename}-${hash.substring(0, 8)}.${extension}`;
+    console.log(`📁 Generated filename: ${finalFilename}`);
 
     // Try to upload to Netlify Blobs
     try {
-      const store = getStore({
-        name: 'news-images',
-        siteID: process.env.NETLIFY_SITE_ID,
-        token: process.env.NETLIFY_AUTH_TOKEN
+      console.log('☁️  Uploading to Netlify Blobs...');
+      const store = getNewsStore();
+
+      // Set content type based on file extension
+      const contentType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+
+      // Generate the final filename with hash for cache busting
+      console.log(`📁 Generated filename: ${finalFilename}`);
+
+      // Upload the processed buffer directly
+      const result = await uploadNewsImageBuffer(finalFilename, processedBuffer, {
+        originalUrl: imageUrl,
+        processedAt: new Date().toISOString(),
+        format: extension,
+        contentType,
+        ...metadata
       });
 
-      // Create a Blob from the processed buffer
-      const blob = new Blob([new Uint8Array(processedBuffer)], {
-        type: `image/${extension === 'jpg' ? 'jpeg' : extension}`
-      });
-
-      await store.set(finalFilename, blob, {
-        metadata: {
-          originalUrl: imageUrl,
-          processedAt: new Date().toISOString(),
-          format: extension,
-          ...metadata
-        }
-      });
-
+      // Upload was successful via direct API
       console.log(`✅ Image uploaded to Netlify Blobs: ${finalFilename}`);
-
-      // Generate Netlify Image CDN URL for the uploaded image
-      const blobUrl = `/.netlify/images?url=${encodeURIComponent(`https://your-site.netlify.app/.netlify/blobs/news-images/${finalFilename}`)}`;
+      console.log('🔗 Generated URL:', result.url);
 
       return {
         success: true,
-        url: blobUrl,
-        path: `/.netlify/blobs/news-images/${finalFilename}`,
+        url: result.url,
+        path: result.key,
         metadata,
       };
 
     } catch (blobError) {
-      console.error('❌ Netlify Blobs upload failed:', blobError);
+      const errorMsg = blobError instanceof Error ? blobError.message : 'Unknown error during upload';
+      console.error('❌ Netlify Blobs upload failed:', errorMsg);
 
-      // Fallback: Use Netlify Image CDN directly with original URL
-      const cdnUrl = generateNetlifyImageCDNUrl(imageUrl, options);
+      if (blobError instanceof Error && blobError.stack) {
+        console.error('Stack:', blobError.stack);
+      }
 
       return {
-        success: true,
-        url: cdnUrl,
-        path: cdnUrl,
+        success: false,
+        error: errorMsg,
         metadata,
       };
     }
 
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown upload error';
+    console.error('❌ Upload failed:', errorMsg);
+    
+    if (error instanceof Error && error.stack) {
+      console.error('Stack:', error.stack);
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown upload error',
+      error: errorMsg,
     };
   }
 }
@@ -301,55 +319,69 @@ export async function processNewsImage(
   options: ImageOptions = {}
 ): Promise<ImageUploadResult> {
   try {
-    // Validate image URL
+    console.log(`🔄 Starting image processing for: ${imageUrl}`);
+    
+    // Validate URL first
     if (!validateImageUrl(imageUrl)) {
-      throw new NewsFetchError(
-        `Invalid image URL: ${imageUrl}`,
-        'INVALID_IMAGE_URL'
-      );
+      console.error(`❌ Invalid image URL format: ${imageUrl}`);
+      return {
+        success: false,
+        error: 'Invalid image URL format',
+      };
     }
 
-    // For remote images, use Netlify Image CDN
-    if (imageUrl.startsWith('http')) {
-      const filename = createSlug(title, { maxLength: 50 });
-      const result = await uploadToNetlifyCDN(imageUrl, filename, options);
+    // Generate a slug from the title for the filename
+    const filename = createSlug(title) || 'image';
+    console.log(`📁 Generated filename: ${filename}`);
+    
+    // Upload to Netlify CDN
+    const result = await uploadToNetlifyCDN(imageUrl, filename, {
+      width: options.width || 1200,
+      height: options.height,
+      quality: options.quality || 85,
+      format: options.format || 'jpeg',
+    });
 
-      // Always return success since we have fallback system
-      return result;
+    if (result.success) {
+      console.log(`✅ Image uploaded successfully: ${result.url}`);
+    } else {
+      console.error(`❌ Failed to upload image: ${result.error}`);
     }
 
-    // For local images (if any), return error since we only support remote URLs
-    throw new NewsFetchError(
-      'Only remote image URLs are supported',
-      'REMOTE_ONLY'
-    );
+    return result;
   } catch (error) {
-    if (error instanceof NewsFetchError) {
-      throw error;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Error in processNewsImage:', errorMessage);
+    if (error instanceof Error) {
+      console.error('Stack:', error.stack);
     }
-
-    throw new NewsFetchError(
-      'Image processing pipeline failed',
-      'PIPELINE_ERROR',
-      error as Error
-    );
+    
+    return {
+      success: false,
+      error: errorMessage,
+    };
   }
 }
 
 /**
  * Validate image URL
  * @param url - Image URL to validate
- * @returns Valid image URL or null
+ * @returns Whether the URL is valid for image processing
  */
 export function validateImageUrl(url: string): boolean {
   try {
-    const urlObj = new URL(url);
-    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const pathname = urlObj.pathname.toLowerCase();
-
-    return validExtensions.some(ext => pathname.endsWith(ext)) ||
-           url.includes('image') ||
-           /\.(jpg|jpeg|png|gif|webp)$/i.test(pathname);
+    // Basic URL validation
+    new URL(url);
+    
+    // Check common image URL patterns
+    const imagePatterns = [
+      /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i,  // Ends with image extension
+      /\/image\//i,                           // Contains /image/ in path
+      /picsum\.photos/,                       // Allow picsum.photos
+      /^https?:\/\//i                         // Must be HTTP/HTTPS URL
+    ];
+    
+    return imagePatterns.some(pattern => pattern.test(url));
   } catch {
     return false;
   }

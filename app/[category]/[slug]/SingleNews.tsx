@@ -1,10 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { newsKeys } from '@/lib/queries/queryKeys';
 import { useNewsDetail, useNews } from '@/hooks/queries/useExternalQueries';
 import { Breadcrumb } from '@/components/navigation/Breadcrumb';
+import { normalizeImageUrl } from '@/lib/utils/image';
 
 interface SingleNewsProps {
     category: string;
@@ -14,6 +16,37 @@ interface SingleNewsProps {
 export function SingleNews({ category, slug }: SingleNewsProps) {
     // Use the new TanStack Query hooks that fetch from API routes
     const { data: newsItem, isLoading, error } = useNewsDetail(slug);
+    
+    // Extract the correct image path from the URL
+    const getImagePath = (url: string) => {
+        if (!url) return '';
+
+        // If it's already a correct Netlify Blobs URL, extract just the filename
+        if (url.includes('.netlify.app/.netlify/blobs/')) {
+            return url.split('/').pop() || '';
+        }
+
+        // If it's an API route URL, extract the filename
+        if (url.startsWith('/api/blobs/')) {
+            return url.replace('/api/blobs/', '');
+        }
+
+        // If it's a full HTTP URL, extract the path after the domain
+        if (url.startsWith('http')) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.pathname.replace(/^\/+/, '');
+            } catch {
+                return url.split('/').pop() || '';
+            }
+        }
+
+        // If it's already a relative path, return as is
+        return url;
+    };
+    
+    const imagePath = newsItem?.image ? normalizeImageUrl(newsItem.image) : '';
+    const imageUrl = imagePath;
 
     // Get related news using category filter
     const { data: relatedNews } = useNews({ category, limit: 4 });
@@ -93,8 +126,8 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
                         )}
                     </div>
 
-                    <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                        {newsItem.seo_title}
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        {newsItem.title}
                     </h1>
 
                     <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
@@ -118,31 +151,23 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
                 </header>
 
                 {/* Article Image */}
-                {newsItem.image && (
-                    <div className="mb-8">
+                {imageUrl && (
+                    <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden">
                         <img
-                            src={newsItem.image}
-                            alt={newsItem.image_title || newsItem.seo_title}
-                            className="w-full h-auto rounded-lg"
-                            loading="lazy"
+                            src={imageUrl}
+                            alt={newsItem.title}
+                            className="w-full h-full object-cover"
                         />
-                        {newsItem.image_title && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">
-                                {newsItem.image_title}
-                            </p>
-                        )}
                     </div>
+                )}
+                {newsItem.image_title && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">
+                        {newsItem.image_title}
+                    </p>
                 )}
 
                 {/* Article Content */}
-                <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
-                    <div className="text-gray-900 dark:text-white leading-relaxed">
-                        {/* For now, show the markdown content directly */}
-                        <div className="whitespace-pre-wrap">
-                            {newsItem.content_md}
-                        </div>
-                    </div>
-                </div>
+                <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: newsItem.content_md }} />
 
                 {/* Article Footer */}
                 <footer className="border-t border-gray-200 dark:border-gray-700 pt-8">
@@ -182,7 +207,7 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
                                         {relatedNewsItem.image && (
                                             <div className="aspect-video">
                                                 <img
-                                                    src={relatedNewsItem.image}
+                                                    src={normalizeImageUrl(relatedNewsItem.image)}
                                                     alt={relatedNewsItem.image_title || relatedNewsItem.seo_title}
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"
