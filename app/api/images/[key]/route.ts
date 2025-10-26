@@ -29,7 +29,17 @@ export async function GET(
     });
 
     // Get blob with metadata for debugging
-    const { data: imageBlob, metadata } = await store.getWithMetadata(key, { type: "blob" });
+    const result = await store.getWithMetadata(key, { type: "blob" });
+    
+    if (!result) {
+      console.error('No data returned for key:', key);
+      return NextResponse.json(
+        { error: 'Image data not found' },
+        { status: 404 }
+      );
+    }
+
+    const { data: imageBlob, metadata } = result;
 
     if (!imageBlob) {
       console.error('Blob not found for key:', key);
@@ -45,9 +55,10 @@ export async function GET(
     const arrayBuffer = await imageBlob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Determine content type
-    const contentType = key.endsWith('.png') ? 'image/png' :
-                       key.endsWith('.webp') ? 'image/webp' :
+    // Determine content type from metadata or file extension
+    const contentType = metadata?.contentType || 
+                      key.endsWith('.png') ? 'image/png' :
+                      key.endsWith('.webp') ? 'image/webp' :
                        key.endsWith('.gif') ? 'image/gif' : 'image/jpeg';
 
     return new NextResponse(buffer, {

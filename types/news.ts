@@ -342,6 +342,7 @@ export interface NewsFilters {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  excludeId?: string; // Added to exclude specific news item from results
 }
 
 export interface SearchFilters {

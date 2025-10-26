@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { processNewsItems } from '@/lib/news/process-news';
 import BlobImage from '@/components/BlobImage';
@@ -40,18 +39,49 @@ export function NewsCard({
   
   const [isImageLoading, setIsImageLoading] = useState(false);
 
+  // Extract just the image key from the URL if it's a Netlify Blob URL
+  const getImageKey = (url: string) => {
+    if (!url) return '';
+    
+    // If it's already just a key (no slashes)
+    if (!url.includes('/')) return url;
+    
+    // Extract the last part of the URL as the key
+    const urlObj = new URL(url, 'http://dummy.com'); // Using dummy base URL to handle relative URLs
+    const pathParts = urlObj.pathname.split('/');
+    return pathParts[pathParts.length - 1];
+  };
+
+  const imageKey = news.image ? getImageKey(news.image) : '';
+
   const publishedAt = new Date(news.published_at);
-  const timeAgo = formatDistanceToNow(publishedAt, { 
-    addSuffix: true, 
-    locale: tr 
+  const timeAgo = formatDistanceToNow(publishedAt, {
+    addSuffix: true
   });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+
+      // Check if it's a default date (like 2001-01-01)
+      if (date.getFullYear() < 2020) {
+        return '';
+      }
+
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
   };
 
   const truncateText = (text: string, maxLength: number) => {
@@ -68,7 +98,7 @@ export function NewsCard({
         className
       )}
     >
-      {news.image && (
+      {imageKey && (
         <div className={cn(
           'relative overflow-hidden rounded-lg',
           featured ? 'h-48 md:h-64' : 'h-40',
@@ -79,17 +109,17 @@ export function NewsCard({
               <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
             ) : (
               <BlobImage
-                imageKey={news.image}
+                imageKey={imageKey}
                 alt={news.image_title || news.seo_title || 'News image'}
                 width={featured ? 800 : 400}
-                height={featured ? 450 : 225}
+                height={featured ? 600 : 255}
                 className={cn(
                   'w-full h-full object-cover',
                   isImageLoading ? 'opacity-0' : 'opacity-100'
                 )}
                 sizes={featured ? '(max-width: 768px) 100vw, 50vw' : '(max-width: 768px) 50vw, 33vw'}
                 onError={() => {
-                  console.error('Error loading image:', news.image);
+                  console.error('Error loading image with key:', imageKey);
                 }}
               />
             )}

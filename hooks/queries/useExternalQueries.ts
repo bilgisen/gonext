@@ -1,6 +1,17 @@
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { newsKeys } from '../../lib/queries/queryKeys';
-import type { NewsFilters, SearchFilters } from '../../types/news';
+import type { NewsFilters, SearchFilters, NewsItem } from '../../types/news';
+
+export interface NewsListResponse {
+  success: boolean;
+  data: {
+    items: NewsItem[];
+    total: number;
+    page: number;
+    limit: number;
+    has_more: boolean;
+  };
+}
 
 // Database Query Hooks (using Next.js internal API routes with direct database access)
 
@@ -86,17 +97,91 @@ export function useFeaturedNews(limit = 6) {
 /**
  * Hook for infinite scroll news list
  */
-export function useInfiniteNews(filters: NewsFilters = {}) {
-  return useInfiniteQuery({
-    queryKey: newsKeys.list(filters),
-    queryFn: ({ pageParam = 1 }) =>
-      fetchNewsFromDatabase({ ...filters, page: pageParam }),
+export function useInfiniteNews({
+  category,
+  tag,
+  limit = 10,
+  excludeId,
+}: {
+  category?: string;
+  tag?: string;
+  limit?: number;
+  excludeId?: string;
+}) {
+  return useInfiniteQuery<NewsListResponse, Error>({
+    queryKey: ['infinite-news', category, tag, limit, excludeId],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = new URLSearchParams({
+        page: pageParam.toString(),
+        limit: limit.toString(),
+        ...(category && { category }),
+        ...(tag && { tag }),
+        ...(excludeId && { excludeId }),
+      });
+
+      const response = await fetch(`/api/news?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch news');
+      }
+
+      return {
+        ...data,
+        data: {
+          ...data.data,
+          // Ensure has_more is always a boolean
+          has_more: Boolean(data.data.has_more)
+        }
+      };
+    },
     initialPageParam: 1,
-    getNextPageParam: (lastPage, pages) => {
-      if (!lastPage?.has_more) return undefined;
-      return pages.length + 1;
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.data.has_more) return undefined;
+      return allPages.length + 1;
     },
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+async function fetchRelatedNewsFromDatabase(category: string, excludeId: string, page: number = 1, limit: number = 6) {
+  const response = await fetch(
+    `/api/news/related?category=${category}&excludeId=${excludeId}&page=${page}&limit=${limit}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch related news: ${response.status} ${response.statusText}`);
+  }
+
+  const result = await response.json();
+
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to fetch related news');
+  }
+
+  return {
+    data: result.data,
+    pagination: result.pagination,
+  };
+}
+
+export function useInfiniteRelatedNews(category: string, excludeId: string, limit: number = 6) {
+  return useInfiniteQuery({
+    queryKey: ['related-news', category, excludeId],
+    queryFn: ({ pageParam = 1 }) => 
+      fetchRelatedNewsFromDatabase(category, excludeId, pageParam, limit),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      return lastPage.pagination.hasMore ? lastPage.pagination.currentPage + 1 : undefined;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!category && !!excludeId,
   });
 }
 

@@ -25,6 +25,7 @@ export interface NewsFilters {
   limit?: number;
   sortBy?: 'date' | 'popularity' | 'relevance';
   search?: string;
+  excludeId?: string;
 }
 
 export interface SearchFilters {

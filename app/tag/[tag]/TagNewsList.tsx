@@ -23,6 +23,14 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         )),
     });
 
+    // Create a new object with only the properties that useInfiniteNews expects
+    const queryParams = {
+        tag: filters.tag || tag,
+        limit: filters.limit || 10,
+        // Only include excludeId if it exists in filters
+        ...(filters.excludeId && { excludeId: String(filters.excludeId) })
+    };
+
     // Use the new TanStack Query hooks that fetch from API routes
     const {
         data,
@@ -31,7 +39,7 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         isFetchingNextPage,
         isLoading,
         error,
-    } = useInfiniteNews(filters);
+    } = useInfiniteNews(queryParams);
 
     const handleLoadMore = () => {
         if (hasNextPage && !isFetchingNextPage) {
@@ -80,7 +88,8 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         );
     }
 
-    const allNews = data?.pages.flatMap(page => page.items) || [];
+    const allNews = data?.pages.flatMap(page => page.data.items) || [];
+    const totalResults = data?.pages[0]?.data.total || 0;
 
     if (allNews.length === 0) {
         return (
@@ -106,7 +115,7 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-wrap gap-2 items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        Showing {data?.pages[0]?.total || 0} articles tagged with
+                        Showing {totalResults} articles tagged with
                     </span>
                     <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
                         #{tag.charAt(0).toUpperCase() + tag.slice(1).replace(/-/g, ' ')}

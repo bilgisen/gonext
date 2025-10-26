@@ -6,7 +6,7 @@ import { getNewsById } from '@/lib/api/externalApiClient';
 export const runtime = 'nodejs';
 
 interface RouteParams {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }> | { id: string };
 }
 
 export async function GET(
@@ -16,7 +16,8 @@ export async function GET(
   let id = '';
 
   try {
-    const resolvedParams = await params;
+    // Handle both Promise and non-Promise params for compatibility
+    const resolvedParams = 'then' in params ? await params : params;
     id = resolvedParams.id;
 
     const result = await getNewsById(id);

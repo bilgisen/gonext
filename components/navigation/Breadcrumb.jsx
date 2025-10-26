@@ -4,12 +4,9 @@ export function Breadcrumb({ items }) {
     return (
         <nav className="mb-6">
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    Home
-                </Link>
                 {items.map((item, index) => (
                     <div key={index} className="flex items-center gap-2">
-                        <span>/</span>
+                        {index > 0 && <span>/</span>}
                         {item.href ? (
                             <Link
                                 href={item.href}

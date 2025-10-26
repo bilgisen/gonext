@@ -24,6 +24,14 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
     });
 
     // Use the new TanStack Query hooks that fetch from API routes
+    // Create a new object with only the properties that useInfiniteNews expects
+    const queryParams = {
+        category: filters.category || '',
+        limit: filters.limit || 10,
+        // Only include excludeId if it exists in filters
+        ...(filters.excludeId && { excludeId: String(filters.excludeId) })
+    };
+
     const {
         data,
         fetchNextPage,
@@ -31,7 +39,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
         isFetchingNextPage,
         isLoading,
         error,
-    } = useInfiniteNews(filters);
+    } = useInfiniteNews(queryParams);
 
     const handleLoadMore = () => {
         if (hasNextPage && !isFetchingNextPage) {
@@ -80,7 +88,9 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
         );
     }
 
-    const allNews = data?.pages.flatMap(page => page.items) || [];
+    // Map through all pages and their items
+    const allNews = data?.pages.flatMap(page => page.data?.items || []) || [];
+    const totalResults = data?.pages[0]?.data?.total || 0;
 
     if (allNews.length === 0) {
         return (
@@ -106,7 +116,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-wrap gap-2 items-center">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        Showing {data?.pages[0]?.total || 0} articles in
+                        Showing {totalResults} articles in
                     </span>
                     <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
                         {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -117,16 +127,17 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
                 </div>
             </div>
 
-            {/* News List */}
-            <div className="space-y-6">
-                {allNews.map((news) => (
-                    <NewsCard
-                        key={news.id}
-                        news={news}
-                        showCategory={false}
-                    />
-                ))}
-            </div>
+            {allNews.length > 0 ? (
+                <div className="space-y-6">
+                    {allNews.map((newsItem) => (
+                        <NewsCard key={newsItem.id} news={newsItem} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400">No news found.</p>
+                </div>
+            )}
 
             {/* Load More Button */}
             {hasNextPage && (
