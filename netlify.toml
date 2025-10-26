@@ -103,16 +103,9 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, must-revalidate"
 
-# Allow image optimization from any domain (be more specific in production)
-[images]
-  remote_images = ["**"]
-
-# Enable Netlify Image CDN
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 # Image optimization settings
 [images]
+  # Allow image optimization from specific domains
   remote_images = [
     "https://image.dunya.com/**",
     "https://*.dunya.com/**",
@@ -125,6 +118,10 @@
   ]
   min_bytes = 1024  # 1KB
   max_bytes = 10485760  # 10MB
+
+# Enable Netlify Image CDN
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 # Netlify Image CDN configuration
 [[plugins]]
