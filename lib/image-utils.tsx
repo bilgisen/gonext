@@ -27,7 +27,7 @@ export function getOptimizedImageUrl(
       const url = new URL(imageUrl);
       const key = url.pathname.split('/').pop();
       if (key) {
-        return `/api/serve-blob-image?key=${encodeURIComponent(key)}`;
+        return `/api/image?key=${encodeURIComponent(key)}`;
       }
     } catch (e) {
       console.error('Error parsing blob URL:', e);

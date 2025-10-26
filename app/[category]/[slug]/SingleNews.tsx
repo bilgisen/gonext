@@ -18,36 +18,34 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
     // Use the new TanStack Query hooks that fetch from API routes
     const { data: newsItem, isLoading, error } = useNewsDetail(slug);
     
-    // Extract the correct image path from the URL
-    const getImagePath = (url: string) => {
+    // Process the image URL to ensure it's properly formatted for our API
+    const getOptimizedImageUrl = (url: string) => {
         if (!url) return '';
-
-        // If it's already a correct Netlify Blobs URL, extract just the filename
-        if (url.includes('.netlify.app/.netlify/blobs/')) {
-            return url.split('/').pop() || '';
+        
+        // If it's already our API URL, return as is
+        if (url.includes('/api/image')) {
+            return url;
         }
-
-        // If it's an API route URL, extract the filename
-        if (url.startsWith('/api/blobs/')) {
-            return url.replace('/api/blobs/', '');
-        }
-
-        // If it's a full HTTP URL, extract the path after the domain
-        if (url.startsWith('http')) {
+        
+        // Handle Netlify Blob URLs
+        if (url.includes('blob.netlify.app')) {
             try {
                 const urlObj = new URL(url);
-                return urlObj.pathname.replace(/^\/+/, '');
-            } catch {
-                return url.split('/').pop() || '';
+                const key = urlObj.pathname.split('/').pop();
+                if (key) {
+                    return `/api/image?key=${encodeURIComponent(key)}`;
+                }
+            } catch (e) {
+                console.error('Error parsing blob URL:', e);
+                return '';
             }
         }
-
-        // If it's already a relative path, return as is
+        
+        // For other URLs, return as is (they'll be handled by the image-utils)
         return url;
     };
     
-    const imagePath = newsItem?.image ? normalizeImageUrl(newsItem.image) : '';
-    const imageUrl = imagePath;
+    const imageUrl = newsItem?.image ? getOptimizedImageUrl(newsItem.image) : '';
 
     // Get related news using category filter
     const { data: relatedNews } = useNews({ category, limit: 4 });
@@ -217,12 +215,19 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
                                     <article key={relatedNewsItem.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
                                         {relatedNewsItem.image && (
                                             <div className="aspect-video">
-                                                <img
-                                                    src={normalizeImageUrl(relatedNewsItem.image)}
-                                                    alt={relatedNewsItem.image_title || relatedNewsItem.seo_title}
-                                                    className="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
+                                                <OptimizedImage
+                                                src={relatedNewsItem.image}
+                                                alt={relatedNewsItem.image_title || relatedNewsItem.seo_title || 'Related news image'}
+                                                width={400}
+                                                height={225}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    console.error('Error loading related image:', relatedNewsItem.image);
+                                                    if (e.currentTarget) {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }
+                                                }}
+                                            />
                                             </div>
                                         )}
                                         <div className="p-4">
