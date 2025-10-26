@@ -1,6 +1,6 @@
+import React, { type CSSProperties } from 'react';
 import type { ImageProps as NextImageProps } from 'next/image';
 import Image from 'next/image';
-import { type CSSProperties } from 'react';
 
 type ImageOptions = {
   width: number;
@@ -49,16 +49,16 @@ type OptimizedImageProps = Omit<NextImageProps, 'src' | 'width' | 'height'> & {
 
 export function OptimizedImage({
   src,
-  alt = '',
   width,
   height,
   quality = 85,
   fit = 'cover',
   format,
-  style,
   className = '',
+  alt = '',
+  style,
   ...props
-}: OptimizedImageProps): JSX.Element | null {
+}: OptimizedImageProps & { alt?: string }): React.ReactElement | null {
   if (!src) return null;
 
   const optimizedUrl = getOptimizedImageUrl(src, {

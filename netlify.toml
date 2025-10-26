@@ -14,7 +14,7 @@
 
 # Image optimization with Netlify Image CDN
 [[redirects]]
-  from = "/.netlify/images/*"
+  from = "/_netlify/images/*"
   to = "https://api.netlify.com/image/v1/:splat"
   status = 200
   force = true
@@ -35,7 +35,7 @@
 
 # Handle blob listing and operations
 [[redirects]]
-  from = "/.netlify/blobs/*"
+  from = "/_netlify/blobs/*"
   to = "/api/blobs/:splat"
   status = 200
   force = true
@@ -105,7 +105,7 @@
 
 # Handle image optimization requests
 [[redirects]]
-  from = "/.netlify/images"
+  from = "/_netlify/images"
   to = "/_next/image"
   status = 200
   force = true
