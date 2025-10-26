@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { processNewsItems } from '@/lib/news/process-news';
-import { normalizeImageUrl } from '@/lib/utils/image';
+import { OptimizedImage } from '@/lib/image-utils';
 import type { NewsItem } from '@/types/news';
 
 interface NewsCardProps {
@@ -38,53 +38,13 @@ export function NewsCard({
     updated_at: initialNews.updated_at || new Date().toISOString()
   });
   
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   const publishedAt = new Date(news.published_at);
   const timeAgo = formatDistanceToNow(publishedAt, { 
     addSuffix: true, 
     locale: tr 
   });
-
-  // Simple image processing - just normalize if needed
-  useEffect(() => {
-    let isMounted = true;
-
-    const processImage = async (currentNews: NewsItem) => {
-      try {
-        if (!currentNews.image) {
-          setIsImageLoading(false);
-          return;
-        }
-
-        // If already an API route URL, use as is
-        if (currentNews.image.includes('/api/images?key=')) {
-          setIsImageLoading(false);
-          return;
-        }
-
-        // Otherwise normalize the URL
-        const normalizedUrl = normalizeImageUrl(currentNews.image);
-        if (isMounted && normalizedUrl !== currentNews.image) {
-          setNews(prev => ({
-            ...prev,
-            image: normalizedUrl
-          }));
-        }
-
-        setIsImageLoading(false);
-      } catch (error) {
-        console.error('Error processing news image:', error);
-        setIsImageLoading(false);
-      }
-    };
-
-    processImage(news);
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -109,29 +69,34 @@ export function NewsCard({
       )}
     >
       {news.image && (
-        <div className={cn('relative', featured ? 'aspect-video' : 'aspect-video')}>
+        <div className={cn(
+          'relative overflow-hidden rounded-lg',
+          featured ? 'h-48 md:h-64' : 'h-40',
+          isImageLoading ? 'bg-gray-200 dark:bg-gray-800' : ''
+        )}>
           <Link href={`/news/${news.id}`} className="block h-full">
             {isImageLoading ? (
               <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
             ) : (
-              <>
-                <img
-                  src={news.image || '/images/placeholder-news.jpg'}
-                  alt={news.image_title || news.seo_title}
-                  className={cn(
-                    'w-full h-full object-cover transition-transform duration-300 hover:scale-105',
-                    isImageLoading ? 'opacity-0' : 'opacity-100'
-                  )}
-                  onLoad={() => setIsImageLoading(false)}
-                  onError={(e) => {
-                    console.error('Error loading image:', e);
-                    setIsImageLoading(false);
-                  }}
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-              </>
+              <OptimizedImage
+                src={news.image}
+                alt={news.image_title || news.seo_title || 'News image'}
+                width={featured ? 800 : 400}
+                height={featured ? 450 : 225}
+                className={cn(
+                  'w-full h-full object-cover',
+                  isImageLoading ? 'opacity-0' : 'opacity-100'
+                )}
+                onError={(e) => {
+                  console.error('Error loading image:', news.image);
+                  if (e.currentTarget) {
+                    e.currentTarget.style.display = 'none';
+                  }
+                }}
+              />
             )}
           </Link>
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
           {showCategory && (
             <div className="absolute top-3 left-3">
               <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">

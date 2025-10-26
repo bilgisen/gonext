@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { newsKeys } from '@/lib/queries/queryKeys';
 import { useNewsDetail, useNews } from '@/hooks/queries/useExternalQueries';
 import { Breadcrumb } from '@/components/navigation/Breadcrumb';
+import { OptimizedImage } from '@/lib/image-utils';
 import { normalizeImageUrl } from '@/lib/utils/image';
 
 interface SingleNewsProps {
@@ -152,18 +153,28 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
 
                 {/* Article Image */}
                 {imageUrl && (
-                    <div className="relative w-full h-64 md:h-96 mb-8 rounded-lg overflow-hidden">
-                        <img
-                            src={imageUrl}
-                            alt={newsItem.title}
-                            className="w-full h-full object-cover"
-                        />
+                    <div className="relative w-full mb-8 rounded-lg overflow-hidden">
+                        <div className="relative w-full h-64 md:h-96">
+                            <OptimizedImage
+                                src={imageUrl}
+                                alt={newsItem.image_title || newsItem.seo_title || 'News image'}
+                                width={1200}
+                                height={675}
+                                className="w-full h-full object-cover rounded-lg"
+                                onError={(e) => {
+                                    console.error('Error loading image:', imageUrl);
+                                    if (e.currentTarget) {
+                                        e.currentTarget.style.display = 'none';
+                                    }
+                                }}
+                            />
+                        </div>
+                        {newsItem.image_title && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">
+                                {newsItem.image_title}
+                            </p>
+                        )}
                     </div>
-                )}
-                {newsItem.image_title && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">
-                        {newsItem.image_title}
-                    </p>
                 )}
 
                 {/* Article Content */}

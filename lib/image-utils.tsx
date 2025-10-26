@@ -15,26 +15,43 @@ export function getOptimizedImageUrl(
   options: ImageOptions
 ): string {
   if (!imageUrl) return '';
-  
-  // If it's already a Netlify CDN URL, return as is
-  if (imageUrl.includes('/.netlify/images')) {
+
+  // If it's already our proxy URL, return as is
+  if (imageUrl.includes('/api/serve-blob-image')) {
     return imageUrl;
+  }
+
+  // Handle Netlify Blob URLs
+  if (imageUrl.includes('blob.netlify.app')) {
+    try {
+      const url = new URL(imageUrl);
+      const key = url.pathname.split('/').pop();
+      if (key) {
+        return `/api/serve-blob-image?key=${encodeURIComponent(key)}`;
+      }
+    } catch (e) {
+      console.error('Error parsing blob URL:', e);
+    }
   }
 
   // Handle relative paths
   const isRelative = !imageUrl.startsWith('http');
-  const encodedUrl = isRelative ? imageUrl : encodeURIComponent(imageUrl);
+  
+  // For non-blob URLs, use Netlify's image transformation
+  if (!isRelative) {
+    const params = new URLSearchParams({
+      url: imageUrl,
+      w: options.width.toString(),
+      ...(options.height && { h: options.height.toString() }),
+      q: (options.quality || 85).toString(),
+      fit: options.fit || 'cover',
+      ...(options.format && { fm: options.format }),
+    });
+    return `/_netlify/images?${params.toString()}`;
+  }
 
-  const params = new URLSearchParams({
-    url: encodedUrl,
-    w: options.width.toString(),
-    ...(options.height && { h: options.height.toString() }),
-    q: (options.quality || 85).toString(),
-    fit: options.fit || 'cover',
-    ...(options.format && { fm: options.format }),
-  });
-
-  return `/.netlify/images?${params.toString()}`;
+  // For local paths, just return as is
+  return imageUrl;
 }
 
 type OptimizedImageProps = Omit<NextImageProps, 'src' | 'width' | 'height'> & {
