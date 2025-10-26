@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { newsKeys } from '@/lib/queries/queryKeys';
 import { useNewsDetail, useNews } from '@/hooks/queries/useExternalQueries';
 import { Breadcrumb } from '@/components/navigation/Breadcrumb';
-import { OptimizedImage } from '@/lib/image-utils';
+import BlobImage from '@/components/BlobImage';
 import { normalizeImageUrl } from '@/lib/utils/image';
 
 interface SingleNewsProps {
@@ -18,34 +18,26 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
     // Use the new TanStack Query hooks that fetch from API routes
     const { data: newsItem, isLoading, error } = useNewsDetail(slug);
     
-    // Process the image URL to ensure it's properly formatted for our API
-    const getOptimizedImageUrl = (url: string) => {
+    // Extract just the image key from the URL if it's a Netlify Blob URL
+    const getImageKey = (url: string) => {
         if (!url) return '';
         
-        // If it's already our API URL, return as is
-        if (url.includes('/api/image')) {
-            return url;
-        }
-        
-        // Handle Netlify Blob URLs
+        // If it's a Netlify Blob URL, extract just the key
         if (url.includes('blob.netlify.app')) {
             try {
                 const urlObj = new URL(url);
-                const key = urlObj.pathname.split('/').pop();
-                if (key) {
-                    return `/api/image?key=${encodeURIComponent(key)}`;
-                }
+                return urlObj.pathname.split('/').pop() || '';
             } catch (e) {
                 console.error('Error parsing blob URL:', e);
                 return '';
             }
         }
         
-        // For other URLs, return as is (they'll be handled by the image-utils)
+        // For other URLs, return as is (they'll be handled by the BlobImage component)
         return url;
     };
     
-    const imageUrl = newsItem?.image ? getOptimizedImageUrl(newsItem.image) : '';
+    const imageKey = newsItem?.image ? getImageKey(newsItem.image) : '';
 
     // Get related news using category filter
     const { data: relatedNews } = useNews({ category, limit: 4 });
@@ -150,20 +142,18 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
                 </header>
 
                 {/* Article Image */}
-                {imageUrl && (
-                    <div className="relative w-full mb-8 rounded-lg overflow-hidden">
-                        <div className="relative w-full h-64 md:h-96">
-                            <OptimizedImage
-                                src={imageUrl}
+                {imageKey && (
+                    <div className="relative w-full mb-8">
+                        <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                            <BlobImage
+                                imageKey={imageKey}
                                 alt={newsItem.image_title || newsItem.seo_title || 'News image'}
                                 width={1200}
                                 height={675}
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => {
-                                    console.error('Error loading image:', imageUrl);
-                                    if (e.currentTarget) {
-                                        e.currentTarget.style.display = 'none';
-                                    }
+                                className="w-full h-full object-cover"
+                                sizes="(max-width: 768px) 100vw, 80vw"
+                                onError={() => {
+                                    console.error('Error loading image:', imageKey);
                                 }}
                             />
                         </div>
@@ -215,19 +205,17 @@ export function SingleNews({ category, slug }: SingleNewsProps) {
                                     <article key={relatedNewsItem.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
                                         {relatedNewsItem.image && (
                                             <div className="aspect-video">
-                                                <OptimizedImage
-                                                src={relatedNewsItem.image}
-                                                alt={relatedNewsItem.image_title || relatedNewsItem.seo_title || 'Related news image'}
-                                                width={400}
-                                                height={225}
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    console.error('Error loading related image:', relatedNewsItem.image);
-                                                    if (e.currentTarget) {
-                                                        e.currentTarget.style.display = 'none';
-                                                    }
-                                                }}
-                                            />
+                                                <BlobImage
+                                                    imageKey={relatedNewsItem.image}
+                                                    alt={relatedNewsItem.image_title || relatedNewsItem.seo_title || 'Related news image'}
+                                                    width={400}
+                                                    height={225}
+                                                    className="w-full h-full object-cover"
+                                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                                    onError={() => {
+                                                        console.error('Error loading related image:', relatedNewsItem.image);
+                                                    }}
+                                                />
                                             </div>
                                         )}
                                         <div className="p-4">

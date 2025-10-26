@@ -6,7 +6,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { processNewsItems } from '@/lib/news/process-news';
-import { OptimizedImage } from '@/lib/image-utils';
+import BlobImage from '@/components/BlobImage';
 import type { NewsItem } from '@/types/news';
 
 interface NewsCardProps {
@@ -78,8 +78,8 @@ export function NewsCard({
             {isImageLoading ? (
               <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
             ) : (
-              <OptimizedImage
-                src={news.image}
+              <BlobImage
+                imageKey={news.image}
                 alt={news.image_title || news.seo_title || 'News image'}
                 width={featured ? 800 : 400}
                 height={featured ? 450 : 225}
@@ -87,11 +87,9 @@ export function NewsCard({
                   'w-full h-full object-cover',
                   isImageLoading ? 'opacity-0' : 'opacity-100'
                 )}
-                onError={(e) => {
+                sizes={featured ? '(max-width: 768px) 100vw, 50vw' : '(max-width: 768px) 50vw, 33vw'}
+                onError={() => {
                   console.error('Error loading image:', news.image);
-                  if (e.currentTarget) {
-                    e.currentTarget.style.display = 'none';
-                  }
                 }}
               />
             )}
