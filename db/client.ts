@@ -38,23 +38,10 @@ function getDatabaseUrl(): string {
   return url;
 }
 
-// Lazy initialization - only create database connection when actually used
-let _db: ReturnType<typeof drizzle> | null = null;
+// Direct database initialization
+const databaseUrl = getDatabaseUrl();
+console.log('🔌 Connecting to database:', databaseUrl.replace(/\/\/.*@/, '//***:***@'));
 
-function getDatabase(): ReturnType<typeof drizzle> {
-  if (!_db) {
-    const databaseUrl = getDatabaseUrl();
-    // TypeScript'teki küçük farkları bypass etmek için 'any' cast'i
-    const sql: any = neon(databaseUrl);
-    _db = drizzle(sql, { schema });
-  }
-  return _db;
-}
-
-// Export the lazy-initialized database
-export const db = new Proxy({} as ReturnType<typeof drizzle>, {
-  get(target, prop) {
-    const database = getDatabase();
-    return database[prop as keyof typeof database];
-  }
-});
+const sql: any = neon(databaseUrl);
+export const db = drizzle(sql);
+console.log('✅ Database connected successfully');

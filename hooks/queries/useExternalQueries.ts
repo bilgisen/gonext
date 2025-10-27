@@ -1,6 +1,7 @@
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { newsKeys } from '../../lib/queries/queryKeys';
 import type { NewsFilters, SearchFilters, NewsItem } from '../../types/news';
+import { CATEGORY_MAPPINGS } from '../../types/news';
 
 export interface NewsListResponse {
   success: boolean;
@@ -150,44 +151,28 @@ export function useInfiniteNews({
   });
 }
 
-async function fetchRelatedNewsFromDatabase(category: string, excludeId: string, page: number = 1, limit: number = 6) {
-  const response = await fetch(
-    `/api/news/related?category=${category}&excludeId=${excludeId}&page=${page}&limit=${limit}`
-  );
+export function useRelatedNews(currentSlug: string, limit: number = 6) {
+  return useQuery({
+    queryKey: ['related-news', currentSlug, limit],
+    queryFn: async () => {
+      const response = await fetch(`/api/news/related?for=${currentSlug}&limit=${limit}`);
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch related news: ${response.status} ${response.statusText}`);
-  }
+      if (!response.ok) {
+        throw new Error('Failed to fetch related news');
+      }
 
-  const result = await response.json();
+      const result = await response.json();
 
-  if (!result.success) {
-    throw new Error(result.error || 'Failed to fetch related news');
-  }
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch related news');
+      }
 
-  return {
-    data: result.data,
-    pagination: result.pagination,
-  };
-}
-
-export function useInfiniteRelatedNews(category: string, excludeId: string, limit: number = 6) {
-  return useInfiniteQuery({
-    queryKey: ['related-news', category, excludeId],
-    queryFn: ({ pageParam = 1 }) => 
-      fetchRelatedNewsFromDatabase(category, excludeId, pageParam, limit),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      return lastPage.pagination.hasMore ? lastPage.pagination.currentPage + 1 : undefined;
+      return result.data;
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!category && !!excludeId,
+    enabled: !!currentSlug,
   });
 }
-
-/**
- * Hook for prefetching news detail on hover
- */
 export function usePrefetchNews() {
   const queryClient = useQueryClient();
 

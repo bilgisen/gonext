@@ -1,38 +1,37 @@
 import type { NewsItem, NewsListResponse } from '../../types/news';
 import { db } from '../../db/client';
-import { news, news_categories, news_tags, categories, tags, media } from '../../db/schema';
-import { desc, asc, sql, and, eq, like, inArray } from 'drizzle-orm';
+import { CATEGORY_MAPPINGS } from '../../types/news';
 
 // Database-based API client for news
 class DatabaseApiClient {
   private async transformDbNewsToNewsItem(dbNews: any): Promise<NewsItem> {
     // Get categories for this news item
-    const newsCats = await db
-      .select({ name: categories.name })
-      .from(news_categories)
-      .innerJoin(categories, eq(news_categories.category_id, categories.id))
-      .where(eq(news_categories.news_id, dbNews.id));
+    const catsResult = await (db as any).execute(`
+      SELECT c.name FROM categories c
+      INNER JOIN news_categories nc ON c.id = nc.category_id
+      WHERE nc.news_id = ${dbNews.id}
+    `);
 
     // Get tags for this news item
-    const newsTags = await db
-      .select({ name: tags.name })
-      .from(news_tags)
-      .innerJoin(tags, eq(news_tags.tag_id, tags.id))
-      .where(eq(news_tags.news_id, dbNews.id));
+    const tagsResult = await (db as any).execute(`
+      SELECT t.name FROM tags t
+      INNER JOIN news_tags nt ON t.id = nt.tag_id
+      WHERE nt.news_id = ${dbNews.id}
+    `);
 
     // Get main image if exists
     let image = '';
     let imageTitle = '';
     if (dbNews.main_media_id) {
-      const mediaResult = await db
-        .select()
-        .from(media)
-        .where(eq(media.id, dbNews.main_media_id))
-        .limit(1);
+      const mediaResult = await (db as any).execute(`
+        SELECT external_url, storage_path, alt_text, caption
+        FROM media WHERE id = ${dbNews.main_media_id}
+      `);
 
-      if (mediaResult.length > 0) {
-        image = mediaResult[0].external_url || mediaResult[0].storage_path || '';
-        imageTitle = mediaResult[0].alt_text || mediaResult[0].caption || '';
+      if (mediaResult.rows.length > 0) {
+        const media = mediaResult.rows[0] as any;
+        image = media.external_url || media.storage_path || '';
+        imageTitle = media.alt_text || media.caption || '';
       }
     }
 
@@ -44,8 +43,8 @@ class DatabaseApiClient {
       seo_description: dbNews.seo_description || dbNews.excerpt || '',
       tldr: [], // Will be populated from news_tldr table if needed
       content_md: dbNews.content_md || '',
-      category: newsCats.length > 0 ? newsCats[0].name : 'General',
-      tags: newsTags.map(tag => tag.name),
+      category: catsResult.rows.length > 0 ? (catsResult.rows[0] as any).name : 'General',
+      tags: tagsResult.rows.map((tag: any) => tag.name),
       image: image,
       image_title: imageTitle,
       image_desc: '',
@@ -71,114 +70,176 @@ class DatabaseApiClient {
     const limit = filters.limit || 20;
     const offset = (page - 1) * limit;
 
-    let whereConditions = [];
+    console.log('🔍 getNews called with filters:', filters);
 
-    // Filter by status (only published news)
-    whereConditions.push(eq(news.status, 'published'));
+    try {
+      // Build WHERE conditions
+      let whereConditions = ['status = \'published\''];
 
-    // Filter by category if provided
-    if (filters.category) {
-      const categoryResult = await db
-        .select({ id: categories.id })
-        .from(categories)
-        .where(eq(categories.name, filters.category))
-        .limit(1);
+      if (filters.category) {
+        // Map URL parameter to actual category name using CATEGORY_MAPPINGS
+        const mappedCategory = CATEGORY_MAPPINGS[filters.category.toLowerCase()] || filters.category;
 
-      if (categoryResult.length > 0) {
-        whereConditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM news_categories nc
-            WHERE nc.news_id = news.id
-            AND nc.category_id = ${categoryResult[0].id}
-          )`
-        );
+        console.log('🔍 Looking for category:', mappedCategory);
+
+        // First check if category exists
+        try {
+          const categoryCheck = await (db as any).execute(`
+            SELECT id FROM categories WHERE name = '${mappedCategory.replace(/'/g, "''")}'
+          `);
+
+          console.log('🔍 Category check result:', categoryCheck.rows);
+
+          if (categoryCheck.rows.length > 0) {
+            const categoryId = categoryCheck.rows[0].id;
+            whereConditions.push(`
+              EXISTS (
+                SELECT 1 FROM news_categories
+                WHERE news_categories.news_id = news.id
+                AND news_categories.category_id = ${categoryId}
+              )
+            `);
+          } else {
+            console.warn('⚠️ Category not found:', mappedCategory);
+            // Return empty result if category doesn't exist
+            return {
+              items: [],
+              total: 0,
+              page,
+              limit,
+              has_more: false,
+            };
+          }
+        } catch (error) {
+          console.error('🔍 Category check failed:', error);
+          throw error;
+        }
       }
-    }
 
-    // Filter by tag if provided
-    if (filters.tag) {
-      const tagResult = await db
-        .select({ id: tags.id })
-        .from(tags)
-        .where(eq(tags.name, filters.tag))
-        .limit(1);
+      if (filters.tag) {
+        try {
+          const tagResult = await (db as any).execute(`
+            SELECT id FROM tags WHERE name = '${filters.tag.replace(/'/g, "''")}'
+          `);
 
-      if (tagResult.length > 0) {
-        whereConditions.push(
-          sql`EXISTS (
-            SELECT 1 FROM news_tags nt
-            WHERE nt.news_id = news.id
-            AND nt.tag_id = ${tagResult[0].id}
-          )`
-        );
+          if (tagResult.rows.length > 0) {
+            const tagId = tagResult.rows[0].id;
+            whereConditions.push(`
+              EXISTS (
+                SELECT 1 FROM news_tags
+                WHERE news_tags.news_id = news.id
+                AND news_tags.tag_id = ${tagId}
+              )
+            `);
+          }
+        } catch (error) {
+          console.error('🔍 Tag check failed:', error);
+          throw error;
+        }
       }
+
+      // Search in title, content, or seo fields
+      if (filters.search) {
+        whereConditions.push(`
+          (
+            title ILIKE '%${filters.search}%' OR
+            seo_title ILIKE '%${filters.search}%' OR
+            seo_description ILIKE '%${filters.search}%' OR
+            content_md ILIKE '%${filters.search}%'
+          )
+        `);
+      }
+
+      const whereClause = whereConditions.join(' AND ');
+
+      console.log('🔍 Final WHERE clause:', whereClause);
+
+      // Get total count
+      try {
+        const countResult = await (db as any).execute(`
+          SELECT COUNT(*) as count FROM news WHERE ${whereClause}
+        `);
+
+        const total = parseInt(countResult.rows[0].count);
+        console.log('🔍 Count result:', total);
+
+        // Get news items
+        const newsResult = await (db as any).execute(`
+          SELECT
+            id, source_guid, source_id, title, seo_title, seo_description,
+            excerpt, content_md, slug, canonical_url, status, visibility,
+            word_count, reading_time_min, published_at, created_at, updated_at,
+            main_media_id
+          FROM news
+          WHERE ${whereClause}
+          ORDER BY published_at DESC, created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `);
+
+        console.log('🔍 News query result:', newsResult.rows.length, 'items');
+
+        // Transform to NewsItem format
+        const items = await Promise.all(
+          newsResult.rows.map(async (row: any) => {
+            try {
+              return await this.transformDbNewsToNewsItem(row);
+            } catch (error) {
+              console.error('🔍 Transform error for item:', row.id, error);
+              throw error;
+            }
+          })
+        );
+
+        return {
+          items,
+          total,
+          page,
+          limit,
+          has_more: offset + limit < total,
+        };
+      } catch (error) {
+        console.error('🔍 Query execution failed:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('🔍 getNews failed:', error);
+      throw error;
     }
-
-    // Search in title, content, or seo fields
-    if (filters.search) {
-      whereConditions.push(
-        sql`(
-          ${news.title} ILIKE ${'%' + filters.search + '%'} OR
-          ${news.seo_title} ILIKE ${'%' + filters.search + '%'} OR
-          ${news.seo_description} ILIKE ${'%' + filters.search + '%'} OR
-          ${news.content_md} ILIKE ${'%' + filters.search + '%'}
-        )`
-      );
-    }
-
-    const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-
-    // Get total count
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(news)
-      .where(whereClause);
-
-    const total = countResult[0].count;
-
-    // Get news items with pagination
-    const dbNewsItems = await db
-      .select()
-      .from(news)
-      .where(whereClause)
-      .orderBy(desc(news.published_at), desc(news.created_at))
-      .limit(limit)
-      .offset(offset);
-
-    // Transform to NewsItem format
-    const items = await Promise.all(
-      dbNewsItems.map(item => this.transformDbNewsToNewsItem(item))
-    );
-
-    return {
-      items,
-      total,
-      page,
-      limit,
-      has_more: offset + limit < total,
-    };
   }
 
   async getNewsById(id: string): Promise<NewsItem> {
     // First try to find by slug (for Next.js routing)
-    let dbNewsItem = await db
-      .select()
-      .from(news)
-      .where(eq(news.slug, id))
-      .limit(1);
+    const slugResult = await (db as any).execute(`
+      SELECT
+        id, source_guid, source_id, title, seo_title, seo_description,
+        excerpt, content_md, slug, canonical_url, status, visibility,
+        word_count, reading_time_min, published_at, created_at, updated_at,
+        main_media_id
+      FROM news WHERE slug = '${id.replace(/'/g, "''")}' AND status = 'published'
+      LIMIT 1
+    `);
 
-    // If not found by slug, try by numeric ID
-    if (dbNewsItem.length === 0) {
+    let dbNewsItem: any[] = [];
+    if (slugResult.rows.length > 0) {
+      dbNewsItem = [slugResult.rows[0]];
+    } else {
+      // If not found by slug, try by numeric ID
       const numericId = parseInt(id, 10);
       if (isNaN(numericId)) {
         throw new Error(`Invalid news identifier: ${id}`);
       }
 
-      dbNewsItem = await db
-        .select()
-        .from(news)
-        .where(eq(news.id, numericId))
-        .limit(1);
+      const idResult = await (db as any).execute(`
+        SELECT
+          id, source_guid, source_id, title, seo_title, seo_description,
+          excerpt, content_md, slug, canonical_url, status, visibility,
+          word_count, reading_time_min, published_at, created_at, updated_at,
+          main_media_id
+        FROM news WHERE id = ${numericId} AND status = 'published'
+        LIMIT 1
+      `);
+
+      dbNewsItem = idResult.rows;
     }
 
     if (dbNewsItem.length === 0) {

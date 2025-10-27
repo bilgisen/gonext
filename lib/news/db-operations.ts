@@ -19,6 +19,7 @@ import {
 } from './types';
 import { createSlug, createUniqueSlug } from './slug-utils';
 import { extractCategoryFromUrl, createCategorySlug } from './category-utils';
+import { CATEGORY_MAPPINGS } from '../../types/news';
 import { processNewsImage } from './image-processor';
 import { checkDuplicateNews } from './duplicate-check';
 
@@ -308,7 +309,11 @@ export async function insertNews(
 
     // Category çıkar ve oluştur
     const categoryName = apiItem.category || extractCategoryFromUrl(apiItem.original_url);
-    const categoryId = await findOrCreateCategory(categoryName);
+
+    // Always use mapped category name for consistency
+    const mappedCategoryName = CATEGORY_MAPPINGS[categoryName.toLowerCase()] || categoryName;
+
+    const categoryId = await findOrCreateCategory(mappedCategoryName);
 
     // Tags oluştur
     const tagIds = await findOrCreateTags(apiItem.tags || []);

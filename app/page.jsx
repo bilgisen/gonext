@@ -1,62 +1,11 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { NewsHero } from '../components/news/NewsHero';
-import { CategoryGrid } from '../components/news/CategoryGrid';
-import { LatestNews } from '../components/news/LatestNews';
-import { FeaturedNews } from '../components/news/FeaturedNews';
 
 export default function HomePage() {
     return (
-        <div className="pt-8">
-            {/* Hero Section */}
-            <NewsHero />
-
-            {/* Main Content */}
-            <div className="container mx-auto px-4 py-8 space-y-12">
-                {/* Featured News */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Featured News
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Top stories and breaking news
-                        </p>
-                    </div>
-                    <Suspense fallback={<FeaturedNewsSkeleton />}>
-                        <FeaturedNews />
-                    </Suspense>
-                </section>
-
-                {/* Categories */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Categories
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Browse news by category
-                        </p>
-                    </div>
-                    <CategoryGrid />
-                </section>
-
-                {/* Latest News */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Latest News
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Most recent news articles
-                        </p>
-                    </div>
                     <Suspense fallback={<LatestNewsSkeleton />}>
-                        <LatestNews />
                     </Suspense>
-                </section>
-            </div>
-        </div>
+               
     );
 }
 

@@ -98,49 +98,21 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
   const publishedDate = newsItem.published_at || newsItem.created_at;
   const formattedDate = formatDate(publishedDate);
 
-  // Clean content to remove duplicate titles and metadata
-  const cleanContent = (content: string): string => {
-    if (!content) return '';
 
-    let cleaned = content;
 
-    // Remove duplicate title if it appears at the beginning
-    if (newsItem.seo_title && cleaned.startsWith(newsItem.seo_title)) {
-      cleaned = cleaned.substring(newsItem.seo_title.length).trim();
-    }
-
-    // Remove various metadata patterns
-    cleaned = cleaned.replace(/^(Published|Updated):\s*[^\n]*$/gm, '');
-    cleaned = cleaned.replace(/^Published:\s*[^\n]*\s*Updated:\s*[^\n]*$/gm, '');
-    cleaned = cleaned.replace(/^Published:\s*[^\n]*$/gm, '');
-    cleaned = cleaned.replace(/^Updated:\s*[^\n]*$/gm, '');
-    cleaned = cleaned.replace(/^Last updated:\s*[^\n]*$/gm, '');
-    cleaned = cleaned.replace(/^Date:\s*[^\n]*$/gm, '');
-
-    // Remove common metadata prefixes that might appear at the beginning
-    cleaned = cleaned.replace(/^[A-Z][a-z]+:\s*[^\n]*$/gm, '');
-
-    // Remove extra whitespace and empty lines at the beginning
-    cleaned = cleaned.replace(/^\s*\n+/, '');
-    cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n'); // Replace multiple newlines with double newline
-
-    return cleaned.trim();
-  };
-
-  const cleanedContentMd = cleanContent(newsItem.content_md || '');
 
   return (
-    <article className="max-w-4xl mx-auto px-0">
+    <article className="max-w-3xl mx-auto px-0">
 
 
       {/* Article Header */}
       <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">{newsItem.seo_title || 'No Title'}</h1>
+        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+          <h3 className="text-xl font-light text-muted-foreground mb-4 leading-relaxed">
             {newsItem.seo_description}
-          </p>
+          </h3>
         )}
 
         {/* Author and Date */}
@@ -202,7 +174,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       {/* Article Content */}
       <div className="prose dark:prose-invert max-w-none mb-8">
         <MarkdownRenderer>
-          {cleanedContentMd}
+         {newsItem.content_md}
         </MarkdownRenderer>
       </div>
 

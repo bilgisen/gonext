@@ -92,7 +92,7 @@ export function NewsCard({
   return (
     <article 
       className={cn(
-        'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700',
+        'bg-card rounded-lg border border-border',
         'overflow-hidden hover:shadow-lg transition-shadow',
         featured ? 'md:col-span-2 lg:col-span-1' : '',
         className
@@ -101,7 +101,7 @@ export function NewsCard({
       {imageKey && (
         <div className={cn(
           'relative overflow-hidden rounded-lg',
-          featured ? 'h-48 md:h-64' : 'h-40',
+          featured ? 'h-36 md:h-52' : 'h-40',
           isImageLoading ? 'bg-gray-200 dark:bg-gray-800' : ''
         )}>
           <Link href={`/news/${news.id}`} className="block h-full">
@@ -124,10 +124,10 @@ export function NewsCard({
               />
             )}
           </Link>
-          <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
           {showCategory && (
-            <div className="absolute top-3 left-3">
-              <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+            <div className="absolute top-3 left-3 bg-primary/50 text-background rounded">
+              <span className="px-2 py-1 text-xs rounded">
                 {news.category}
               </span>
             </div>

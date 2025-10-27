@@ -1,163 +1,124 @@
 'use client';
 
-import { useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { newsKeys } from '@/lib/queries/queryKeys';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
-import { urlHelpers } from '@/lib/urlFilters';
-import { NewsCard } from './NewsCard';
-import type { NewsFilters } from '@/lib/urlFilters';
+import { urlHelpers, type NewsFilters } from '@/lib/urlFilters';
+import { cn } from '@/lib/utils';
+import { BentoNewsCard } from './BentoNewsCard';
+import { CategoryHero } from './categoryHero';
 
 interface CategoryNewsListProps {
-    category: string;
-    searchParams: { [key: string]: string | string[] | undefined };
+  category: string;
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export function CategoryNewsList({ category, searchParams }: CategoryNewsListProps) {
-    const [filters, setFilters] = useState<NewsFilters>({
-        category,
-        ...urlHelpers.parseNewsFilters(new URLSearchParams(
-            Object.entries(searchParams).map(([key, value]) =>
-                Array.isArray(value) ? [key, value[0]] : [key, value || '']
-            ).filter(([_, value]) => value)
-        )),
-    });
+  const queryClient = useQueryClient();
 
-    // Use the new TanStack Query hooks that fetch from API routes
-    // Create a new object with only the properties that useInfiniteNews expects
-    const queryParams = {
-        category: filters.category || '',
-        limit: filters.limit || 10,
-        // Only include excludeId if it exists in filters
-        ...(filters.excludeId && { excludeId: String(filters.excludeId) })
-    };
+  const [filters, setFilters] = useState<NewsFilters>({
+    category,
+    ...urlHelpers.parseNewsFilters(
+      new URLSearchParams(
+        Object.entries(searchParams)
+          .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value || ''])
+          .filter(([_, value]) => value)
+      )
+    ),
+  });
 
-    const {
-        data,
-        fetchNextPage,
-        hasNextPage,
-        isFetchingNextPage,
-        isLoading,
-        error,
-    } = useInfiniteNews(queryParams);
-
-    const handleLoadMore = () => {
-        if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <div className="space-y-6">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                            <div className="flex gap-4">
-                                <div className="shrink-0 w-32 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                                <div className="flex-1 space-y-3">
-                                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-                                    <div className="flex gap-2">
-                                        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-                                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
+  useEffect(() => {
+    if (category) {
+      queryClient.invalidateQueries({ queryKey: ['infinite-news'], exact: false });
     }
+  }, [category, queryClient]);
 
-    if (error) {
-        return (
-            <div className="text-center py-12">
-                <div className="text-red-600 dark:text-red-400 mb-4">
-                    Failed to load {category} news
-                </div>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                    Try Again
-                </button>
-            </div>
-        );
-    }
+  const queryParams = {
+    category: category || '',
+    limit: filters.limit || 12,
+    ...(filters.excludeId && { excludeId: String(filters.excludeId) }),
+  };
 
-    // Map through all pages and their items
-    const allNews = data?.pages.flatMap(page => page.data?.items || []) || [];
-    const totalResults = data?.pages[0]?.data?.total || 0;
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = useInfiniteNews(queryParams);
 
-    if (allNews.length === 0) {
-        return (
-            <div className="text-center py-12">
-                <div className="text-gray-600 dark:text-gray-400 mb-4">
-                    No news found in {category} category
-                </div>
-                <div className="space-x-4">
-                    <button
-                        onClick={() => window.location.href = '/news'}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                    >
-                        View All News
-                    </button>
-                </div>
-            </div>
-        );
-    }
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  };
 
+  if (isLoading) {
     return (
-        <div className="space-y-8">
-            {/* Filter Summary */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        Showing {totalResults} articles in
-                    </span>
-                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                        category
-                    </span>
-                </div>
-            </div>
-
-            {allNews.length > 0 ? (
-                <div className="space-y-6">
-                    {allNews.map((newsItem) => (
-                        <NewsCard key={newsItem.id} news={newsItem} />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-12">
-                    <p className="text-gray-500 dark:text-gray-400">No news found.</p>
-                </div>
-            )}
-
-            {/* Load More Button */}
-            {hasNextPage && (
-                <div className="text-center py-8">
-                    <button
-                        onClick={handleLoadMore}
-                        disabled={isFetchingNextPage}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        {isFetchingNextPage ? 'Loading...' : `Load More ${category} News`}
-                    </button>
-                </div>
-            )}
-
-            {/* Loading indicator for infinite scroll */}
-            {isFetchingNextPage && (
-                <div className="flex justify-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-            )}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-[400px] rounded-xl bg-muted/20 border border-border/30"
+          />
+        ))}
+      </div>
     );
+  }
+
+  if (error)
+    return (
+      <div className="text-center py-12 text-red-500">
+        Failed to load {category} news
+      </div>
+    );
+
+  const allNews = data?.pages.flatMap((p) => p.data?.items || []) || [];
+
+  if (allNews.length === 0)
+    return (
+      <div className="text-center py-12 text-gray-500">
+        No news found in {category}.
+      </div>
+    );
+
+  return (
+    <div className="space-y-10">
+      <div className="space-y-6">
+        {/* First 2 items as CategoryHero in 2/3 - 1/3 layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {allNews.slice(0, 2).map((newsItem, index) => (
+            <div key={newsItem.id} className={cn(
+              index === 0 ? 'md:col-span-2' : 'md:col-span-1',
+              index === 1 ? 'hidden md:block' : ''
+            )}>
+              <CategoryHero 
+                news={newsItem} 
+                variant={index === 0 ? 'large' : 'small'}
+                className="h-full" 
+              />
+            </div>
+          ))}
+        </div>
+        
+        {/* Remaining items as BentoNewsCard */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {allNews.slice(2).map((newsItem, index) => (
+            <BentoNewsCard key={newsItem.id} news={newsItem} index={index} />
+          ))}
+        </div>
+      </div>
+
+      {hasNextPage && (
+        <div className="text-center">
+          <button
+            onClick={handleLoadMore}
+            disabled={isFetchingNextPage}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isFetchingNextPage ? 'Loading...' : 'Load More'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
