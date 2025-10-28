@@ -68,7 +68,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
         <Providers>
-          <nav className="bg-background/20 backdrop-blur-sm border-b fixed top-0 left-0 right-0 z-50">
+          <nav className="bg-background/70 backdrop-blur-sm border-b fixed top-0 left-0 right-0 z-50">
             <div className="h-16 flex items-center justify-between max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center gap-12">
                 <Logo />
