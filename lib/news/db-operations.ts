@@ -18,10 +18,10 @@ import {
   ValidationError
 } from './types';
 import { createSlug, createUniqueSlug } from './slug-utils';
-import { extractCategoryFromUrl, createCategorySlug } from './category-utils';
-import { CATEGORY_MAPPINGS } from '../../types/news';
+import { extractCategoryFromUrl, createCategorySlug, CATEGORY_MAPPINGS } from './category-utils';
 import { processNewsImage } from './image-processor';
 import { checkDuplicateNews } from './duplicate-check';
+import { parseNewsDate } from '@/lib/utils/date-utils';
 
 /**
  * Source'u bulur veya oluşturur
@@ -189,19 +189,71 @@ export async function createMediaRecord(imageData: {
  * @param insertData - Database'e insert edilecek data
  * @returns News ID
  */
+/**
+ * Creates a new news record in the database
+ * @param _apiItem - The original API item (currently unused but kept for future use)
+ * @param insertData - The data to insert into the database
+ * @returns The ID of the created news record
+ */
 export async function createNewsRecord(
-  apiItem: NewsApiItem,
+  _apiItem: NewsApiItem,
   insertData: NewsInsertData
 ): Promise<number> {
   try {
+    // Ensure required fields are present
+    if (!insertData.title) {
+      throw new ValidationError('Title is required', 'title');
+    }
+    if (!insertData.slug) {
+      throw new ValidationError('Slug is required', 'slug');
+    }
+    if (!insertData.source_guid) {
+      throw new ValidationError('Source GUID is required', 'source_guid');
+    }
+
+    // Prepare the data for insertion
+    const now = new Date();
+    const newsData = {
+      title: insertData.title,
+      slug: insertData.slug,
+      source_guid: insertData.source_guid,
+      source_id: insertData.source_id || null,
+      seo_title: insertData.seo_title || insertData.title,
+      seo_description: insertData.seo_description || '',
+      excerpt: insertData.excerpt || '',
+      content_md: insertData.content_md || '',
+      content_html: insertData.content_html || '',
+      tldr_count: insertData.tldr?.length || 0,
+      main_media_id: insertData.main_media_id || null,
+      canonical_url: insertData.canonical_url || null,
+      status: insertData.status || 'draft',
+      visibility: insertData.visibility || 'public',
+      editor_id: insertData.editor_id || null,
+      word_count: insertData.word_count || 0,
+      reading_time_min: insertData.reading_time_min || insertData.read_time || 0,
+      published_at: insertData.published_at 
+        ? (() => {
+            // Convert to string if it's a Date object
+            const dateString = insertData.published_at instanceof Date 
+              ? insertData.published_at.toISOString() 
+              : String(insertData.published_at);
+            return parseNewsDate(dateString) || new Date();
+          })() 
+        : new Date(),
+      created_at: insertData.created_at ? new Date(insertData.created_at) : now,
+      updated_at: insertData.updated_at ? new Date(insertData.updated_at) : now,
+      meta: insertData.meta || null,
+      source_fk: insertData.source_fk || null
+    };
+
     const newNews = await db
       .insert(news)
-      .values({
-        ...insertData,
-        created_at: new Date(),
-        updated_at: new Date(),
-      })
+      .values(newsData)
       .returning();
+
+    if (!newNews[0]?.id) {
+      throw new NewsFetchError('Failed to create news record: No ID returned', 'NEWS_CREATE_ERROR');
+    }
 
     return newNews[0].id;
   } catch (error) {
@@ -372,7 +424,11 @@ export async function insertNews(
       visibility: 'public',
       word_count: wordCount,
       reading_time_min: readingTimeMin,
-      published_at: new Date(apiItem.published_at || apiItem.created_at),
+      // Handle published_at with proper type safety
+      published_at: (() => {
+        const dateStr = apiItem.published_at || apiItem.created_at;
+        return dateStr ? new Date(dateStr) : null;
+      })(),
       meta: {
         tldr: apiItem.tldr,
         image_title: apiItem.image_title,

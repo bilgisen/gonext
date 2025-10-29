@@ -1,7 +1,8 @@
-import { eq, inArray } from 'drizzle-orm';
-import { db } from '../../db/client'; // Database connection import edilecek
+import { eq, inArray, and, or, like } from 'drizzle-orm';
+import { db } from '../../db/client';
 import { news } from '../../db/schema';
-import { DuplicateError, NewsApiItem } from './types';
+import { NewsApiItem } from './types';
+import { DuplicateError } from './error-handler';
 
 /**
  * Haber duplicate olup olmadığını kontrol eder
@@ -23,6 +24,26 @@ export async function checkDuplicateNews(apiItem: NewsApiItem): Promise<boolean>
 
     // source_id ile kontrol (fallback)
     if (apiItem.id) {
+      // Check for similar titles using source_id and title similarity
+      const titleCheck = await db
+        .select()
+        .from(news)
+        .where(
+          and(
+            eq(news.source_id, apiItem.source_id),
+            or(
+              eq(news.seo_title, apiItem.seo_title),
+              like(news.seo_title, `${apiItem.seo_title}%`),
+              like(news.seo_title, `%${apiItem.seo_title}`)
+            )
+          )
+        )
+        .limit(1);
+
+      if (titleCheck.length > 0) {
+        return true;
+      }
+
       const idCheck = await db
         .select()
         .from(news)
@@ -53,7 +74,9 @@ export async function checkBulkDuplicates(apiItems: NewsApiItem[]): Promise<stri
 
     // Tüm source_guid'leri topla
     const sourceGuids = apiItems.map(item => item.source_guid);
-    const sourceIds = apiItems.map(item => item.id).filter(Boolean);
+    const sourceIds = apiItems
+      .filter((item): item is NewsApiItem & { id: string } => Boolean(item.id))
+      .map((item) => item.id);
 
     // Database query ile tüm duplicate'ları bir kerede kontrol et
     let existingNews: any[] = [];
@@ -70,14 +93,16 @@ export async function checkBulkDuplicates(apiItems: NewsApiItem[]): Promise<stri
     }
 
     if (sourceIds.length > 0) {
-      const idResults = await db
-        .select({
-          source_guid: news.source_guid,
-          source_id: news.source_id,
-        })
+      const existingNews = await db
+        .select({ source_id: news.source_id })
         .from(news)
-        .where(inArray(news.source_id, sourceIds));
-      existingNews.push(...idResults);
+        .where(inArray(news.source_id, sourceIds as string[]));
+
+      const existingSourceIds = new Set(
+        existingNews.map((item) => item.source_id)
+      );
+
+      return sourceIds.filter((id) => existingSourceIds.has(id));
     }
 
     // Her API item için duplicate kontrolü

@@ -1,44 +1,76 @@
 // types/news.ts
-// External API Response Types
-export interface NewsItem {
-  id: string;
-  source_guid: string;
+// Centralized type definitions for the application
+
+// Import types from category-utils first to avoid circular dependencies
+import { 
+  Category as NewsCategory, 
+  CATEGORY_MAPPINGS,
+  extractCategoryFromUrl as extractCategoryFromUrlUtil,
+  VALID_CATEGORIES,
+  type CategoryMapping
+} from '@/lib/news/category-utils';
+
+// Re-export types and values with proper type exports
+export type { NewsCategory, CategoryMapping };
+export { CATEGORY_MAPPINGS, VALID_CATEGORIES, extractCategoryFromUrlUtil };
+
+// ====================================
+// 1. Core Types
+// ====================================
+
+
+// ====================================
+// 2. API Response Types (Zod Schemas)
+// ====================================
+
+import { z } from 'zod';
+
+export const NewsApiItemSchema = z.object({
+  id: z.string(),
+  source_guid: z.string(),
+  seo_title: z.string(),
+  seo_description: z.string(),
+  tldr: z.array(z.string()),
+  content_md: z.string(),
+  category: z.string().optional(),
+  categories: z.array(z.string()).optional(),
+  tags: z.array(z.string()),
+  image: z.string().url(),
+  image_title: z.string(),
+  image_desc: z.string().optional(),
+  original_url: z.string().url(),
+  file_path: z.string(),
+  created_at: z.string(),
+  published_at: z.string(),
+  updated_at: z.string(),
+  slug: z.string(),
+  read_time: z.number().optional(),
+  is_bookmarked: z.boolean().optional(),
+});
+
+export type NewsApiItem = z.infer<typeof NewsApiItemSchema>;
+
+export const NewsApiResponseSchema = z.object({
+  items: z.array(NewsApiItemSchema),
+  page: z.number().optional(),
+  page_size: z.number().optional(),
+  total: z.number().optional(),
+});
+
+export type NewsApiResponse = z.infer<typeof NewsApiResponseSchema>;
+
+// ====================================
+// 3. News Item Types
+// ====================================
+
+export interface NewsItem extends Omit<NewsApiItem, 'category' | 'categories'> {
+  category: NewsCategory;
+  categories: NewsCategory[];
   source_id: string;
-  seo_title: string;
-  seo_description: string;
-  tldr: string[];
-  content_md: string;
-  category: string;
-  categories: string[]; // Multiple categories support
-  tags: string[];
-  image: string;
-  image_title: string;
-  image_desc: string;
-  original_url: string;
-  file_path: string;
-  created_at: string;
-  published_at: string;
-  updated_at: string;
-  slug: string;
   read_time: number;
-  is_bookmarked?: boolean;
 }
 
-export interface NewsListResponse {
-  items: NewsItem[];
-  total: number;
-  page: number;
-  limit: number;
-  has_more: boolean;
-}
-
-// TanStack Query useInfiniteQuery için gerekli InfiniteData yapısı
-export interface NewsInfiniteData {
-  pages: NewsListResponse[]; // Her sayfa NewsListResponse tipinde
-  pageParams: (number | null)[]; // Kullanılan sayfa numaraları
-}
-
-export interface Category {
+export interface CategoryEntity {
   id: string;
   name: string;
   slug: string;
@@ -54,228 +86,136 @@ export interface Tag {
   news_count?: number;
 }
 
-export interface SearchSuggestion {
-  query: string;
-  count: number;
-  category?: string;
+// ====================================
+// 4. API Response Wrappers
+// ====================================
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
 }
 
-// Category mapping types (from lib/news/category-utils.ts)
-export type CategoryMapping = {
-  [key: string]: string;
-};
+export interface PaginationData {
+  page: number;
+  limit: number;
+  total: number;
+  has_more: boolean;
+}
 
-// Category mapping for URL path extraction
-export const CATEGORY_MAPPINGS: CategoryMapping = {
-  // Business & Finance
-  'sirketler': 'Business',
-  'company': 'Business',
-  'companies': 'Business',
-  'business': 'Business',
-  'finance': 'Business',
-  'financial': 'Business',
-  'ekonomi': 'Business',
-  'economy': 'Business',
-  'market': 'Business',
-  'markets': 'Business',
-  'stock': 'Business',
-  'stocks': 'Business',
-  'borsa': 'Business',
-  'investment': 'Business',
-  'investing': 'Business',
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationData;
+}
 
-  // Politics
-  'politika': 'Politics',
-  'politics': 'Politics',
-  'political': 'Politics',
-  'government': 'Politics',
-  'siyaset': 'Politics',
-  'parliament': 'Politics',
-  'election': 'Politics',
-  'elections': 'Politics',
-  'secim': 'Politics',
+// ====================================
+// 5. Filter and Sort Types
+// ====================================
 
-  // Technology
-  'teknoloji': 'Technology',
-  'technology': 'Technology',
-  'tech': 'Technology',
-  'innovation': 'Technology',
-  'digital': 'Technology',
-  'software': 'Technology',
-  'hardware': 'Technology',
-  'ai': 'Technology',
-  'artificial-intelligence': 'Technology',
-  'yapay-zeka': 'Technology',
-  'bilisim': 'Technology',
-  'computer': 'Technology',
-  'programming': 'Technology',
-  'code': 'Technology',
+export interface BaseFilters {
+  page?: number;
+  limit?: number;
+}
 
-  // Sports
-  'spor': 'Sports',
-  'sports': 'Sports',
-  'football': 'Sports',
-  'futbol': 'Sports',
-  'basketball': 'Sports',
-  'basketbol': 'Sports',
-  'tennis': 'Sports',
-  'tenis': 'Sports',
-  'volleyball': 'Sports',
-  'voleybol': 'Sports',
-  'formula1': 'Sports',
-  'formula-1': 'Sports',
-  'f1': 'Sports',
-  'motor-sports': 'Sports',
-  'motorsporlari': 'Sports',
+export interface NewsFilters extends BaseFilters {
+  category?: string;
+  tag?: string;
+  sortBy?: 'date' | 'popularity' | 'relevance';
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+  excludeId?: string;
+}
 
-  // Health
-  'saglik': 'Health',
-  'health': 'Health',
-  'medical': 'Health',
-  'medicine': 'Health',
-  'tip': 'Health',
-  'hospital': 'Health',
-  'hastane': 'Health',
-  'doctor': 'Health',
-  'doktor': 'Health',
-  'pharma': 'Health',
-  'ilac': 'Health',
+export interface SearchFilters extends BaseFilters {
+  category?: string;
+  tag?: string;
+  query?: string;
+}
 
-  // Science
-  'bilim': 'Science',
-  'science': 'Science',
-  'research': 'Science',
-  'arastirma': 'Science',
-  'discovery': 'Science',
-  'kesif': 'Science',
-  'space': 'Science',
-  'uzay': 'Science',
-  'astronomy': 'Science',
-  'gokbilim': 'Science',
+export interface BookmarkFilters extends BaseFilters {
+  sortBy?: 'date' | 'title';
+}
 
-  // Entertainment
-  'magazin': 'Entertainment',
-  'entertainment': 'Entertainment',
-  'celebrity': 'Entertainment',
-  'music': 'Entertainment',
-  'muzik': 'Entertainment',
-  'movie': 'Entertainment',
-  'movies': 'Entertainment',
-  'film': 'Entertainment',
-  'sinema': 'Entertainment',
-  'tv': 'Entertainment',
-  'television': 'Entertainment',
+// ====================================
+// 6. Error Types
+// ====================================
 
-  // World News
-  'dunya': 'World',
-  'world': 'World',
-  'international': 'World',
-  'global': 'World',
-  'haberler': 'World',
-  'news': 'World',
-  'gundem': 'World',
-  'current': 'World',
-
-  // Travel
-  'seyahat': 'Travel',
-  'travel': 'Travel',
-  'tourism': 'Travel',
-  'turizm': 'Travel',
-  'vacation': 'Travel',
-  'tatil': 'Travel',
-  'hotel': 'Travel',
-  'oteller': 'Travel',
-
-  // Education
-  'egitim': 'Education',
-  'education': 'Education',
-  'school': 'Education',
-  'okul': 'Education',
-  'university': 'Education',
-  'universite': 'Education',
-  'student': 'Education',
-  'ogrenci': 'Education',
-
-  // Environment
-  'cevre': 'Environment',
-  'environment': 'Environment',
-  'climate': 'Environment',
-  'iklim': 'Environment',
-  'nature': 'Environment',
-  'dogal': 'Environment',
-  'green': 'Environment',
-  'yesil': 'Environment',
-  'sustainability': 'Environment',
-  'surdurulebilirlik': 'Environment',
-
-  // Lifestyle
-  'yasam': 'Lifestyle',
-  'lifestyle': 'Lifestyle',
-  'fashion': 'Lifestyle',
-  'moda': 'Lifestyle',
-  'food': 'Lifestyle',
-  'yemek': 'Lifestyle',
-  'cooking': 'Lifestyle',
-  'mutfak': 'Lifestyle',
-  'home': 'Lifestyle',
-  'ev': 'Lifestyle',
-  'garden': 'Lifestyle',
-  'bahce': 'Lifestyle',
-};
-
-// Category utility functions
-export function extractCategoryFromUrl(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
-
-    // Get path segments (e.g: ['', 'sirketler', 'intel-haberi'])
-    const segments = pathname.split('/').filter(Boolean);
-
-    // Look for category in each segment
-    for (const segment of segments) {
-      const category = CATEGORY_MAPPINGS[segment.toLowerCase()];
-      if (category) {
-        return category;
-      }
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number = 400,
+    public details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+    
+    // Maintains proper stack trace for where the error was thrown
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ApiError);
     }
-
-    // Extract from domain (fallback)
-    const hostname = urlObj.hostname.toLowerCase();
-    if (hostname.includes('tech') || hostname.includes('teknoloji')) return 'Technology';
-    if (hostname.includes('sport') || hostname.includes('spor')) return 'Sports';
-    if (hostname.includes('health') || hostname.includes('saglik')) return 'Health';
-    if (hostname.includes('finance') || hostname.includes('ekonomi')) return 'Business';
-
-    return 'General';
-  } catch (error) {
-    console.warn('Failed to extract category from URL:', url, error);
-    return 'General';
   }
 }
 
-export function extractCategoryFromUrls(urls: string[]): string {
-  const categories = urls.map(extractCategoryFromUrl);
-
-  // Count most frequent category
-  const categoryCount = categories.reduce((acc, category) => {
-    acc[category] = (acc[category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  return Object.entries(categoryCount)
-    .sort(([,a], [,b]) => b - a)[0]?.[0] || 'General';
+export class NewsFetchError extends ApiError {
+  constructor(
+    message: string,
+    public cause?: Error
+  ) {
+    super(message, 'NEWS_FETCH_ERROR', 500);
+    this.name = 'NewsFetchError';
+  }
 }
 
-export function createCategorySlug(category: string): string {
-  return category.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-    .trim();
+export class ValidationError extends ApiError {
+  constructor(message: string, public field?: string) {
+    super(message, 'VALIDATION_ERROR', 400);
+    this.name = 'ValidationError';
+  }
 }
 
-// Local Database Types
+export class DuplicateError extends ApiError {
+  constructor(message: string, public duplicateField: string) {
+    super(message, 'DUPLICATE_ERROR', 409);
+    this.name = 'DuplicateError';
+  }
+}
+
+export class NotFoundError extends ApiError {
+  constructor(resource: string, id?: string) {
+    super(
+      id ? `${resource} with ID ${id} not found` : `${resource} not found`,
+      'NOT_FOUND',
+      404
+    );
+    this.name = 'NotFoundError';
+  }
+}
+
+// ====================================
+// 7. Utility Types
+// ====================================
+
+export interface SlugOptions {
+  maxLength?: number;
+  separator?: string;
+  lowercase?: boolean;
+}
+
+// ====================================
+// 8. User and Authentication Types
+// ====================================
+
+export interface UserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  language: string;
+  notifications: boolean;
+  reading_time_goal: number;
+  favorite_categories: NewsCategory[];
+}
+
 export interface User {
   id: string;
   email: string;
@@ -286,19 +226,45 @@ export interface User {
   updated_at: string;
 }
 
-export interface UserPreferences {
-  theme: 'light' | 'dark' | 'system';
-  language: string;
-  notifications: boolean;
-  reading_time_goal: number;
-  favorite_categories: string[];
+// ====================================
+// 9. News List and Infinite Scroll Types
+// ====================================
+
+export interface NewsListResponse {
+  items: NewsItem[];
+  total: number;
+  page: number;
+  limit: number;
+  has_more: boolean;
 }
+
+/**
+ * Type for TanStack Query's useInfiniteQuery data structure
+ */
+export interface NewsInfiniteData {
+  pages: NewsListResponse[];
+  pageParams: (number | null)[];
+}
+
+// ====================================
+// 10. Search and Suggestion Types
+// ====================================
+
+export interface SearchSuggestion {
+  query: string;
+  count: number;
+  category?: string;
+}
+
+// ====================================
+// 11. Local Database Types
+// ====================================
 
 export interface Bookmark {
   id: string;
   user_id: string;
   news_id: string;
-  news_data: NewsItem; // Denormalized for offline access
+  news_data: NewsItem;
   created_at: string;
   updated_at: string;
 }
@@ -322,54 +288,45 @@ export interface ReadingHistory {
   updated_at: string;
 }
 
-// API Response Wrappers
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  error?: string;
+// ====================================
+// 12. Utility Functions
+// ====================================
+
+/**
+ * Extract the most common category from multiple URLs
+ * @param urls - Array of URLs to analyze
+ * @returns The most common category, or 'turkiye' if none found
+ */
+export function extractCategoryFromUrls(urls: string[]): NewsCategory {
+  const categoryCounts = new Map<NewsCategory, number>();
+  
+  urls.forEach(url => {
+    const category = extractCategoryFromUrlUtil(url);
+    categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+  });
+  
+  let mostCommonCategory: NewsCategory = 'turkiye';
+  let highestCount = 0;
+  
+  categoryCounts.forEach((count, category) => {
+    if (count > highestCount) {
+      highestCount = count;
+      mostCommonCategory = category;
+    }
+  });
+  
+  return mostCommonCategory;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    has_more: boolean;
-  };
+/**
+ * @deprecated Use the version from category-utils instead
+ */
+export function createCategorySlug(category: string): string {
+  return category
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
-// Filter and Sort Types
-export interface NewsFilters {
-  category?: string;
-  tag?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: 'date' | 'popularity' | 'relevance';
-  dateFrom?: string;
-  dateTo?: string;
-  search?: string;
-  excludeId?: string; // Added to exclude specific news item from results
-}
-
-export interface SearchFilters {
-  category?: string;
-  tag?: string;
-  limit?: number;
-  page?: number;
-}
-
-export interface BookmarkFilters {
-  page?: number;
-  limit?: number;
-  sortBy?: 'date' | 'title';
-}
-
-// Error Types
-export interface ApiError {
-  message: string;
-  code: string;
-  status: number;
-  details?: Record<string, any>;
-}
+// Re-export the extractCategoryFromUrl function for backward compatibility
+export { extractCategoryFromUrlUtil as extractCategoryFromUrl };

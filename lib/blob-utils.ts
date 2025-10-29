@@ -1,58 +1,9 @@
-import https from 'https';
 import { getStore } from '@netlify/blobs';
 
 // Load environment variables
 import 'dotenv/config';
 
 const NEWS_IMAGES_STORE = 'news-images';
-
-/**
- * Uploads data directly to Netlify Blobs API
- */
-async function uploadDirectToBlobs(key: string, data: Buffer, metadata: Record<string, any> = {}): Promise<any> {
-  const siteID = process.env.NETLIFY_SITE_ID;
-  const token = process.env.NETLIFY_AUTH_TOKEN;
-
-  return new Promise((resolve, reject) => {
-    // Send binary data directly, not JSON
-    const options = {
-      hostname: 'api.netlify.com',
-      path: `/api/v1/sites/${siteID}/blobs/news-images/${key}`,
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': metadata?.contentType || 'image/jpeg',
-        'Content-Length': data.length
-      }
-    };
-
-    console.log('Making direct binary request to:', options.path);
-
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk) => {
-        body += chunk;
-      });
-
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve({ success: true });
-        } else {
-          reject(new Error(`API request failed: ${res.statusCode}. Body: ${body}`));
-        }
-      });
-    });
-
-    req.on('error', (e) => {
-      console.error('Direct API request error:', e);
-      reject(e);
-    });
-
-    // Send binary data directly
-    req.write(data);
-    req.end();
-  });
-}
 
 /**
  * Gets the news images store instance
@@ -80,44 +31,28 @@ export function getNewsImageStore() {
  * @param metadata Optional metadata
  * @returns Object containing the blob key and public URL
  */
-export async function uploadNewsImageBuffer(key: string, buffer: Buffer, metadata?: Record<string, any>) {
+export async function uploadNewsImageBuffer(key: string, buffer: Buffer, metadata: Record<string, any> = {}) {
   const store = getNewsImageStore();
-
   console.log('Uploading binary data via library...');
 
   try {
-    // Upload binary data directly using the library
-    // Convert Buffer to ArrayBuffer for Netlify Blobs compatibility
-    const arrayBuffer = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    ) as ArrayBuffer;
-
-    await store.set(key, arrayBuffer, {
-      metadata: {
-        uploadedAt: new Date().toISOString(),
-        contentType: metadata?.contentType || 'image/jpeg',
-        ...metadata
-      }
-    });
-
+    // Convert Buffer to Uint8Array for Netlify Blobs
+    const uint8Array = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    // @ts-ignore - Netlify Blobs type definitions might be outdated
+    await store.set(key, uint8Array, { metadata });
     console.log('✅ Library binary upload successful');
-
-  } catch (directError) {
-    console.error('❌ Library upload failed:', directError.message);
-    throw new Error(`Blob upload failed: ${directError.message}`);
+    
+    const publicUrl = await getNewsImageUrl(key);
+    if (!publicUrl) {
+      throw new Error('Failed to generate public URL for the uploaded image');
+    }
+    
+    return { key, url: publicUrl };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Library upload failed:', errorMessage);
+    throw new Error(`Blob upload failed: ${errorMessage}`);
   }
-
-  // Generate the public URL for the blob using correct Netlify Blobs format
-  const siteId = process.env.NEXT_PUBLIC_NETLIFY_SITE_ID;
-  const storeName = 'news-images';
-  const publicUrl = `https://${siteId}.netlify.app/.netlify/blobs/${storeName}/${key}`;
-
-  // Return the blob key and URL
-  return {
-    key,
-    url: publicUrl
-  };
 }
 
 /**
@@ -127,7 +62,6 @@ export async function uploadNewsImageBuffer(key: string, buffer: Buffer, metadat
  * @returns Object containing the blob key and public URL
  */
 export async function uploadNewsImage(url: string, key?: string) {
-  const store = getNewsImageStore();
   const imageKey = key || `img-${Buffer.from(url).toString('base64url')}`;
 
   const imageResponse = await fetch(url);

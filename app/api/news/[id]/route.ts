@@ -1,24 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getNewsById } from '@/lib/api/externalApiClient';
 
-// Internal API route for individual news data (runs on server, accesses database)
-// This is NOT an external API - it's a Next.js internal route for server-client separation
 export const runtime = 'nodejs';
 
-interface RouteParams {
+interface Context {
   params: Promise<{ id: string }> | { id: string };
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
+  _request: Request,
+  context: Context
 ) {
-  let id = '';
-
+  const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
   try {
-    // Handle both Promise and non-Promise params for compatibility
-    const resolvedParams = 'then' in params ? await params : params;
-    id = resolvedParams.id;
+    const { id } = params;
 
     const result = await getNewsById(id);
 

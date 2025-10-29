@@ -10,7 +10,7 @@
 
 import 'dotenv/config'; // Load environment variables
 import { fetchNewsIncremental, fetchNewsBatch, getSystemStatus } from '../lib/news/index';
-import { logger, PerformanceMonitor } from '../lib/news/error-handler';
+import { PerformanceMonitor } from '../lib/news/error-handler';
 
 interface CLIOptions {
   limit?: number;

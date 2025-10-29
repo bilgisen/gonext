@@ -1,6 +1,5 @@
 import { db } from '../db/client';
 import { sql } from 'drizzle-orm';
-import { news } from '../db/schema';
 
 export async function clearDatabase() {
   try {

@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
-import { format } from 'date-fns';
+import { formatNewsDate } from '@/lib/utils/date-utils';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage'; // BlobImage genel bir bileşen olduğu için root'dan import ediliyor
 
@@ -22,9 +22,7 @@ const FrontCategoryMainNewsCard: React.FC<FrontCategoryMainNewsCardProps> = ({
   showReadTime = true,
 }) => {
   const categorySlug = item.category?.toLowerCase() || 'all';
-  const formattedDate = item.published_at
-    ? format(new Date(item.published_at), 'dd MMMM yyyy')
-    : '';
+  const formattedDate = formatNewsDate(item.published_at, 'dd MMMM yyyy');
     
   // Extract the image key from the URL if it's a full URL
   const imageKey = item.image ? item.image.split('/').pop() : null;

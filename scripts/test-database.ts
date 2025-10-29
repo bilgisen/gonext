@@ -29,7 +29,8 @@ async function checkDatabase() {
         });
       }
     } catch (error) {
-      console.log(`❌ News table: Error - ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ News table: Error - ${errorMessage}`);
     }
 
     // Categories table
@@ -45,7 +46,8 @@ async function checkDatabase() {
         });
       }
     } catch (error) {
-      console.log(`❌ Categories table: Error - ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ Categories table: Error - ${errorMessage}`);
     }
 
     // Tags table
@@ -61,7 +63,8 @@ async function checkDatabase() {
         });
       }
     } catch (error) {
-      console.log(`❌ Tags table: Error - ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ Tags table: Error - ${errorMessage}`);
     }
 
     // Sources table
@@ -77,7 +80,8 @@ async function checkDatabase() {
         });
       }
     } catch (error) {
-      console.log(`❌ Sources table: Error - ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ Sources table: Error - ${errorMessage}`);
     }
 
     // Media table
@@ -85,7 +89,8 @@ async function checkDatabase() {
       const mediaCount = await db.select({ count: sql<number>`count(*)` }).from(media);
       console.log(`✅ Media table: ${mediaCount[0].count} records`);
     } catch (error) {
-      console.log(`❌ Media table: Error - ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ Media table: Error - ${errorMessage}`);
     }
 
     // Test fetch from API and insert
@@ -114,7 +119,8 @@ async function checkDatabase() {
       console.log(`\n📊 Updated news count: ${updatedNewsCount[0].count}`);
 
     } catch (error) {
-      console.log(`❌ API fetch test failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ API fetch test failed: ${errorMessage}`);
     }
 
   } catch (error) {
@@ -122,4 +128,11 @@ async function checkDatabase() {
   }
 }
 
-checkDatabase().catch(console.error);
+checkDatabase().catch((error: unknown) => {
+  if (error instanceof Error) {
+    console.error('❌ Error:', error.message);
+  } else {
+    console.error('❌ An unknown error occurred');
+  }
+  process.exit(1);
+});

@@ -1,4 +1,11 @@
-import { SlugOptions } from './types';
+/**
+ * Slug generation options
+ */
+interface SlugOptions {
+  maxLength?: number;
+  separator?: string;
+  lowercase?: boolean;
+}
 
 /**
  * Türkçe karakter mapping
@@ -19,15 +26,24 @@ const TURKISH_CHARS: Record<string, string> = {
 };
 
 /**
+ * Generates a random 6-digit number
+ * @returns Random 6-digit number as string
+ */
+function generateRandomNumber(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
  * Title'dan slug oluşturur
  * @param title - Haber başlığı
  * @param options - Slug oluşturma seçenekleri
- * @returns SEO-friendly slug
+ * @returns SEO-friendly slug with random number suffix
  */
 export function createSlug(title: string, options: SlugOptions = {}): string {
   const {
     maxLength = 100,
     separator = '-',
+    // Force lowercase to true to ensure consistent slugs
     lowercase = true
   } = options;
 
@@ -61,7 +77,22 @@ export function createSlug(title: string, options: SlugOptions = {}): string {
     }
   }
 
-  return slug || 'untitled';
+  // Add random 6-digit number to the end of the slug
+  const randomSuffix = `-${generateRandomNumber()}`;
+  
+  // Ensure the final slug with random number doesn't exceed maxLength
+  const maxSlugLength = maxLength - randomSuffix.length;
+  if (slug.length > maxSlugLength) {
+    slug = slug.substring(0, maxSlugLength);
+    // Don't end with a separator
+    const lastSeparatorIndex = slug.lastIndexOf(separator);
+    if (lastSeparatorIndex > 0) {
+      slug = slug.substring(0, lastSeparatorIndex);
+    }
+  }
+
+  // Ensure the slug is not empty and add the random number
+  return (slug || 'untitled') + randomSuffix;
 }
 
 /**

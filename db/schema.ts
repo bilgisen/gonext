@@ -8,7 +8,6 @@ import {
   integer,
   boolean,
   json,
-  uuid,
   // if your drizzle version exposes 'json' or 'jsonb' adjust accordingly
 } from "drizzle-orm/pg-core";
 
@@ -67,11 +66,13 @@ export const editors = pgTable("editors", {
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  slug: varchar("slug", { length: 255 }).unique().notNull(),
   description: text("description"),
-  image_media_id: integer("image_media_id").references(() => media.id),
-  parent_id: integer("parent_id").references(() => categories.id), // self ref
+  parent_id: integer("parent_id").references((): any => categories.id), // self ref with type assertion
   order: integer("order").default(0),
+  is_active: boolean("is_active").default(true),
+  seo_title: varchar("seo_title", { length: 255 }),
+  seo_description: text("seo_description"),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at"),
 });

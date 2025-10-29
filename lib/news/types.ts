@@ -1,83 +1,79 @@
-import { z } from 'zod';
+// lib/news/types.ts
+// Local type definitions for the news module
 
-// News API Response Types
-export const NewsApiItemSchema = z.object({
-  id: z.string(),
-  source_guid: z.string(),
-  seo_title: z.string(),
-  seo_description: z.string(),
-  tldr: z.array(z.string()),
-  content_md: z.string(),
-  category: z.string().optional(),
-  tags: z.array(z.string()),
-  image: z.string().url(),
-  image_title: z.string(),
-  image_desc: z.string().optional(),
-  original_url: z.string().url(),
-  file_path: z.string(),
-  created_at: z.string(),
-  published_at: z.string(),
-  updated_at: z.string(),
-});
+import { NewsItem as SharedNewsItem, NewsCategory } from '@/types/news';
 
-export const NewsApiResponseSchema = z.object({
-  items: z.array(NewsApiItemSchema),
-  page: z.number().optional(),
-  page_size: z.number().optional(),
-  total: z.number().optional(),
-});
+// Re-export types from the centralized types file
+export type { NewsCategory };
 
-export type NewsApiItem = z.infer<typeof NewsApiItemSchema>;
-export type NewsApiResponse = z.infer<typeof NewsApiResponseSchema>;
-
-// Category mapping types
-export type CategoryMapping = {
-  [key: string]: string;
-};
-
-// Slug generation options
-export interface SlugOptions {
-  maxLength?: number;
-  separator?: string;
-  lowercase?: boolean;
+// Extended types specific to the news module
+export interface NewsApiItem extends Omit<SharedNewsItem, 'id' | 'created_at' | 'updated_at' | 'slug' | 'read_time' | 'is_bookmarked'> {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+  slug?: string;
+  read_time?: number;
+  is_bookmarked?: boolean;
 }
 
-// Database operation types
 export interface NewsInsertData {
-  source_guid: string;
-  source_id: string;
-  source_fk: number;
+  // Required fields
   title: string;
+  source_guid: string;
+  slug: string;
+  
+  // Optional fields with defaults
+  source_id?: string;
   seo_title?: string;
   seo_description?: string;
   excerpt?: string;
-  content_md: string;
+  content_md?: string;
   content_html?: string;
+  tldr?: string[];
+  
+  // Category and tags
+  category?: NewsCategory;
+  categories?: NewsCategory[];
+  tags?: string[];
+  
+  // Media
+  image?: string;
+  image_title?: string;
+  image_desc?: string;
   main_media_id?: number;
-  slug: string;
-  canonical_url: string;
-  status: 'draft' | 'published' | 'archived';
-  visibility: 'public' | 'private';
-  editor_id?: number;
-  word_count: number;
-  reading_time_min: number;
-  published_at?: Date;
+  
+  // URLs
+  original_url?: string;
+  canonical_url?: string;
+  
+  // Status
+  status?: 'draft' | 'published' | 'archived';
+  visibility?: 'public' | 'private';
+  
+  // Metadata
   meta?: Record<string, any>;
+  
+  // Timestamps
+  created_at?: Date | string;
+  updated_at?: Date | string | null;
+  published_at?: Date | string | null;
+  
+  // Metrics
+  word_count?: number;
+  read_time?: number;
+  reading_time_min?: number;
+  tldr_count?: number;
+  
+  // Relations
+  source_fk?: number;
+  editor_id?: number;
 }
 
-// Fetch options
-export interface FetchNewsOptions {
-  limit?: number;
-  offset?: number;
-  force?: boolean; // Force refresh even if duplicates exist
-}
-
-// Error types
 export class NewsFetchError extends Error {
   constructor(
     message: string,
-    public code: string,
-    public cause?: Error
+    public code: string = 'NEWS_FETCH_ERROR',
+    public cause?: unknown
   ) {
     super(message);
     this.name = 'NewsFetchError';
@@ -91,9 +87,4 @@ export class ValidationError extends NewsFetchError {
   }
 }
 
-export class DuplicateError extends NewsFetchError {
-  constructor(message: string, public duplicateField: string) {
-    super(message, 'DUPLICATE_ERROR');
-    this.name = 'DuplicateError';
-  }
-}
+// Add any other types that were previously in the old types file

@@ -15,7 +15,6 @@ interface NewsCardProps {
   showCategory?: boolean;
   showDate?: boolean;
   showReadTime?: boolean;
-  showExcerpt?: boolean;
   size?: 'small' | 'medium' | 'large';
 }
 
@@ -29,30 +28,42 @@ const NewsCard = ({
   showCategory = false,
   showDate = false,
   showReadTime = false,
-  showExcerpt = false,
   size = 'medium',
 }: NewsCardProps) => {
   // Memoize the image key to prevent unnecessary recalculations
-  const imageKey = useMemo(() => item.image?.split('/').pop(), [item.image]);
+  const imageKey = useMemo(() => item.image?.split('/').pop() || '', [item.image]);
+
+  // Destructure with default values
+  const {
+    category = 'turkiye',
+    slug = '',
+    id = '',
+    seo_title = '',
+    seo_description = '',
+    tldr = []
+  } = item;
 
   // Memoize the link URL to prevent recreation on every render
-  const href = useMemo(() => `/${item.category}/${item.slug || item.id}`, [item.category, item.slug, item.id]);
+  const href = useMemo(() => `/${category}/${slug || id}`, [category, slug, id]);
 
   // Memoize the title to prevent recreation on every render
-  const title = useMemo(() => item.seo_title || 'No title available', [item.seo_title]);
+  const title = useMemo(() => seo_title || 'No title available', [seo_title]);
 
   // Memoize the description to prevent recreation on every render
   const description = useMemo(() =>
-    item.seo_description || item.tldr?.[0] || 'No description available',
-    [item.seo_description, item.tldr]
+    seo_description || (Array.isArray(tldr) ? tldr[0] : '') || 'No description available',
+    [seo_description, tldr]
   );
 
   // Memoize the card class names to prevent recreation on every render
-  const cardClasses = useMemo(() => cn(
-    'group relative overflow-hidden rounded-xl cursor-pointer h-full',
-    'bg-background [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]',
-    className
-  ), [className]);
+  const cardClasses = useMemo<string>(() => 
+    cn(
+      'group relative overflow-hidden rounded-xl cursor-pointer h-full',
+      'bg-background [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]',
+      className as string
+    ),
+    [className]
+  );
 
   if (isList) {
     return (
@@ -63,15 +74,17 @@ const NewsCard = ({
         <div className="flex h-full p-3 gap-3">
           <div className="w-1/3 h-full">
             <div className="relative w-full h-full rounded-lg overflow-hidden aspect-square">
-              <BlobImage
-                imageKey={imageKey}
-                alt={title}
-                width={400}
-                height={300}
-                className="w-full h-full object-cover"
-                sizes="(max-width: 768px) 100vw, 33vw"
-                loading={isMain ? 'eager' : 'lazy'} // Lazy load non-main images
-              />
+              {imageKey && (
+                <BlobImage
+                  imageKey={imageKey}
+                  alt={title}
+                  width={400}
+                  height={300}
+                  className="w-full h-full object-cover"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  loading={isMain ? 'eager' : 'lazy'} // Lazy load non-main images
+                />
+              )}
             </div>
           </div>
           <div className="w-2/3 flex flex-col justify-center">
@@ -87,7 +100,7 @@ const NewsCard = ({
   if (isMiddle) {
     return (
       <Link
-        href={`/${item.category}/${item.slug || item.id}`}
+        href={href}
         className={cn(
           'group relative overflow-hidden rounded-xl cursor-pointer h-full',
           'bg-background [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]',

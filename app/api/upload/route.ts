@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
 import { v4 as uuidv4 } from 'uuid';
 
-// Load environment variables
-import 'dotenv/config';
-
 // Import the proper store configuration
-import { getNewsImageStore } from '../../../lib/blob-utils';
+import { getNewsImageStore } from '@/lib/blob-utils';
 
 export async function POST(request: Request) {
   try {

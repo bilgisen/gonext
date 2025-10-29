@@ -4,7 +4,6 @@
 import { Suspense } from 'react';
 import { BentoFront } from './[category]/BentoFront';
 import { useNews } from '@/hooks/useNews';
-import { NewsItem } from '@/types/news';
 import FrontCategoryLayoutOne from '@/components/front-category/front-cat-layout-one';
 import FrontCardLayoutTwo from '@/components/front-category/front-card-layout-two';
 

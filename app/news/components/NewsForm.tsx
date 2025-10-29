@@ -27,8 +27,18 @@ export function NewsForm({ initialData, onSubmit, isSubmitting = false }: NewsFo
   };
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const fileInput = e.target as HTMLInputElement;
+    const file = fileInput.files?.[0];
+    
+    if (!file) {
+      setImagePreview(null);
+      setFormData(prev => ({
+        ...prev,
+        image: undefined,
+        image_title: ''
+      }));
+      return;
+    }
 
     // Create preview
     const reader = new FileReader();
@@ -51,6 +61,11 @@ export function NewsForm({ initialData, onSubmit, isSubmitting = false }: NewsFo
       console.error('Image upload failed:', err);
       setError('Resim yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
       setImagePreview(null);
+      setFormData(prev => ({
+        ...prev,
+        image: undefined,
+        image_title: ''
+      }));
     } finally {
       setIsUploading(false);
     }
@@ -61,13 +76,43 @@ export function NewsForm({ initialData, onSubmit, isSubmitting = false }: NewsFo
     try {
       const formDataToSubmit = new FormData();
       
-      // Append all form data to FormData
-      Object.entries(formData).forEach(([key, value]) => {
+      // Append all form data to FormData with proper type handling
+      // Helper function to safely handle different value types
+      const appendFormValue = (key: string, value: unknown) => {
+        if (value === undefined || value === null) return;
+        
         if (Array.isArray(value)) {
-          value.forEach(item => formDataToSubmit.append(key, item));
-        } else if (value) {
+          value.forEach(item => {
+            if (item !== undefined && item !== null) {
+              formDataToSubmit.append(key, String(item));
+            }
+          });
+        } else if (value instanceof File) {
           formDataToSubmit.append(key, value);
+        } else if (value instanceof Date) {
+          formDataToSubmit.append(key, value.toISOString());
+        } else if (typeof value === 'object') {
+          // Handle File-like objects
+          const fileLike = value as Record<string, any>;
+          if (fileLike.name && fileLike.size !== undefined && fileLike.type) {
+            formDataToSubmit.append(key, fileLike as unknown as Blob);
+          }
+          // Handle Date-like objects
+          else if (fileLike.toISOString && typeof fileLike.toISOString === 'function') {
+            formDataToSubmit.append(key, new Date(fileLike as unknown as string).toISOString());
+          }
+          // Handle other objects
+          else {
+            formDataToSubmit.append(key, JSON.stringify(value));
+          }
+        } else {
+          formDataToSubmit.append(key, String(value));
         }
+      };
+
+      // Process each form field
+      Object.entries(formData).forEach(([key, value]) => {
+        appendFormValue(key, value);
       });
 
       await onSubmit(formDataToSubmit);

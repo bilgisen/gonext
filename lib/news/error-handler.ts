@@ -1,4 +1,28 @@
-import { NewsFetchError, ValidationError, DuplicateError } from './types';
+// Error types
+export class NewsFetchError extends Error {
+  constructor(
+    message: string,
+    public code: string = 'NEWS_FETCH_ERROR',
+    public cause?: unknown
+  ) {
+    super(message);
+    this.name = 'NewsFetchError';
+  }
+}
+
+export class ValidationError extends NewsFetchError {
+  constructor(message: string, public field?: string) {
+    super(message, 'VALIDATION_ERROR');
+    this.name = 'ValidationError';
+  }
+}
+
+export class DuplicateError extends NewsFetchError {
+  constructor(message: string, public duplicateField: string) {
+    super(message, 'DUPLICATE_ERROR');
+    this.name = 'DuplicateError';
+  }
+}
 
 /**
  * Log levels
@@ -126,14 +150,27 @@ export const logger = new NewsLogger();
  * Error handler utility
  */
 export class ErrorHandler {
-  static handle(error: unknown, context: string, data?: any): NewsFetchError {
+  static handle(error: Error | unknown, context: string, data?: Record<string, any>): NewsFetchError {
     if (error instanceof NewsFetchError) {
-      logger.error(`Handled error in ${context}`, 'ERROR_HANDLER', error, data);
+      const errorMessage = error.message;
+      // Log the error with the correct signature
+      logger.error(
+        `Handled error in ${context}: ${errorMessage}`,
+        'ERROR_HANDLER',
+        new Error(errorMessage),
+        { ...(data || {}) }
+      );
       return error;
     }
 
     if (error instanceof Error) {
-      logger.error(`Unexpected error in ${context}`, 'ERROR_HANDLER', error, data);
+      // Log the error with the correct signature
+      logger.error(
+        `Unexpected error in ${context}: ${error.message}`,
+        'ERROR_HANDLER',
+        error,
+        { ...(data || {}) }
+      );
 
       // Convert to appropriate NewsFetchError
       if (error.message.includes('duplicate') || error.message.includes('already exists')) {

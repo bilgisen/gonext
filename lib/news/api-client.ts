@@ -1,11 +1,5 @@
-import { NewsApiResponse, NewsApiItem, NewsFetchError } from './types';
-import { syncNewsImages } from './image-sync';
-
-/**
- * Test mode - local JSON file'dan mı okusun?
- */
-const TEST_MODE = process.env.TEST_MODE === 'true';
-const TEST_API_URL = process.env.TEST_API_URL || '/app/test/news.json';
+import type { NewsItem } from '@/types/news';
+import { NewsFetchError } from '@/lib/news/error-handler';
 
 /**
  * News API URL - Environment variable'dan alınır
@@ -72,10 +66,17 @@ async function withRetry<T>(
  * @param offset - Offset
  * @returns API response
  */
+export interface NewsApiResponse {
+  items: NewsItem[];
+  page?: number;
+  page_size?: number;
+  total?: number;
+}
+
 export async function fetchNewsFromApi(
   limit: number = 50,
   offset: number = 0,
-  syncImages: boolean = true
+  _syncImages: boolean = true // Prefix with underscore to indicate it's intentionally unused
 ): Promise<NewsApiResponse> {
   const url = new URL(NEWS_API_URL);
   url.searchParams.set('limit', limit.toString());
@@ -151,7 +152,7 @@ export async function fetchNewsFromApi(
  * @param newsId - Haber ID
  * @returns Haber detayı
  */
-export async function fetchNewsById(newsId: string): Promise<NewsApiItem | null> {
+export async function fetchNewsById(newsId: string): Promise<NewsItem | null> {
   const url = new URL(`${NEWS_API_URL}/${newsId}`);
 
   try {
@@ -196,7 +197,7 @@ export async function fetchNewsById(newsId: string): Promise<NewsApiItem | null>
       }
     }
 
-    return data as NewsApiItem;
+    return data as NewsItem;
   } catch (error) {
     if (error instanceof NewsFetchError) {
       throw error;

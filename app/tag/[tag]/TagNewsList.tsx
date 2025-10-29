@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { newsKeys } from '@/lib/queries/queryKeys';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers } from '@/lib/urlFilters';
 import { NewsCard } from '@/app/[category]/NewsCard';
@@ -14,7 +12,7 @@ interface TagNewsListProps {
 }
 
 export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
-    const [filters, setFilters] = useState<NewsFilters>({
+    const [filters] = useState<NewsFilters>({
         tag,
         ...urlHelpers.parseNewsFilters(new URLSearchParams(
             Object.entries(searchParams).map(([key, value]) =>

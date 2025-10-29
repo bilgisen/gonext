@@ -18,9 +18,8 @@ interface BentoNewsCardProps {
  * 4 -> küçük (1x1)
  * 5 -> küçük (1x1)
  */
-export function BentoNewsCard({ news, index }: BentoNewsCardProps) {
+export function BentoNewsCard({ news }: BentoNewsCardProps) {
   const imageKey = news.image ? news.image.split('/').pop() : null;
-  const mod = index % 6;
 
   // Simple 3-column grid item
   const gridClass = 'col-span-full sm:col-span-1 lg:col-span-4 h-full';

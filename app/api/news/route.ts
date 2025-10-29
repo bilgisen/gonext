@@ -112,16 +112,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Arama filtresi
-    if (filters.search) {
-      whereConditions.push(
-        or(
-          ilike(news.title, `%${filters.search}%`),
-          ilike(news.seo_title, `%${filters.search}%`),
-          ilike(news.seo_description, `%${filters.search}%`),
-          ilike(news.content_md, `%${filters.search}%`)
-        )
-      );
+    // Search filter
+    if (filters.search?.trim()) {
+      const searchTerm = `%${filters.search}%`;
+      const searchConditions = [
+        ilike(news.title, searchTerm),
+        ilike(news.seo_title, searchTerm),
+        ilike(news.seo_description, searchTerm),
+        ilike(news.content_md, searchTerm)
+      ].filter(Boolean);
+      
+      if (searchConditions.length > 0) {
+        const searchCondition = or(...searchConditions);
+        if (searchCondition) {
+          whereConditions.push(searchCondition);
+        }
+      }
     }
 
     // Create base where conditions for count (without CTE references)
@@ -144,15 +150,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Add search filter if needed
-    if (filters.search) {
-      countWhereConditions.push(
-        or(
-          ilike(news.title, `%${filters.search}%`),
-          ilike(news.seo_title, `%${filters.search}%`),
-          ilike(news.seo_description, `%${filters.search}%`),
-          ilike(news.content_md, `%${filters.search}%`)
-        )
-      );
+    if (filters.search?.trim()) {
+      const searchTerm = `%${filters.search}%`;
+      const searchConditions = [
+        ilike(news.title, searchTerm),
+        ilike(news.seo_title, searchTerm),
+        ilike(news.seo_description, searchTerm),
+        ilike(news.content_md, searchTerm)
+      ].filter(Boolean);
+      
+      if (searchConditions.length > 0) {
+        const searchCondition = or(...searchConditions);
+        if (searchCondition) {
+          countWhereConditions.push(searchCondition);
+        }
+      }
     }
 
     // Build the count query

@@ -1,4 +1,4 @@
-import { NewsApiResponse } from './types';
+import { NewsApiResponse } from './';
 import fs from 'fs';
 import path from 'path';
 

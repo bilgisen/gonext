@@ -1,7 +1,6 @@
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { newsKeys } from '../../lib/queries/queryKeys';
-import type { NewsFilters, SearchFilters, NewsItem } from '../../types/news';
-import { CATEGORY_MAPPINGS } from '../../types/news';
+import type { NewsFilters, NewsItem } from '../../types/news';
 
 export interface NewsListResponse {
   success: boolean;
@@ -109,35 +108,26 @@ export function useInfiniteNews({
   limit?: number;
   excludeId?: string;
 }) {
-  return useInfiniteQuery<NewsListResponse, Error>({
-    queryKey: ['infinite-news', category, tag, limit, excludeId],
+  return useInfiniteQuery({
+    queryKey: ['news', 'infinite', { category, tag, limit, excludeId }],
     queryFn: async ({ pageParam = 1 }) => {
-      const params = new URLSearchParams({
-        page: pageParam.toString(),
-        limit: limit.toString(),
-        ...(category && { category }),
-        ...(tag && { tag }),
-        ...(excludeId && { excludeId }),
+      const response = await fetchNewsFromDatabase({
+        category,
+        tag,
+        page: pageParam as number,
+        limit,
+        excludeId,
       });
 
-      const response = await fetch(`/api/news?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch news');
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch news');
       }
 
       return {
-        ...data,
+        ...response,
         data: {
-          ...data.data,
-          // Ensure has_more is always a boolean
-          has_more: Boolean(data.data.has_more)
+          ...response.data,
+          has_more: response.data.items.length >= (limit || 10)
         }
       };
     },

@@ -1,10 +1,35 @@
-import { NewsApiResponse, NewsApiItem, FetchNewsOptions, NewsFetchError } from './types';
+import { NewsApiItem } from './types';
 import { fetchNewsFromApi } from './api-client';
 import { insertNews } from './db-operations';
 import { getDuplicateStats } from './duplicate-check';
 import { createImportLog } from './db-operations';
 import { sql } from 'drizzle-orm';
 import { fetchNewsFromTest } from './test-fetch';
+import { NewsFetchError } from './error-handler';
+
+// Define missing types
+export interface NewsApiResponse {
+  items: NewsApiItem[];
+  page?: number;
+  page_size?: number;
+  total?: number;
+}
+
+export interface FetchNewsOptions {
+  limit?: number;
+  page?: number;
+  offset?: number;  // For pagination
+  category?: string;
+  force?: boolean;
+  testMode?: boolean;
+  skipDuplicates?: boolean;
+  sourceId?: string;
+  startDate?: Date | string;
+  endDate?: Date | string;
+  sortBy?: 'published_at' | 'created_at' | 'updated_at';
+  sortOrder?: 'asc' | 'desc';
+  debug?: boolean;
+}
 
 /**
  * Import sonuçları

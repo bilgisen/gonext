@@ -9,11 +9,21 @@ interface NewsItem {
   [key: string]: any;
 }
 
-interface NewsFilters {
-  limit?: number;
-  excludeId?: string | number;
-  [key: string]: any;
+interface TemplateWrapperProps {
+  news: NewsItem;
+  variant?: string;
+  className?: string;
+  Template: React.ComponentType<any> | React.LazyExoticComponent<React.ComponentType<any>>;
 }
+
+const TemplateWrapper = ({ 
+  news, 
+  variant = 'small', 
+  className = '',
+  Template
+}: TemplateWrapperProps) => (
+  <Template news={news} variant={variant} className={className} />
+);
 
 interface FrontPageCategoriesProps {
   category: string | string[];
@@ -22,7 +32,6 @@ interface FrontPageCategoriesProps {
   className?: string;
   limit?: number;
   title?: string;
-  filters?: any;
   showTabs?: boolean;
   allNews?: NewsItem[];
   isLoading?: boolean;
@@ -34,23 +43,22 @@ export function FrontPageCategories({
   template: Template,
   variant = 'grid',
   className,
-  limit = 6,
   title,
-  filters,
   showTabs = true,
   allNews = [],
   isLoading = false,
-  error = null
+  error = null,
+  limit = 6 // Add default value for limit
 }: FrontPageCategoriesProps) {
   const categories = Array.isArray(category) ? category : [category];
   const [activeCategory, setActiveCategory] = useState<string | null>(
     categories.length === 1 ? categories[0] : null
   );
   
-  // Use the provided props or default values
-  const newsList = allNews || [];
-  const loadingState = isLoading || false;
-  const errorState = error || null;
+  // Filter news based on active category if set
+  const filteredNews = activeCategory 
+    ? allNews.filter(news => news.category === activeCategory)
+    : allNews;
 
   // Loading state
   if (isLoading) {
@@ -95,102 +103,89 @@ export function FrontPageCategories({
     );
   }
 
-  // Create a wrapper component to handle the template rendering
-  const TemplateWrapper = ({ 
-    news, 
-    variant = 'small', 
-    className = '' 
-  }: { 
-    news: NewsItem; 
-    variant?: string; 
-    className?: string 
-  }) => {
-    const Component = Template as React.ComponentType<{ 
-      news: NewsItem; 
-      variant?: string; 
-      className?: string;
-    }>;
-    return <Component news={news} variant={variant} className={className} />;
-  };
+  // Use the TemplateWrapper component that's now defined outside
 
-  // Render different layouts based on variant
-  const renderLayout = () => {
-    switch (variant) {
-      case 'large':
-        return (
-          <div className={cn('grid grid-cols-1 gap-6', className)}>
-            {allNews.map((news, index) => (
-              <div key={news.id} className="col-span-1">
-                <TemplateWrapper news={news} variant="large" />
-              </div>
-            ))}
+  // Render the appropriate layout based on the variant
+  if (filteredNews.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        No {title || activeCategory} news found.
+      </div>
+    );
+  }
+
+  let content;
+  
+  switch (variant) {
+    case 'bento':
+      content = (
+        <div className={cn('grid grid-cols-1 md:grid-cols-3 gap-6', className)}>
+          {filteredNews.map((news, index) => (
+            <div 
+              key={news.id} 
+              className={cn(
+                index === 0 ? 'md:col-span-2 row-span-2 h-[500px]' : 'h-48',
+                index === 3 ? 'md:col-span-3 h-[300px]' : ''
+              )}
+            >
+              <TemplateWrapper 
+                news={news} 
+                variant={index === 0 ? 'large' : 'small'}
+                className="h-full"
+                Template={Template}
+              />
+            </div>
+          ))}
+        </div>
+      );
+      break;
+    
+    case 'featured':
+      content = (
+        <div className={cn('grid grid-cols-1 md:grid-cols-12 gap-6', className)}>
+          <div className="md:col-span-7">
+            {filteredNews[0] && (
+              <TemplateWrapper 
+                news={filteredNews[0]} 
+                variant="large" 
+                Template={Template}
+                className="h-full"
+              />
+            )}
           </div>
-        );
-      
-      case 'small':
-        return (
-          <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4', className)}>
-            {allNews.map((news) => (
-              <div key={news.id} className="col-span-1">
-                <TemplateWrapper news={news} variant="small" />
-              </div>
-            ))}
-          </div>
-        );
-      
-      case 'bento':
-        return (
-          <div className={cn('grid grid-cols-1 md:grid-cols-3 gap-4', className)}>
-            {allNews.map((news, index) => (
-              <div 
-                key={news.id} 
-                className={cn(
-                  index === 0 ? 'md:col-span-2 row-span-2 h-[500px]' : 'h-[240px]',
-                  index === 3 ? 'md:col-span-3 h-[300px]' : ''
-                )}
-              >
+          <div className="md:col-span-5 grid grid-cols-1 gap-4">
+            {filteredNews.slice(1, limit).map((news) => (
+              <div key={news.id} className="h-full">
                 <TemplateWrapper 
                   news={news} 
-                  variant={index === 0 ? 'large' : 'small'}
+                  variant="small" 
+                  Template={Template}
                   className="h-full"
                 />
               </div>
             ))}
           </div>
-        );
+        </div>
+      );
+      break;
       
-      case 'featured':
-        return (
-          <div className={cn('grid grid-cols-1 md:grid-cols-12 gap-6', className)}>
-            <div className="md:col-span-7">
-              {allNews[0] && <TemplateWrapper news={allNews[0]} variant="large" />}
+    case 'grid':
+    default:
+      content = (
+        <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6', className)}>
+          {filteredNews.map((news, index) => (
+            <div key={news.id} className="col-span-1">
+              <TemplateWrapper 
+                news={news} 
+                variant={index === 0 ? 'large' : 'small'}
+                Template={Template}
+                className="h-full"
+              />
             </div>
-            <div className="md:col-span-5 grid grid-cols-1 gap-4">
-              {allNews.slice(1, 3).map((news) => (
-                <div key={news.id} className="h-full">
-                  <TemplateWrapper news={news} variant="small" />
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      
-      case 'grid':
-      default:
-        return (
-          <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6', className)}>
-            {allNews.map((news, index) => (
-              <div key={news.id} className="col-span-1">
-                <TemplateWrapper 
-                  news={news} 
-                  variant={index === 0 ? 'large' : 'small'}
-                />
-              </div>
-            ))}
-          </div>
-        );
-    }
-  };
+          ))}
+        </div>
+      );
+  }
 
   return (
     <div>
@@ -221,27 +216,7 @@ export function FrontPageCategories({
           ))}
         </div>
       )}
-      <div className={cn(
-        'grid gap-6',
-        variant === 'large' ? 'grid-cols-1' : 
-        variant === 'small' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' :
-        variant === 'bento' ? 'grid-cols-1 md:grid-cols-3' :
-        'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-        className
-      )}>
-        {allNews.map((news, index) => (
-          <div
-            key={news.id || index}
-            className={cn(
-              'h-full',
-              variant === 'large' ? 'md:col-span-2' : '',
-              variant === 'bento' && index === 0 ? 'md:col-span-2 row-span-2' : ''
-            )}
-          >
-            <Template news={news} />
-          </div>
-        ))}
-      </div>
+      {content}
     </div>
   );
 }

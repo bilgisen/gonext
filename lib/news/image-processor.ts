@@ -1,7 +1,6 @@
 import sharp from 'sharp';
 import { createSlug } from './slug-utils';
 import { NewsFetchError } from './types';
-import { getNewsStore } from '../netlify-store';
 import { uploadNewsImageBuffer } from '../blob-utils';
 
 // Ensure dotenv is loaded
@@ -248,8 +247,6 @@ export async function uploadToNetlifyCDN(
     // Try to upload to Netlify Blobs
     try {
       console.log('☁️  Uploading to Netlify Blobs...');
-      const store = getNewsStore();
-
       // Set content type based on file extension
       const contentType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
 
@@ -262,7 +259,9 @@ export async function uploadToNetlifyCDN(
         processedAt: new Date().toISOString(),
         format: extension,
         contentType,
-        ...metadata
+        ...(metadata ? Object.fromEntries(
+          Object.entries(metadata).filter(([key]) => key !== 'format')
+        ) : {}) // Ensure metadata is an object and remove any duplicate format property
       });
 
       // Upload was successful via direct API

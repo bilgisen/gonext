@@ -2,12 +2,11 @@
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 
 interface MarkdownRendererProps {
-  children: string;
+  children: React.ReactNode;
   className?: string;
 }
 
@@ -19,6 +18,9 @@ interface CodeProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function MarkdownRenderer({ children, className = '' }: MarkdownRendererProps) {
+  // Convert children to string if it's not already
+  const content = typeof children === 'string' ? children : String(children);
+  
   return (
     <div className={`prose dark:prose-invert max-w-none ${className}`}>
       <ReactMarkdown
@@ -79,7 +81,7 @@ export function MarkdownRenderer({ children, className = '' }: MarkdownRendererP
           ),
         }}
       >
-        {children}
+        {content}
       </ReactMarkdown>
     </div>
   );

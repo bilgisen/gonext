@@ -1,34 +1,19 @@
 'use client';
 
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import BlobImage from '@/components/BlobImage';
+import { NewsItem } from '@/types/news';
 
 interface NewsArticleProps {
-  newsItem: {
-    id?: string;
-    seo_title?: string;
-    seo_description?: string;
-    content?: string;
-    content_md?: string;
-    image?: string;
-    image_title?: string;
-    author?: string;
-    published_at?: string;
-    created_at?: string;
-    updated_at?: string;
-    tldr?: string[];
-    tags?: string[];
-  };
+  newsItem: NewsItem;
 }
 
 export function NewsArticle({ newsItem }: NewsArticleProps) {
   const router = useRouter();
-  const params = useParams();
   
   if (!newsItem) {
     return (
@@ -51,9 +36,10 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       </div>
     );
   }
+  
 
   // Extract just the image key from the URL if it's a Netlify Blob URL
-  const getImageKey = (url: string | undefined): string => {
+  const getImageKey = (url?: string | null): string => {
     if (!url) return '';
 
     // If it's already just a key (no slashes)
@@ -64,7 +50,8 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       const urlObj = new URL(url, 'http://dummy.com'); // Using dummy base URL to handle relative URLs
       const pathParts = urlObj.pathname.split('/');
       return pathParts[pathParts.length - 1];
-    } catch {
+    } catch (error) {
+      console.error('Error parsing image URL:', error);
       return '';
     }
   };
@@ -72,7 +59,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
   const imageKey = newsItem.image ? getImageKey(newsItem.image) : '';
 
   // Format date for display in English
-  const formatDate = (dateString?: string): string => {
+  const formatDate = (dateString?: string | null): string => {
     if (!dateString) return '';
 
     try {
@@ -95,8 +82,8 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
     }
   };
 
-  const publishedDate = newsItem.published_at || newsItem.created_at;
-  const formattedDate = formatDate(publishedDate);
+  const publishedDate = newsItem.published_at || newsItem.created_at || '';
+  const formattedDate = publishedDate ? formatDate(publishedDate) : '';
 
 
 
@@ -115,10 +102,8 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           </h3>
         )}
 
-        {/* Author and Date */}
+        {/* Date */}
         <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6">
-          {newsItem.author && <span>By: {newsItem.author}</span>}
-          {newsItem.author && formattedDate && <span className="mx-2">•</span>}
           {formattedDate && (
             <time dateTime={publishedDate}>
               {formattedDate}
@@ -174,7 +159,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       {/* Article Content */}
       <div className="prose dark:prose-invert max-w-none mb-8">
         <MarkdownRenderer>
-         {newsItem.content_md}
+          {newsItem.content_md || newsItem.seo_description || 'No content available'}
         </MarkdownRenderer>
       </div>
 

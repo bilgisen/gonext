@@ -1,16 +1,16 @@
-import { getStore } from "@netlify/blobs";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { getNewsImageStore } from "@/lib/blob-utils";
+import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Make the function async
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ key: string }> } // Note: params is now a Promise
+  _request: NextRequest,
+  context: { params: Promise<{ key: string }> } // Burayı değiştirin
 ) {
   try {
-    // Await the params Promise before destructuring
-    const { key } = await params;
+    // params nesnesini await ile çözün
+    const { key } = await context.params;
 
     if (!key) {
       return NextResponse.json(
@@ -21,12 +21,16 @@ export async function GET(
 
     console.log('Attempting to fetch blob with key:', key);
 
-    // Simplify the store initialization
-    const store = getStore({
-      name: "news-images",
-      siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_AUTH_TOKEN
-    });
+    // Get the image store
+    const store = getNewsImageStore();
+    
+    if (!store) {
+      console.error('Failed to initialize image store');
+      return NextResponse.json(
+        { error: 'Failed to initialize image store' },
+        { status: 500 }
+      );
+    }
 
     // Get blob with metadata for debugging
     const result = await store.getWithMetadata(key, { type: "blob" });

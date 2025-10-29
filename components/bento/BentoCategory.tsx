@@ -2,7 +2,7 @@
 import { memo } from 'react';
 import BentoLayout from './BentoLayout';
 import FallbackNewsGrid from './FallbackNewsGrid';
-import type { NewsItem } from '@/types/news';
+import type { NewsItem, NewsCategory } from '@/types/news';
 
 export interface BentoCategoryProps {
   category?: string;
@@ -89,8 +89,8 @@ const BentoCategoryComponent = ({
       seo_description: 'Check back later for updates',
       tldr: ['No content available'],
       content_md: 'No content available',
-      category: category,
-      categories: [category],
+      category: category as NewsCategory,
+      categories: [category as NewsCategory],
       tags: [],
       image: '',
       image_title: '',

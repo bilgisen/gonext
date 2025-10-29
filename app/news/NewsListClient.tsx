@@ -2,18 +2,33 @@
 'use client';
 
 import { useState } from 'react';
-import { useInfiniteNews } from '../../hooks/queries/useExternalQueries';
-import { urlHelpers } from '../../lib/urlFilters';
-import { usePrefetchNews } from '../../hooks/queries/useExternalQueries';
-import { NewsCard as CategoryNewsCard } from '../[category]/NewsCard';
+import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
+import { NewsCard } from '@/app/[category]/NewsCard';
+
+// Helper function to clean filters
+const cleanFilters = (filters: Record<string, any>): Record<string, any> => {
+  const result: Record<string, any> = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      result[key] = value;
+    }
+  });
+  return result;
+};
 
 interface NewsListClientProps {
-  initialFilters: any;
+  initialFilters: {
+    category?: string;
+    limit?: number;
+    page?: number;
+    [key: string]: any;
+  };
 }
 
 export function NewsListClient({ initialFilters }: NewsListClientProps) {
-  const [filters, setFilters] = useState(initialFilters);
-  const { prefetchNewsDetail } = usePrefetchNews();
+  const [filters] = useState(initialFilters);
+  // Prefetch functionality is currently not used
+  // const { prefetchNewsDetail } = usePrefetchNews();
 
   const {
     data,
@@ -24,19 +39,12 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     error,
   } = useInfiniteNews(filters);
 
-  const handleFilterChange = (newFilters: any) => {
-    setFilters({ ...filters, ...newFilters, page: 1 });
-  };
-
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
 
-  const handleCardHover = (newsId: string) => {
-    prefetchNewsDetail(newsId);
-  };
 
   if (isLoading) {
     return (
@@ -48,7 +56,7 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     );
   }
 
-  if (error) {
+  if (error instanceof Error) {
     return (
       <div className="text-center py-12">
         <div className="text-red-600 dark:text-red-400 mb-4">
@@ -81,7 +89,7 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
               const processedNews = processNewsItem(news);
               return (
                 <div key={processedNews.id} className="hover:shadow-lg transition-shadow">
-                  <CategoryNewsCard
+                  <NewsCard
                     news={processedNews}
                   />
                 </div>
@@ -93,37 +101,19 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     );
   };
 
-  const getImageKey = (url: string) => {
-    if (!url) return '';
-    
-    // If it's already just a key (no slashes)
-    if (!url.includes('/')) return url;
-    
-    // Extract the last part of the URL as the key
-    try {
-      const urlObj = new URL(url, 'http://dummy.com'); // Using dummy base URL to handle relative URLs
-      const pathParts = urlObj.pathname.split('/');
-      return pathParts[pathParts.length - 1];
-    } catch (e) {
-      console.error('Error parsing image URL:', url, e);
-      return '';
-    }
-  };
-
-  // Process news items to ensure they have the required fields
+  // Process news items for display
   const processNewsItem = (item: any) => ({
     ...item,
-    image: item.image ? getImageKey(item.image) : '',
-    tags: item.tags || [],
+    id: item.id?.toString() || '',
+    slug: item.slug || item.id?.toString() || '',
+    seo_title: item.seo_title || 'No title',
+    seo_description: item.seo_description || '',
+    category: item.category || 'general',
+    tags: Array.isArray(item.tags) ? item.tags : [],
+    image: item.image || '',
     image_title: item.image_title || '',
-    slug: item.slug || item.id,
-    tldr: item.tldr || [],
-    content_md: item.content_md || '',
-    original_url: item.original_url || '',
-    file_path: item.file_path || '',
-    created_at: item.created_at || new Date().toISOString(),
-    updated_at: item.updated_at || new Date().toISOString(),
-    published_at: item.published_at || item.created_at || new Date().toISOString()
+    published_at: item.published_at || new Date().toISOString(),
+    read_time: item.read_time || 0
   });
 
   return (
@@ -132,15 +122,15 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
         <div className="flex flex-wrap gap-2">
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            Total {data?.pages[0]?.data?.total || 0} news articles
+            {data?.pages[0]?.data?.total ? `Total ${data.pages[0].data.total} news articles` : 'Loading news...'}
           </span>
-          {Object.entries(urlHelpers.cleanFilters(filters)).map(([key, value]) => (
-            value && (
+          {Object.entries(cleanFilters(filters)).map(([key, value]) => 
+            value ? (
               <span key={key} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                {key}: {value}
+                {key}: {String(value)}
               </span>
-            )
-          ))}
+            ) : null
+          )}
         </div>
       </div>
 
@@ -167,85 +157,6 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
         </div>
       )}
     </div>
-  );
-}
-
-// News Card Component
-const NewsCard = ({ news, onHover }: { news: any; onHover?: () => void }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
-
-  return (
-    <article className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
-      {news.image && (
-        <div className="aspect-video bg-gray-200 dark:bg-gray-700">
-          <img
-            src={news.image}
-            alt={news.image_title || news.seo_title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        </div>
-      )}
-
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              <a
-                href={`/news/${news.slug || news.id}`}
-                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                onMouseEnter={onHover}
-              >
-                {news.seo_title}
-              </a>
-            </h2>
-
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-              {truncateText(news.seo_description, 150)}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-          <div className="flex items-center gap-4">
-            {news.category && (
-              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
-                {news.category}
-              </span>
-            )}
-
-            <time dateTime={news.published_at}>
-              {formatDate(news.published_at)}
-            </time>
-
-            {news.read_time && (
-              <span>{news.read_time} min read</span>
-            )}
-          </div>
-
-          {news.tags && news.tags.length > 0 && (
-            <div className="flex gap-1">
-              {news.tags.slice(0, 3).map((tag: string) => (
-                <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </article>
   );
 }
 

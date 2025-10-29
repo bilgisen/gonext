@@ -1,7 +1,7 @@
 // hooks/useCategoryNews.ts
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import type { NewsItem, NewsListResponse } from '@/types/news';
+import type { NewsItem } from '@/types/news';
 
 interface UseCategoryNewsOptions {
   category: string;

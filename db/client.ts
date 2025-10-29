@@ -3,7 +3,6 @@
 import { config } from 'dotenv';
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@netlify/neon";
-import * as schema from "./schema";
 
 // Load environment variables safely (ignore isTTY errors)
 try {

@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { processNewsItems } from '@/lib/news/process-news';
 import BlobImage from '@/components/BlobImage';
 import type { NewsItem } from '@/types/news';
 
@@ -21,7 +19,7 @@ export function NewsCard({
   showCategory = true, 
   featured = false 
 }: NewsCardProps) {
-  const [news, setNews] = useState<NewsItem>({
+  const [news] = useState<NewsItem>({
     ...initialNews,
     // Ensure all required fields have default values
     tags: initialNews.tags || [],
@@ -37,7 +35,7 @@ export function NewsCard({
     updated_at: initialNews.updated_at || new Date().toISOString()
   });
   
-  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [isImageLoading] = useState(false);
 
   // Extract just the image key from the URL if it's a Netlify Blob URL
   const getImageKey = (url: string) => {
@@ -53,11 +51,6 @@ export function NewsCard({
   };
 
   const imageKey = news.image ? getImageKey(news.image) : '';
-
-  const publishedAt = new Date(news.published_at);
-  const timeAgo = formatDistanceToNow(publishedAt, {
-    addSuffix: true
-  });
 
   const formatDate = (dateString: string) => {
     try {

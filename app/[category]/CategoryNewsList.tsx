@@ -16,7 +16,7 @@ interface CategoryNewsListProps {
 export function CategoryNewsList({ category, searchParams }: CategoryNewsListProps) {
   const queryClient = useQueryClient();
 
-  const [filters, setFilters] = useState<NewsFilters>({
+  const [filters] = useState<NewsFilters>(() => ({
     category,
     ...urlHelpers.parseNewsFilters(
       new URLSearchParams(
@@ -25,7 +25,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
           .filter(([_, value]) => value)
       )
     ),
-  });
+  }));
 
   useEffect(() => {
     if (category) {

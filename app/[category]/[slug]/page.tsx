@@ -36,12 +36,16 @@ async function fetchNewsItem(slug: string) {
 }
 
 export default function SingleNewsPage() {
-  const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const params = useParams<{ category: string; slug: string }>();
+  const slug = params.slug;
+  
+  if (!slug) {
+    notFound();
+  }
 
   const { data: newsItem, isLoading, isError } = useQuery({
     queryKey: ['news', slug],
-    queryFn: () => fetchNewsItem(slug),
+    queryFn: () => fetchNewsItem(slug as string),
     enabled: !!slug,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
@@ -74,18 +78,14 @@ export default function SingleNewsPage() {
   };
 
   // Fetch related news
-  const { data: relatedNews, isLoading: isLoadingRelated } = useQuery({
+  const { data: relatedNews } = useQuery({
     queryKey: ['related-news', slug],
-    queryFn: () => fetchRelatedNews(slug || '', 4),
-    enabled: !!slug,
+    queryFn: () => fetchRelatedNews(slug, 4),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const relatedNewsItems = relatedNews ? transformRelatedNews(relatedNews) : [];
 
-  if (!slug) {
-    notFound();
-  }
 
   if (isLoading) {
     return (
