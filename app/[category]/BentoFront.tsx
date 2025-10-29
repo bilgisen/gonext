@@ -123,14 +123,30 @@ interface BentoFrontProps {
 }
 
 export function BentoFront({ news, className, categories = {} }: BentoFrontProps) {
-  // Helper function to get news items by category
+  // Helper function to get news items by category with flexible matching
   const getNewsByCategory = (category: string, excludeIds: string[] = []) => {
-    return news
-      .filter(item => 
-        item.category?.toLowerCase() === category.toLowerCase() && 
+    if (!category) return null;
+    
+    // First try exact match
+    let foundItem = news.find(item => 
+      item.category?.toLowerCase() === category.toLowerCase() && 
+      !excludeIds.includes(item.id)
+    );
+    
+    // If no exact match, try partial match
+    if (!foundItem) {
+      foundItem = news.find(item => 
+        item.category?.toLowerCase().includes(category.toLowerCase()) && 
         !excludeIds.includes(item.id)
-      )
-      .slice(0, 1)[0]; // Get first matching item
+      );
+    }
+    
+    // If still no match, get any available news item
+    if (!foundItem) {
+      foundItem = news.find(item => !excludeIds.includes(item.id));
+    }
+    
+    return foundItem || null;
   };
 
   // Track used news IDs to avoid duplicates

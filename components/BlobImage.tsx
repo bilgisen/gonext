@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +10,8 @@ interface BlobImageProps extends Omit<ImageProps, 'src' | 'alt'> {
   fallback?: React.ReactNode;
 }
 
-export default function BlobImage({ 
+// Memoize the component to prevent unnecessary re-renders
+const BlobImage = memo(function BlobImage({ 
   imageKey, 
   alt,
   className = '',
@@ -19,13 +20,25 @@ export default function BlobImage({
   ...props 
 }: BlobImageProps) {
   const [error, setError] = useState(false);
-  const imageUrl = `/api/images/${encodeURIComponent(imageKey)}`;
+  
+  // Memoize the image URL to prevent recreation on every render
+  const imageUrl = useMemo(() => {
+    if (!imageKey) return '';
+    return `/api/images/${encodeURIComponent(imageKey)}`;
+  }, [imageKey]);
+  
+  // Handle image error
+  const handleError = useMemo(() => (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.warn(`Failed to load image: ${imageKey}`);
+    setError(true);
+    onError?.(e);
+  }, [imageKey, onError]);
   
   if (error && fallback) {
     return <>{fallback}</>;
   }
   
-  if (error) {
+  if (error || !imageKey) {
     return (
       <div className={cn(
         'bg-gray-100 dark:bg-gray-800 flex items-center justify-center',
@@ -42,12 +55,13 @@ export default function BlobImage({
         src={imageUrl}
         alt={alt}
         className={cn('object-cover', className)}
-        onError={(e) => {
-          setError(true);
-          onError?.(e);
-        }}
+        onError={handleError}
+        // Add cache control headers
+        unoptimized={process.env.NODE_ENV !== 'production'}
         {...props}
       />
     </div>
   );
-}
+});
+
+export default BlobImage;

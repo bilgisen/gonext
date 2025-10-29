@@ -1,81 +1,63 @@
+// app/page.tsx
 'use client';
 
-import { Suspense, lazy } from 'react';
-import dynamic from 'next/dynamic';
-import { useCategoryNews } from '@/hooks/useCategoryNews';
-import { FrontPageCategories } from '@/components/FrontPageCategories';
+import { Suspense } from 'react';
+import { BentoFront } from './[category]/BentoFront';
+import { useNews } from '@/hooks/useNews';
+import { NewsItem } from '@/types/news';
+import FrontCategoryLayoutOne from '@/components/front-category/front-cat-layout-one';
+import FrontCardLayoutTwo from '@/components/front-category/front-card-layout-two';
 
-// Lazy load the card components with proper dynamic imports
-const CategoryHero = dynamic(
-  () => import('@/app/[category]/categoryHero').then(mod => ({ default: mod.CategoryHero })),
-  { ssr: false, loading: () => <div className="h-[500px] bg-muted/20 animate-pulse rounded-xl" /> }
-);
+function HomePageContent() {
+  // Fetch all news for the Bento layout
+  const { data, isLoading, error } = useNews({
+    limit: 24,
+    sort: 'newest',
+    page: 1
+  });
 
-const BentoFront = dynamic(
-  () => import('@/app/[category]/BentoFront').then(mod => ({ default: mod.BentoFront })),
-  { ssr: false, loading: () => <div className="h-[600px] bg-muted/20 animate-pulse rounded-xl" /> }
-);
-
-const NewsCard = dynamic(
-  () => import('@/app/[category]/NewsCard').then(mod => ({ default: mod.NewsCard })),
-  { ssr: false, loading: () => <div className="h-[200px] bg-muted/20 animate-pulse rounded-xl" /> }
-);
-
-// Define props interface for CategorySection
-interface CategorySectionProps {
-  category: string | string[];
-  template: React.ComponentType<any> | React.LazyExoticComponent<React.ComponentType<any>>;
-  variant?: 'large' | 'small' | 'bento' | 'grid' | 'featured';
-  limit?: number;
-  className?: string;
-  title?: string;
-  showTabs?: boolean;
-}
-
-// Main component with proper Suspense boundaries
-function CategorySection({ 
-  category, 
-  template: Template, 
-  variant, 
-  limit = 6, 
-  className = '',
-  title,
-  showTabs = true
-}: CategorySectionProps) {
-  const { allNews, isLoading, error } = useCategoryNews(category, limit);
-
-  return (
-    <Suspense fallback={<div className="h-[500px] bg-muted/20 animate-pulse rounded-xl" />}>
-      <FrontPageCategories
-        category={category}
-        template={Template}
-        variant={variant}
-        limit={limit}
-        className={className}
-        title={title}
-        showTabs={showTabs}
-        allNews={allNews}
-        isLoading={isLoading}
-        error={error}
-      />
-    </Suspense>
-  );
-}
-
-function BusinessWorldNews() {
-  // Fetch more items than needed in case we need to filter by category
-  const { allNews, isLoading, error } = useCategoryNews(['business', 'world', 'technology', 'sports', 'entertainment'], 12);
+  // Extract news items from the response data
+  const allNews = data?.pages[0]?.data?.items || [];
 
   if (isLoading) {
-    return <div className="h-[600px] bg-muted/20 animate-pulse rounded-xl" />;
+    return (
+      <div className="space-y-6 p-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-64 bg-muted/20 animate-pulse rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">Error loading news: {error.message}</div>;
+    return (
+      <div className="text-center p-8">
+        <div className="text-red-600 dark:text-red-400 mb-4">
+          Error loading news: {error.message}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
-  // Define categories for each position
-  const categories = {
+  if (!allNews || allNews.length === 0) {
+    if (!isLoading) {
+      return (
+        <div className="text-center p-8">
+          <p className="text-muted-foreground">No news available at the moment. Please check back later.</p>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  // Define categories for the Bento layout
+  const bentoCategories = {
     // First row
     firstLarge: 'business',
     firstSmall1: 'world',
@@ -89,44 +71,51 @@ function BusinessWorldNews() {
     third3: 'world'
   };
 
-  return <BentoFront news={allNews || []} categories={categories} />;
+  return (
+    <div className="container mx-auto px-4 py-8 space-y-12">
+      {/* Featured Section with BentoFront */}
+      <section className="mb-12">
+        <h2 className="text-3xl font-bold mb-6">Featured Stories</h2>
+        <BentoFront news={allNews} categories={bentoCategories} />
+      </section>
+      
+      {/* Category Sections */}
+      <section className="space-y-12">
+        <h2 className="text-3xl font-bold mb-6">Browse by Category</h2>
+        
+       
+        
+        {/* Business */}
+        <div className="space-y-4">
+          <h3 className="text-2xl font-semibold">Business</h3>
+          <div className="">
+            <FrontCategoryLayoutOne category="science" limit={5} />
+          </div>
+        </div>
+        
+        {/* World */}
+         <div className="space-y-4">
+          <h3 className="text-2xl font-semibold">World News</h3>
+          
+            <FrontCardLayoutTwo category="world" limit={5} />
+          
+        </div>
+
+      </section>
+    </div>
+  );
 }
 
 export default function HomePage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Business & World News Section - Bento Layout */}
-      <section className="mb-16">
-        <Suspense fallback={<div className="h-[600px] bg-muted/20 animate-pulse rounded-xl" />}>
-          <BusinessWorldNews />
-        </Suspense>
-      </section>
-
-      {/* Technology Section - Grid Layout */}
-      <section className="mb-16">
-        <h2 className="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b border-border">
-          Technology
-        </h2>
-        <CategorySection
-          category="technology"
-          template={NewsCard}
-          variant="grid"
-          limit={6}
-        />
-      </section>
-
-      {/* Sports Section - Small Grid */}
-      <section className="mb-16">
-        <h2 className="text-2xl md:text-3xl font-bold mb-6 pb-2 border-b border-border">
-          Sports
-        </h2>
-        <CategorySection
-          category="sports"
-          template={NewsCard}
-          variant="small"
-          limit={4}
-        />
-      </section>
-    </div>
+    <Suspense fallback={
+      <div className="space-y-6 p-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-64 bg-muted/20 animate-pulse rounded-xl" />
+        ))}
+      </div>
+    }>
+      <HomePageContent />
+    </Suspense>
   );
 }

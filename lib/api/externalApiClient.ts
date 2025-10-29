@@ -19,9 +19,17 @@ class DatabaseApiClient {
       WHERE nt.news_id = ${dbNews.id}
     `);
 
+    // Get TL;DR items if they exist
+    const tldrResult = await (db as any).execute(`
+      SELECT text FROM news_tldr
+      WHERE news_id = ${dbNews.id}
+      ORDER BY position ASC
+    `);
+
     // Get main image if exists
     let image = '';
     let imageTitle = '';
+    let imageDesc = '';
     if (dbNews.main_media_id) {
       const mediaResult = await (db as any).execute(`
         SELECT external_url, storage_path, alt_text, caption
@@ -31,30 +39,35 @@ class DatabaseApiClient {
       if (mediaResult.rows.length > 0) {
         const media = mediaResult.rows[0] as any;
         image = media.external_url || media.storage_path || '';
-        imageTitle = media.alt_text || media.caption || '';
+        imageTitle = media.alt_text || '';
+        imageDesc = media.caption || '';
       }
     }
 
+    const categories = catsResult.rows.map((cat: any) => cat.name);
+    const primaryCategory = categories.length > 0 ? categories[0] : 'General';
+
     return {
       id: dbNews.id.toString(),
-      source_guid: dbNews.source_guid,
-      source_id: dbNews.source_id,
-      seo_title: dbNews.seo_title || dbNews.title,
+      source_guid: dbNews.source_guid || '',
+      source_id: dbNews.source_id || '',
+      seo_title: dbNews.seo_title || dbNews.title || '',
       seo_description: dbNews.seo_description || dbNews.excerpt || '',
-      tldr: [], // Will be populated from news_tldr table if needed
+      tldr: tldrResult.rows.map((row: any) => row.text) || [],
       content_md: dbNews.content_md || '',
-      category: catsResult.rows.length > 0 ? (catsResult.rows[0] as any).name : 'General',
-      tags: tagsResult.rows.map((tag: any) => tag.name),
+      category: primaryCategory,
+      categories: categories,
+      tags: tagsResult.rows.map((tag: any) => tag.name) || [],
       image: image,
       image_title: imageTitle,
-      image_desc: '',
+      image_desc: imageDesc,
       original_url: dbNews.canonical_url || '',
-      file_path: '',
-      created_at: dbNews.created_at?.toISOString() || '',
-      published_at: dbNews.published_at?.toISOString() || dbNews.created_at?.toISOString() || '',
-      updated_at: dbNews.updated_at?.toISOString() || '',
-      slug: dbNews.slug,
-      read_time: dbNews.reading_time_min || undefined,
+      file_path: dbNews.storage_path || '',
+      created_at: dbNews.created_at?.toISOString() || new Date().toISOString(),
+      published_at: dbNews.published_at?.toISOString() || dbNews.created_at?.toISOString() || new Date().toISOString(),
+      updated_at: dbNews.updated_at?.toISOString() || dbNews.created_at?.toISOString() || new Date().toISOString(),
+      slug: dbNews.slug || '',
+      read_time: dbNews.reading_time_min || 0,
       is_bookmarked: false,
     };
   }

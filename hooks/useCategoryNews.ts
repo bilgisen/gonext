@@ -1,56 +1,88 @@
-'use client';
-
-import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
+// hooks/useCategoryNews.ts
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import type { NewsItem, NewsListResponse } from '@/types/news';
 
-// Maximum number of categories we'll support
-const MAX_CATEGORIES = 3;
+interface UseCategoryNewsOptions {
+  category: string;
+  limit?: number;
+  sort?: 'newest' | 'oldest' | 'popular';
+  enabled?: boolean;
+}
 
-// Custom hook that handles multiple categories
-export function useCategoryNews(category: string | string[], limit: number = 12) {
-  const categories = useMemo(() => 
-    (Array.isArray(category) ? category : [category])
-      .filter(Boolean) // Remove any empty strings
-      .slice(0, MAX_CATEGORIES)
-  , [category]);
-  
-  // Call the hook for each category (always the same number of hooks)
-  const query1 = useInfiniteNews({ 
-    category: categories[0] || '', 
-    limit,
-  });
-  
-  const query2 = useInfiniteNews({ 
-    category: categories[1] || '', 
-    limit,
-  });
-  
-  const query3 = useInfiniteNews({ 
-    category: categories[2] || '', 
-    limit,
-  });
-  
-  // Memoize the queries array to prevent unnecessary re-renders
-  const queries = useMemo(() => [query1, query2, query3], [query1, query2, query3]);
+interface NewsListResponseData {
+  data: {
+    items: NewsItem[];
+    total: number;
+    page: number;
+    limit: number;
+    has_more: boolean;
+  };
+}
 
-  // Combine news from all categories, filtering out empty categories
+export function useCategoryNews({
+  category,
+  limit = 12,
+  sort = 'newest',
+  enabled = true,
+}: UseCategoryNewsOptions) {
+  const queryKey = ['category-news', { category, limit, sort }];
+
+  const queryFn = async (context: any) => {
+    const pageParam = context.pageParam ?? 1;
+    const response = await fetch(
+      `/api/news/categories/${encodeURIComponent(category)}?` + 
+      new URLSearchParams({
+        page: pageParam.toString(),
+        limit: limit.toString(),
+        sort,
+      })
+    );
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `Failed to fetch ${category} news`);
+    }
+    
+    return response.json() as Promise<NewsListResponseData>;
+  };
+
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery<NewsListResponseData, Error>({
+    queryKey,
+    queryFn,
+    getNextPageParam: (lastPage) => {
+      return lastPage.data.has_more ? lastPage.data.page + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: !!category && enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+
+  // Flatten all pages of news items
   const allNews = useMemo(() => {
-    return categories.map((cat, index) => {
-      if (!cat) return [];
-      const query = queries[index];
-      return query.data?.pages.flatMap((p: any) => p?.data?.items || []) || [];
-    }).flat();
-  }, [queries, categories]);
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.data?.items || []) as NewsItem[];
+  }, [data]);
 
-  // Only consider loading state for active categories
-  const isLoading = useMemo(() => 
-    categories.some((cat, index) => cat && queries[index]?.isLoading)
-  , [categories, queries]);
-  
-  // Get the first error from active categories
-  const error = useMemo(() => 
-    queries.find((query, index) => categories[index] && query.error)?.error
-  , [queries, categories]);
-
-  return { allNews, isLoading, error };
+  return {
+    data: allNews,
+    allNews, // For backward compatibility
+    isLoading,
+    isError,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+  };
 }

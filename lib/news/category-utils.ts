@@ -27,32 +27,21 @@ export const CATEGORY_MAPPINGS: CategoryMapping = {
   'emlak': 'Business',
 
 
-  // Politics
-  'politika': 'Politics',
-  'politics': 'Politics',
-  'political': 'Politics',
-  'government': 'Politics',
-  'siyaset': 'Politics',
-  'parliament': 'Politics',
-  'election': 'Politics',
-  'elections': 'Politics',
-  'secim': 'Politics',
+  // Türkiye
+  'politika': 'Türkiye',
+  'siyaset': 'Türkiye',
+  'haberler': 'Türkiye',
+  'gundem': 'Türkiye',
+  'sondakika': 'Türkiye',
+  'turkiye': 'Türkiye',
+  'haber': 'Türkiye',
+  'yerel': 'Türkiye',
 
   // Technology
   'teknoloji': 'Technology',
-  'technology': 'Technology',
-  'tech': 'Technology',
-  'innovation': 'Technology',
-  'digital': 'Technology',
-  'software': 'Technology',
-  'hardware': 'Technology',
-  'ai': 'Technology',
-  'artificial-intelligence': 'Technology',
+  'bilim': 'Technology',
   'yapay-zeka': 'Technology',
-  'bilisim': 'Technology',
-  'computer': 'Technology',
-  'programming': 'Technology',
-  'code': 'Technology',
+
 
   // Sports
   'spor': 'Sports',
@@ -71,37 +60,14 @@ export const CATEGORY_MAPPINGS: CategoryMapping = {
   'motor-sports': 'Sports',
   'motorsporlari': 'Sports',
 
-  // Health
-  'saglik': 'Health',
-  'health': 'Health',
-  'medical': 'Health',
-  'medicine': 'Health',
-  'tip': 'Health',
-  'hospital': 'Health',
-  'hastane': 'Health',
-  'doctor': 'Health',
-  'doktor': 'Health',
-  'pharma': 'Health',
-  'ilac': 'Health',
+  
 
-  // Science
-  'bilim': 'Science',
-  'science': 'Science',
-  'research': 'Science',
-  'arastirma': 'Science',
-  'discovery': 'Science',
-  'kesif': 'Science',
-  'space': 'Science',
-  'uzay': 'Science',
-  'astronomy': 'Science',
-  'gokbilim': 'Science',
-
-  // Entertainment
-  'magazin': 'Entertainment',
-  'entertainment': 'Entertainment',
-  'celebrity': 'Entertainment',
-  'music': 'Entertainment',
-  'muzik': 'Entertainment',
+  // Culture and Arts
+  'magazin': 'Culture',
+  'kultur': 'Entertainment',
+  'sanat': 'Entertainment',
+  'kultur-sanat': 'Entertainment',
+  'nlife': 'Entertainment',
   'movie': 'Entertainment',
   'movies': 'Entertainment',
   'film': 'Entertainment',
@@ -114,42 +80,8 @@ export const CATEGORY_MAPPINGS: CategoryMapping = {
   'world': 'World',
   'international': 'World',
   'global': 'World',
-  'haberler': 'World',
-  'news': 'World',
-  'gundem': 'World',
   'current': 'World',
 
-  // Travel
-  'seyahat': 'Travel',
-  'travel': 'Travel',
-  'tourism': 'Travel',
-  'turizm': 'Travel',
-  'vacation': 'Travel',
-  'tatil': 'Travel',
-  'hotel': 'Travel',
-  'oteller': 'Travel',
-
-  // Education
-  'egitim': 'Education',
-  'education': 'Education',
-  'school': 'Education',
-  'okul': 'Education',
-  'university': 'Education',
-  'universite': 'Education',
-  'student': 'Education',
-  'ogrenci': 'Education',
-
-  // Environment
-  'cevre': 'Environment',
-  'environment': 'Environment',
-  'climate': 'Environment',
-  'iklim': 'Environment',
-  'nature': 'Environment',
-  'dogal': 'Environment',
-  'green': 'Environment',
-  'yesil': 'Environment',
-  'sustainability': 'Environment',
-  'surdurulebilirlik': 'Environment',
 
   // Lifestyle
   'yasam': 'Lifestyle',

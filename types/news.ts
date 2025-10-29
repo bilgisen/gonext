@@ -1,3 +1,4 @@
+// types/news.ts
 // External API Response Types
 export interface NewsItem {
   id: string;
@@ -8,6 +9,7 @@ export interface NewsItem {
   tldr: string[];
   content_md: string;
   category: string;
+  categories: string[]; // Multiple categories support
   tags: string[];
   image: string;
   image_title: string;
@@ -17,8 +19,8 @@ export interface NewsItem {
   created_at: string;
   published_at: string;
   updated_at: string;
-  slug?: string;
-  read_time?: number;
+  slug: string;
+  read_time: number;
   is_bookmarked?: boolean;
 }
 
@@ -28,6 +30,12 @@ export interface NewsListResponse {
   page: number;
   limit: number;
   has_more: boolean;
+}
+
+// TanStack Query useInfiniteQuery için gerekli InfiniteData yapısı
+export interface NewsInfiniteData {
+  pages: NewsListResponse[]; // Her sayfa NewsListResponse tipinde
+  pageParams: (number | null)[]; // Kullanılan sayfa numaraları
 }
 
 export interface Category {
