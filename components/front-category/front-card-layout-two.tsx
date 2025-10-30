@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNews } from '@/hooks/useNews';
 import { cn } from '@/lib/utils';
-import FrontCategoryMainNewsCard from './front-cat-main-newscard';
 import FrontCategorySecondNewsCard from './front-cat-second-newscard';
 import FrontCategoryThirdNewsCard from './front-cat-third-newscard';
 import type { NewsItem } from '@/types/news';
