@@ -64,10 +64,22 @@ export type NewsApiResponse = z.infer<typeof NewsApiResponseSchema>;
 // ====================================
 
 export interface NewsItem extends Omit<NewsApiItem, 'category' | 'categories'> {
+  id: string;
+  title?: string;
   category: NewsCategory;
   categories: NewsCategory[];
   source_id: string;
+  source_guid: string;
+  seo_title: string;
+  seo_description: string;
+  image: string;
+  slug: string;
   read_time: number;
+  created_at: string;
+  updated_at: string;
+  published_at: string;
+  // Add other properties as needed
+  [key: string]: any; // For any additional dynamic properties
 }
 
 export interface CategoryEntity {
@@ -119,12 +131,12 @@ export interface BaseFilters {
 }
 
 export interface NewsFilters extends BaseFilters {
-  category?: string;
+  category?: string | string[];
+  categories?: string[];
   tag?: string;
-  sortBy?: 'date' | 'popularity' | 'relevance';
-  dateFrom?: string;
-  dateTo?: string;
   search?: string;
+  sort?: 'newest' | 'oldest' | 'popular';
+  type?: 'category' | 'tag' | 'search' | 'featured';
   excludeId?: string;
 }
 

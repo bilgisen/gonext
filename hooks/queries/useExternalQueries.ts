@@ -18,7 +18,12 @@ export interface NewsListResponse {
 async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
   const params = new URLSearchParams();
 
-  if (filters.category) params.append('category', filters.category);
+  if (filters.category) {
+    const categories = Array.isArray(filters.category) 
+      ? filters.category.join(',') 
+      : filters.category;
+    params.append('category', categories);
+  }
   if (filters.tag) params.append('tag', filters.tag);
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());

@@ -46,8 +46,10 @@
   to = "/_next/static/:splat"
   status = 200
 
-# Edge Functions configuration
-[[edge_functions]]
+# Edge Functions configuration (commented out as it's not properly configured)
+# [[edge_functions]]
+#   path = "/api/edge-function"
+#   function = "edge-function"
 
 # Scheduled Functions
 [functions]
