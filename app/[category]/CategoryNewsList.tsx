@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers, type NewsFilters } from '@/lib/urlFilters';
 import { cn } from '@/lib/utils';
+import { CATEGORY_MAPPINGS } from '@/types/news';
 import { BentoNewsCard } from './BentoNewsCard';
 import { CategoryHero } from './categoryHero';
 
@@ -15,23 +17,74 @@ interface CategoryNewsListProps {
 
 export function CategoryNewsList({ category, searchParams }: CategoryNewsListProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const [retryCount, setRetryCount] = useState(0);
 
-  const [filters] = useState<NewsFilters>(() => ({
-    category,
-    ...urlHelpers.parseNewsFilters(
-      new URLSearchParams(
-        Object.entries(searchParams)
-          .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value || ''])
-          .filter(([_, value]) => value)
-      )
-    ),
-  }));
+  // Format category name with proper title case
+  const formatCategoryName = (name: string): string => {
+    if (!name) return '';
+    // Special case for 'turkiye' -> 'Türkiye'
+    if (name.toLowerCase() === 'turkiye') return 'Türkiye';
+    // For other categories, convert to title case
+    return name
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
+  const [filters] = useState<NewsFilters>(() => {
+    // Ensure category slug is in lowercase and matches the database
+    const categorySlug = category ? category.toLowerCase() : '';
+    
+    // Map the category to a slug if it's a display name
+    const mappedSlug = CATEGORY_MAPPINGS[categorySlug] || categorySlug;
+    
+    return {
+      category: mappedSlug, // Use the mapped slug for the API request
+      ...urlHelpers.parseNewsFilters(
+        new URLSearchParams(
+          Object.entries(searchParams)
+            .map(([key, value]) => [key, Array.isArray(value) ? value[0] : value || ''])
+            .filter(([_, value]) => value)
+        )
+      ),
+    };
+  });
+
+  // Reset query state when category changes
   useEffect(() => {
     if (category) {
-      queryClient.invalidateQueries({ queryKey: ['infinite-news'], exact: false });
+      const queryKey = ['news', 'infinite', { category, limit: filters.limit || 20 }];
+      
+      // Completely remove the query to clear any error state
+      queryClient.removeQueries({ 
+        queryKey,
+        exact: false
+      });
     }
-  }, [category, queryClient]);
+  }, [category, filters.limit, queryClient]);
+  
+  // Handle retry logic
+  const handleRetry = useCallback(() => {
+    const queryKey = ['news', 'infinite', { category, limit: filters.limit || 20 }];
+    
+    // Reset retry count when retrying
+    setRetryCount(0);
+    
+    // Reset the query state before retrying
+    queryClient.resetQueries({
+      queryKey,
+      exact: false
+    });
+    
+    // Force a hard refresh of the data
+    queryClient.invalidateQueries({
+      queryKey,
+      exact: false,
+      refetchType: 'active',
+    });
+  }, [category, filters.limit, queryClient]);
 
   const queryParams = {
     category: category || '',
@@ -45,6 +98,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
     error,
   } = useInfiniteNews(queryParams);
 
@@ -65,19 +119,51 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
     );
   }
 
-  if (error)
+  // Handle error state with retry button
+  if (isError) {
     return (
-      <div className="text-center py-12 text-red-500">
-        Failed to load {category} news
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 px-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-500 mb-2">
+            Failed to load {formatCategoryName(category)} news
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {error instanceof Error ? error.message : 'An unknown error occurred'}
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={handleRetry}
+            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? 'Retrying...' : 'Try Again'}
+          </button>
+          
+          <button
+            onClick={() => router.refresh()}
+            className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+        
+        {retryCount > 0 && (
+          <p className="text-sm text-gray-500 mt-4">
+            Attempt {retryCount + 1} of 3
+          </p>
+        )}
       </div>
     );
+  }
 
   const allNews = data?.pages.flatMap((p) => p.data?.items || []) || [];
 
   if (allNews.length === 0)
     return (
       <div className="text-center py-12 text-gray-500">
-        No news found in {category}.
+        No news found in {formatCategoryName(category)}.
       </div>
     );
 
@@ -96,6 +182,12 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
                 variant={index === 0 ? 'large' : 'small'}
                 className="h-full" 
               />
+              <a 
+                href={`/${newsItem.category.toLowerCase()}`}
+                className="text-xl font-medium text-foreground hover:text-primary"
+              >
+                {formatCategoryName(newsItem.category)}
+              </a>
             </div>
           ))}
         </div>

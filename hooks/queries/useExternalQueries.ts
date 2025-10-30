@@ -27,19 +27,32 @@ async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
   const queryString = params.toString();
   const url = `/api/news${queryString ? `?${queryString}` : ''}`;
 
-  const response = await fetch(url);
+  try {
+    console.log('📡 Fetching news from:', url);
+    const response = await fetch(url);
+    const result = await response.json();
 
-  if (!response.ok) {
-    throw new Error(`Database fetch error: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      throw new Error(result.message || `Failed to fetch news: ${response.statusText}`);
+    }
+
+    // Ensure the response has the expected structure
+    if (!result || typeof result !== 'object') {
+      console.error('❌ Invalid response format from server:', result);
+      throw new Error('Invalid response format from server');
+    }
+
+    if (!result.success) {
+      console.error('❌ API returned error:', result.error);
+      throw new Error(result.error || 'Failed to fetch news from database');
+    }
+
+    console.log('✅ Fetched news successfully, items count:', result.data?.items?.length || 0);
+    return result.data;
+  } catch (error) {
+    console.error('❌ Error in fetchNewsFromDatabase:', error);
+    throw new Error('Failed to fetch news. Please try again later.');
   }
-
-  const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error || 'Failed to fetch news from database');
-  }
-
-  return result.data;
 }
 
 async function fetchNewsByIdFromDatabase(id: string) {
@@ -111,33 +124,48 @@ export function useInfiniteNews({
   return useInfiniteQuery({
     queryKey: ['news', 'infinite', { category, tag, limit, excludeId }],
     queryFn: async ({ pageParam = 1 }) => {
-      const response = await fetchNewsFromDatabase({
-        category,
-        tag,
-        page: pageParam as number,
-        limit,
-        excludeId,
-      });
+      try {
+        console.log(`🔄 Fetching page ${pageParam} for category: ${category}`);
+        const response = await fetchNewsFromDatabase({
+          category,
+          tag,
+          page: pageParam as number,
+          limit,
+          excludeId,
+        });
 
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to fetch news');
-      }
-
-      return {
-        ...response,
-        data: {
-          ...response.data,
-          has_more: response.data.items.length >= (limit || 10)
+        // Ensure the response has the expected structure
+        if (!response || !response.items) {
+          console.error('❌ Invalid response structure:', response);
+          throw new Error('Invalid response format from server');
         }
-      };
+
+        const hasMore = response.items.length >= (limit || 10);
+        console.log(`✅ Fetched ${response.items.length} items, has more: ${hasMore}`);
+
+        return {
+          data: {
+            items: response.items || [],
+            total: response.total || 0,
+            page: pageParam,
+            limit,
+            has_more: hasMore,
+          },
+        };
+      } catch (error) {
+        console.error('❌ Error in useInfiniteNews queryFn:', error);
+        throw error; // Re-throw to let React Query handle the error
+      }
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      if (!lastPage.data.has_more) return undefined;
+      if (!lastPage?.data?.has_more) return undefined;
       return allPages.length + 1;
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+    retryDelay: 1000,
   });
 }
 

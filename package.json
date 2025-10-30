@@ -11,6 +11,7 @@
     "test:news": "tsx scripts/test-news-fetch.ts",
     "test:db": "tsx scripts/test-database.ts",
     "news:fetch": "tsx scripts/news-fetch-cli.ts",
+    "news:update-tags": "tsx scripts/update-news-tags.ts",
     "setup:env": "node scripts/setup-env.js"
   },
   "dependencies": {

@@ -144,7 +144,7 @@ export function NewsCard({
               featured ? 'text-lg' : 'text-base'
             )}>
               <Link
-                href={`/${news.category}/${news.slug || news.id}`}
+                href={`/${news.category.toLowerCase()}/${news.slug || news.id}`}
                 className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 {news.seo_title}

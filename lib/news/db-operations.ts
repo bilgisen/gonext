@@ -11,6 +11,7 @@ import {
   sources,
   import_logs
 } from '../../db/schema';
+import { processAndSaveTags } from './tags-utils';
 import {
   NewsInsertData,
   NewsApiItem,
@@ -18,7 +19,12 @@ import {
   ValidationError
 } from './types';
 import { createSlug, createUniqueSlug } from './slug-utils';
-import { extractCategoryFromUrl, createCategorySlug, CATEGORY_MAPPINGS } from './category-utils';
+import { 
+  extractCategoryFromUrls, 
+  createCategorySlug,
+  CATEGORY_MAPPINGS,
+  type Category
+} from './category-utils';
 import { processNewsImage } from './image-processor';
 import { checkDuplicateNews } from './duplicate-check';
 import { parseNewsDate } from '@/lib/utils/date-utils';
@@ -68,36 +74,110 @@ export async function findOrCreateSource(baseUrl: string): Promise<number> {
  */
 export async function findOrCreateCategory(categoryName: string): Promise<number> {
   try {
-    const slug = createCategorySlug(categoryName);
+    if (!categoryName || typeof categoryName !== 'string') {
+      // Return default category (turkiye) if no valid category name is provided
+      const defaultCategory = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.slug, 'turkiye'))
+        .limit(1);
+      
+      if (defaultCategory.length > 0) {
+        return defaultCategory[0].id;
+      }
+      throw new Error('Default category not found');
+    }
 
-    // Önce mevcut category'yi ara
-    const existingCategory = await db
-      .select()
+    // First, try to find by name (case-insensitive)
+    const existingCategories = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(sql`LOWER(${categories.name}) = LOWER(${categoryName})`)
+      .limit(1);
+
+    if (existingCategories.length > 0) {
+      return existingCategories[0].id;
+    }
+
+    // If not found by name, try by slug
+    const slug = createCategorySlug(categoryName);
+    const existingBySlug = await db
+      .select({ id: categories.id })
       .from(categories)
       .where(eq(categories.slug, slug))
       .limit(1);
 
-    if (existingCategory.length > 0) {
-      return existingCategory[0].id;
+    if (existingBySlug.length > 0) {
+      return existingBySlug[0].id;
     }
 
-    // Yeni category oluştur
-    const newCategory = await db
-      .insert(categories)
-      .values({
-        name: categoryName,
-        slug,
-        created_at: new Date(),
-      })
-      .returning();
+    // If still not found, create a new category
+    console.log(`Creating new category: ${categoryName} (${slug})`);
+    
+    try {
+      const newCategory = await db
+        .insert(categories)
+        .values({
+          name: categoryName,
+          slug,
+          is_active: true, // Explicitly set is_active
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning({ id: categories.id });
 
-    return newCategory[0].id;
+      return newCategory[0].id;
+    } catch (error) {
+      const insertError = error as Error & { code?: string };
+      
+      // If there's a unique constraint violation on slug, try to find the category again
+      if (insertError.code === '23505') { // Unique violation
+        const existing = await db
+          .select({ id: categories.id })
+          .from(categories)
+          .where(eq(categories.slug, slug))
+          .limit(1);
+          
+        if (existing.length > 0) {
+          return existing[0].id;
+        }
+      }
+      throw insertError;
+    }
   } catch (error) {
-    throw new NewsFetchError(
-      'Failed to find or create category',
-      'CATEGORY_ERROR',
-      error as Error
-    );
+    console.error(`Error in findOrCreateCategory for "${categoryName}":`, error);
+    
+    // Fallback to default category (turkiye)
+    try {
+      const defaultCategory = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.slug, 'turkiye'))
+        .limit(1);
+        
+      if (defaultCategory.length > 0) {
+        return defaultCategory[0].id;
+      }
+      
+      // If we can't find the default category, try to create it
+      const newDefault = await db
+        .insert(categories)
+        .values({
+          name: 'Türkiye',
+          slug: 'turkiye',
+          created_at: new Date(),
+        })
+        .returning();
+        
+      return newDefault[0].id;
+    } catch (fallbackError) {
+      console.error('Failed to use fallback category:', fallbackError);
+      throw new NewsFetchError(
+        `Failed to find or create category: ${categoryName}`,
+        'CATEGORY_ERROR',
+        error as Error
+      );
+    }
   }
 }
 
@@ -108,37 +188,8 @@ export async function findOrCreateCategory(categoryName: string): Promise<number
  */
 export async function findOrCreateTags(tagNames: string[]): Promise<number[]> {
   try {
-    const tagIds: number[] = [];
-
-    for (const tagName of tagNames) {
-      const slug = createCategorySlug(tagName);
-
-      // Önce mevcut tag'i ara
-      const existingTag = await db
-        .select()
-        .from(tags)
-        .where(eq(tags.slug, slug))
-        .limit(1);
-
-      if (existingTag.length > 0) {
-        tagIds.push(existingTag[0].id);
-        continue;
-      }
-
-      // Yeni tag oluştur
-      const newTag = await db
-        .insert(tags)
-        .values({
-          name: tagName,
-          slug,
-          created_at: new Date(),
-        })
-        .returning();
-
-      tagIds.push(newTag[0].id);
-    }
-
-    return tagIds;
+    // Use the new processAndSaveTags utility to handle tag processing and saving
+    return await processAndSaveTags(tagNames);
   } catch (error) {
     throw new NewsFetchError(
       'Failed to find or create tags',
@@ -359,11 +410,14 @@ export async function insertNews(
     const sourceUrl = new URL(apiItem.original_url).origin;
     const sourceId = await findOrCreateSource(sourceUrl);
 
-    // Category çıkar ve oluştur
-    const categoryName = apiItem.category || extractCategoryFromUrl(apiItem.original_url);
+    // Extract category from URL
+    const categoryName = extractCategoryFromUrls([apiItem.original_url]);
 
+    // If we still don't have a valid category, try the item's category
+    const finalCategory = (categoryName || apiItem.category || 'turkiye').toLowerCase();
+    
     // Always use mapped category name for consistency
-    const mappedCategoryName = CATEGORY_MAPPINGS[categoryName.toLowerCase()] || categoryName;
+    const mappedCategoryName = (CATEGORY_MAPPINGS[finalCategory] || finalCategory) as Category;
 
     const categoryId = await findOrCreateCategory(mappedCategoryName);
 

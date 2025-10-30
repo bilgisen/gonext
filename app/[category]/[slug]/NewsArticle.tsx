@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import BlobImage from '@/components/BlobImage';
@@ -58,35 +58,71 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
 
   const imageKey = newsItem.image ? getImageKey(newsItem.image) : '';
 
-  // Format date for display in English
+  // Format date for display in English with time
   const formatDate = (dateString?: string | null): string => {
-    if (!dateString) return '';
+    if (!dateString) {
+      console.log('No date string provided');
+      return '';
+    }
 
     try {
       const date = new Date(dateString);
 
-      // Check if the date is valid
-      if (isNaN(date.getTime())) {
+      // Check if the date is valid and not the default date (January 1, 0001)
+      if (isNaN(date.getTime()) || date.getFullYear() <= 1) {
+        console.log('Invalid or default date:', dateString);
         return '';
       }
 
-      // Check if it's a default date (like 2001-01-01)
-      if (date.getFullYear() < 2020) {
+      const currentYear = new Date().getFullYear();
+      // Only check for obviously invalid future dates (more than 1 year in future)
+      if (date.getFullYear() > currentYear + 1) {
+        console.log('Suspicious future date:', date);
         return '';
       }
 
-      return format(date, 'MMMM d, yyyy');
+      // Format as "Month Day, Year at HH:MM" (e.g., "October 30, 2025 at 14:30")
+      return format(date, 'MMMM d, yyyy \'at\' HH:mm');
     } catch (error) {
-      console.error('Error formatting date:', error);
+      console.error('Error formatting date:', error, 'Date string:', dateString);
       return '';
     }
   };
 
-  const publishedDate = newsItem.published_at || newsItem.created_at || '';
-  const formattedDate = publishedDate ? formatDate(publishedDate) : '';
+  // Get the most appropriate date, preferring published_at, then created_at, then updated_at
+  const getBestAvailableDate = (): string | null => {
+    const dates = [
+      newsItem.published_at,
+      newsItem.created_at,
+      newsItem.updated_at,
+      new Date().toISOString() // Fallback to current date if all else fails
+    ];
 
+    for (const dateStr of dates) {
+      if (!dateStr) continue;
+      
+      const date = new Date(dateStr);
+      // Accept dates between 2000 and next year
+      if (!isNaN(date.getTime()) && date.getFullYear() > 2000 && date.getFullYear() <= new Date().getFullYear() + 1) {
+        return dateStr;
+      }
+    }
+    return null;
+  };
 
-
+  const bestDate = getBestAvailableDate();
+  const formattedDate = bestDate ? formatDate(bestDate) : '';
+  
+  // Debug log to check date selection
+  console.log('Selected date:', {
+    original: { 
+      published_at: newsItem.published_at, 
+      created_at: newsItem.created_at, 
+      updated_at: newsItem.updated_at 
+    },
+    selected: bestDate,
+    formatted: formattedDate || 'No valid date found'
+  });
 
   return (
     <article className="max-w-3xl mx-auto px-0">
@@ -94,6 +130,18 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
 
       {/* Article Header */}
       <header className="mb-8">
+        {newsItem.category && (
+          <div className="mb-4">
+            <a 
+              href={`/${newsItem.category.toLowerCase()}`}
+              className="text-xl font-medium text-foreground hover:text-primary"
+            >
+              {newsItem.category === 'turkiye' ? 'Türkiye' : 
+               newsItem.category === 'technology' ? 'Technology' :
+               newsItem.category.charAt(0).toUpperCase() + newsItem.category.slice(1)}
+            </a>
+          </div>
+        )}
         <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
@@ -102,12 +150,17 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           </h3>
         )}
 
-        {/* Date */}
-        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+      
+        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6 space-x-2">
           {formattedDate && (
-            <time dateTime={publishedDate}>
-              {formattedDate}
-            </time>
+            <div className="flex items-center space-x-1">
+              <Calendar className="h-4 w-4" />
+              <span>{formattedDate.split(' at ')[0]}</span>
+              <Clock className="h-4 w-4 ml-2" />
+              <time dateTime={bestDate || ''}>
+                {formattedDate.split(' at ')[1]}
+              </time>
+            </div>
           )}
         </div>
       </header>

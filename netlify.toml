@@ -48,6 +48,15 @@
 
 # Edge Functions configuration
 [[edge_functions]]
+
+# Scheduled Functions
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/functions"]
+
+# Configure the scheduled function
+[functions."fetch-news-cron"]
+  schedule = "*/15 * * * *"  # Every 15 minutes
   function = "blob-image"
   path = "/api/blob-image"
 

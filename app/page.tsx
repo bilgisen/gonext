@@ -58,16 +58,16 @@ function HomePageContent() {
   // Define categories for the Bento layout
   const bentoCategories = {
     // First row
-    firstLarge: 'business',
-    firstSmall1: 'world',
+    firstLarge: 'turkiye',
+    firstSmall1: 'business',
     firstSmall2: 'business',
     // Second row
-    second1: 'business',
-    second2: 'world',
+    second1: 'world',
+    second2: 'turkiye',
     // Third row
     third1: 'business',
     third2: 'world',
-    third3: 'world'
+    third3: 'turkiye'
   };
 
   return (
@@ -86,9 +86,9 @@ function HomePageContent() {
         
         {/* Business */}
         <div className="space-y-4">
-          <h3 className="text-2xl font-semibold">Business</h3>
+          <h3 className="text-2xl font-semibold">Türkiye</h3>
           <div className="">
-            <FrontCategoryLayoutOne category="science" limit={5} />
+            <FrontCategoryLayoutOne category="turkiye" limit={5} />
           </div>
         </div>
         

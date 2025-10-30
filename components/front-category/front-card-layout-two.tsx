@@ -36,21 +36,20 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
     enabled: true,
   });
   
-  // Debug log the filtered news items
+  // Debug logs for better troubleshooting
+  console.log('FrontCardLayoutTwo - Raw API response:', data);
+  console.log('FrontCardLayoutTwo - Pages:', data?.pages);
+  console.log('FrontCardLayoutTwo - First page:', data?.pages?.[0]);
+  
+  // Access the news items from the response according to NewsListResponse type
+  const newsItems: NewsItem[] = data?.pages?.[0]?.data?.items || [];
+  
   console.log('Filtered news items for category', { 
     originalCategory: category, 
     formattedCategory,
-    items: data?.pages?.[0]?.data?.items || [] 
+    items: newsItems,
+    hasItems: newsItems.length > 0
   });
-
-  // Debug log the response data
-  console.log('FrontCardLayoutTwo - data:', data);
-
-  // Access the first page of results
-  const newsItems: NewsItem[] = data?.pages?.[0]?.data?.items || [];
-  
-  // Debug log the news items
-  console.log('FrontCardLayoutTwo - newsItems:', newsItems);
 
   if (isLoading) {
     return (
@@ -62,7 +61,18 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
     );
   }
 
-  if (error || !newsItems.length) {
+  if (error) {
+    console.error('Error loading news:', error);
+    return (
+      <div className={`rounded-lg border border-dashed p-8 text-center ${className}`}>
+        <p className="text-muted-foreground">
+          Error loading news. Please try again later.
+        </p>
+      </div>
+    );
+  }
+
+  if (!isLoading && (!newsItems || newsItems.length === 0)) {
     return (
       <div className={`rounded-lg border border-dashed p-8 text-center ${className}`}>
         <p className="text-muted-foreground">No news available for {category}.</p>

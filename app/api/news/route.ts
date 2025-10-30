@@ -1,6 +1,6 @@
 // app/api/news/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db/client'; // Drizzle client'iniz
+import { db } from '@/db/client';
 import {
   news,
   categories,
@@ -8,7 +8,7 @@ import {
   media,
   news_categories,
   news_tags,
-} from '@/db/schema'; // Schema dosyanız
+} from '@/db/schema';
 import { eq, and, or, ilike, inArray, desc, sql } from 'drizzle-orm';
 import { CATEGORY_MAPPINGS, NewsItem, NewsListResponse } from '@/types/news'; // CATEGORY_MAPPINGS ve NewsItem/NewsListResponse import edin
 
@@ -38,40 +38,27 @@ export async function GET(request: NextRequest) {
     const whereConditions = [eq(news.status, 'published')]; // Base filter
     const withQueries: any[] = []; // For CTE (WITH) clauses
 
-    // Kategori filtresi
+    // Kategori filtresi - artık sadece slug'ları kullanıyoruz
     if (filters.category) {
-      const categoryNames = filters.category.split(',').map(cat => cat.trim().toLowerCase());
-      console.log('🔍 Looking for categories:', categoryNames);
+      const categorySlugs = filters.category.split(',').map(cat => cat.trim().toLowerCase());
+      console.log('🔍 Looking for categories by slug:', categorySlugs);
 
-      // CATEGORY_MAPPINGS ile eşle
-      const mappedCategoryNames = categoryNames.map(name => CATEGORY_MAPPINGS[name] || name);
-
-      // Geçerli kategori ID'lerini veritabanından çek
+      // Doğrudan slug üzerinden arama yap
       const categoryResult = await db
         .select({ id: categories.id })
         .from(categories)
-        .where(inArray(categories.name, mappedCategoryNames));
+        .where(inArray(sql`LOWER(${categories.slug})`, categorySlugs));
+        
+      console.log('🔍 Category query result:', categoryResult);
 
       if (categoryResult.length > 0) {
         const categoryIds = categoryResult.map(row => row.id);
-        // Create a subquery for news with matching categories
-        const newsInCategories = db.$with('news_in_categories').as(
-          db.selectDistinct({ id: news.id })
-            .from(news)
-            .innerJoin(news_categories, eq(news.id, news_categories.news_id))
-            .where(inArray(news_categories.category_id, categoryIds))
-        );
         
-        // Add the condition using the subquery
-        whereConditions.push(
-          inArray(news.id, db.select({ id: newsInCategories.id }).from(newsInCategories))
-        );
-        
-        // Add the WITH clause to the main query
-        withQueries.push(newsInCategories);
+        // Directly add the category filter to the where conditions
+        whereConditions.push(inArray(news_categories.category_id, categoryIds));
       } else {
-        console.warn('⚠️ No valid categories found in:', mappedCategoryNames);
-        // Geçerli kategori yoksa, boş sonuç döndür
+        console.warn('⚠️ No valid categories found with slugs:', categorySlugs);
+        // Return empty result if no categories found
         return NextResponse.json({
           success: true,
           data: {
@@ -190,9 +177,19 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Count result:', total);
 
-    // 1. First, get the distinct news items with pagination
-    const newsQuery = db
-      .with(...withQueries)
+    // Create a new array for where conditions that we can modify
+    const finalWhereConditions = [...whereConditions];
+    
+    // Add category filter if provided
+    if (filters.category) {
+      // Convert category slug to lowercase for case-insensitive comparison
+      const categorySlug = filters.category.toLowerCase();
+      const categoryCondition = eq(sql`LOWER(${categories.slug})`, categorySlug);
+      finalWhereConditions.push(categoryCondition);
+    }
+
+    // Build and execute the query
+    const newsItems = await db
       .select({
         // News fields
         id: news.id,
@@ -220,16 +217,15 @@ export async function GET(request: NextRequest) {
       })
       .from(news)
       .leftJoin(media, eq(news.main_media_id, media.id))
-      .where(and(...whereConditions))
+      .innerJoin(news_categories, eq(news.id, news_categories.news_id))
+      .innerJoin(categories, eq(news_categories.category_id, categories.id))
+      .where(and(...finalWhereConditions))
       .orderBy(desc(news.published_at), desc(news.created_at))
       .limit(filters.limit)
       .offset(offset);
 
-    // 2. Get the news items
-    const newsItems = await newsQuery;
-    const newsIds = newsItems.map(item => item.id);
-
-    console.log('🔍 Fetched news items:', newsItems.length);
+    console.log('🔍 Found news items:', newsItems.length);
+    const newsIds = newsItems.map((item) => String(item.id));
 
     // 3. Fetch related data in parallel
     const [categoriesData, tagsData] = await Promise.all([
@@ -239,10 +235,11 @@ export async function GET(request: NextRequest) {
           news_id: news_categories.news_id,
           id: categories.id,
           name: categories.name,
+          slug: categories.slug,
         })
         .from(categories)
         .innerJoin(news_categories, eq(categories.id, news_categories.category_id))
-        .where(inArray(news_categories.news_id, newsIds)) : [],
+        .where(inArray(sql`${news_categories.news_id}::int`, newsIds.map(id => parseInt(id, 10)))) : Promise.resolve([]),
       
       // Tags
       newsIds.length > 0 ? db
@@ -250,15 +247,16 @@ export async function GET(request: NextRequest) {
           news_id: news_tags.news_id,
           id: tags.id,
           name: tags.name,
+          slug: tags.slug,
         })
         .from(tags)
         .innerJoin(news_tags, eq(tags.id, news_tags.tag_id))
-        .where(inArray(news_tags.news_id, newsIds)) : []
+        .where(inArray(sql`${news_tags.news_id}::int`, newsIds.map(id => parseInt(id, 10)))) : Promise.resolve([]),
     ]);
 
     // 4. Group related data by news_id
-    type CategoryItem = { news_id: number; id: number; name: string };
-    type TagItem = { news_id: number; id: number; name: string };
+    type CategoryItem = { news_id: number; id: number; name: string; slug: string };
+    type TagItem = { news_id: number; id: number; name: string; slug: string };
 
     const categoriesByNewsId: Record<number, CategoryItem[]> = {};
     const tagsByNewsId: Record<number, TagItem[]> = {};

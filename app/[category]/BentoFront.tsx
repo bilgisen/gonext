@@ -152,29 +152,33 @@ export function BentoFront({ news, className, categories = {} }: BentoFrontProps
   // Track used news IDs to avoid duplicates
   const usedIds = new Set<string>();
   
-  // Get news for each position based on category
-  const firstLarge = getNewsByCategory(categories.firstLarge || 'business');
+  // Get the current category from the URL
+  const currentCategory = typeof window !== 'undefined' ? 
+    window.location.pathname.split('/').pop() || 'politics' : 'politics';
+    
+  // Get news items for each position, using the current category as fallback
+  const firstLarge = getNewsByCategory(categories.firstLarge || currentCategory, []);
   if (firstLarge) usedIds.add(firstLarge.id);
   
-  const firstSmall1 = getNewsByCategory(categories.firstSmall1 || 'world', [...usedIds]);
+  const firstSmall1 = getNewsByCategory(categories.firstSmall1 || currentCategory, [...usedIds]);
   if (firstSmall1) usedIds.add(firstSmall1.id);
   
-  const firstSmall2 = getNewsByCategory(categories.firstSmall2 || 'world', [...usedIds]);
+  const firstSmall2 = getNewsByCategory(categories.firstSmall2 || currentCategory, [...usedIds]);
   if (firstSmall2) usedIds.add(firstSmall2.id);
   
-  const second1 = getNewsByCategory(categories.second1 || 'business', [...usedIds]);
+  const second1 = getNewsByCategory(categories.second1 || currentCategory, [...usedIds]);
   if (second1) usedIds.add(second1.id);
   
-  const second2 = getNewsByCategory(categories.second2 || 'world', [...usedIds]);
+  const second2 = getNewsByCategory(categories.second2 || currentCategory, [...usedIds]);
   if (second2) usedIds.add(second2.id);
   
-  const third1 = getNewsByCategory(categories.third1 || 'technology', [...usedIds]);
+  const third1 = getNewsByCategory(categories.third1 || currentCategory, [...usedIds]);
   if (third1) usedIds.add(third1.id);
   
-  const third2 = getNewsByCategory(categories.third2 || 'sports', [...usedIds]);
+  const third2 = getNewsByCategory(categories.third2 || currentCategory, [...usedIds]);
   if (third2) usedIds.add(third2.id);
   
-  const third3 = getNewsByCategory(categories.third3 || 'entertainment', [...usedIds]);
+  const third3 = getNewsByCategory(categories.third3 || currentCategory, [...usedIds]);
   if (third3) usedIds.add(third3.id);
   
   // Group into rows
