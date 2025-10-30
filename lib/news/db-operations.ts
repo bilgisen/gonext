@@ -3,7 +3,6 @@ import { db } from '../../db/client';
 import {
   news,
   categories,
-  tags,
   news_categories,
   news_tags,
   media,

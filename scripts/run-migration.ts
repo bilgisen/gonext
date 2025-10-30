@@ -1,4 +1,3 @@
-import { db } from '../db/client';
 import { up as addIsActiveToCategories } from '../db/migrations/202410300146_add_is_active_to_categories';
 
 async function runMigrations() {

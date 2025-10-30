@@ -1,6 +1,5 @@
 import { db } from '../db/client';
 import { categories } from '../db/schema';
-import { eq } from 'drizzle-orm';
 
 async function checkCategories() {
   try {
