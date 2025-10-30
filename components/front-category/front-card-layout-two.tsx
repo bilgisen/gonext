@@ -1,3 +1,4 @@
+// components/front-category/front-card-layout-two.tsx
 import React from 'react';
 import { useNews } from '@/hooks/useNews';
 import { cn } from '@/lib/utils';
@@ -9,16 +10,18 @@ import type { NewsItem } from '@/types/news';
 interface FrontCardLayoutTwoProps {
   category?: string;
   limit?: number;
+  offset?: number; // Add offset prop
   className?: string;
 }
 
 const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
   category = 'all',
   limit = 5, // Show exactly 5 items (1 center + 2 left + 2 right)
+  offset = 0, // Default offset is 0
   className = '',
 }) => {
   // Debug log the props
-  console.log('FrontCardLayoutTwo - props:', { category, limit });
+  console.log('FrontCardLayoutTwo - props:', { category, limit, offset });
 
   // Format category name to match API expectations (e.g., 'business' -> 'Business')
   const formatCategoryName = (cat: string) => {
@@ -32,23 +35,37 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
   const { data, isLoading, error } = useNews({
     category: formattedCategory,
     limit,
+    offset, // Add offset to the API call
     sort: 'newest',
     enabled: true,
   });
   
-  // Debug logs for better troubleshooting
-  console.log('FrontCardLayoutTwo - Raw API response:', data);
-  console.log('FrontCardLayoutTwo - Pages:', data?.pages);
-  console.log('FrontCardLayoutTwo - First page:', data?.pages?.[0]);
   
-  // Access the news items from the response according to NewsListResponse type
-  const newsItems: NewsItem[] = data?.pages?.[0]?.data?.items || [];
+  // Safely access news items from different possible response structures
+  const responseData = data?.pages?.[0]?.data;
+  let newsItems: NewsItem[] = [];
+  
+  if (Array.isArray(responseData?.items)) {
+    newsItems = responseData.items;
+  } else if (Array.isArray(responseData)) {
+    newsItems = responseData;
+  } else if (Array.isArray(data?.pages?.[0]?.data)) {
+    newsItems = data.pages[0].data;
+  }
+  
+  const hasMore = responseData?.has_more || false;
+  const totalItems = responseData?.total || 0;
   
   console.log('Filtered news items for category', { 
     originalCategory: category, 
     formattedCategory,
+    offset,
     items: newsItems,
-    hasItems: newsItems.length > 0
+    hasItems: newsItems.length > 0,
+    hasMore,
+    total: totalItems,
+    responseData: responseData,
+    fullResponse: data
   });
 
   if (isLoading) {
@@ -80,9 +97,9 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
     );
   }
 
-  // Take only the first 5 news items (1 for left, 2 for center, 2 for right)
-  const items = newsItems.slice(0, 5);
-  const [firstItem, secondItem, thirdItem, fourthItem, fifthItem] = items;
+  // Ensure newsItems is an array and take only the first 5 items
+  const items = Array.isArray(newsItems) ? newsItems.slice(0, 5) : [];
+  const [firstItem, secondItem, thirdItem, fourthItem, fifthItem] = items || [];
 
   return (
     <div className={cn('grid grid-cols-12 gap-6 w-full', className)}>
@@ -91,7 +108,6 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
         {firstItem && (
           <FrontCategorySecondNewsCard
             item={firstItem}
-            showCategory={category === 'all'}
             className="h-full"
           />
         )}
@@ -101,7 +117,7 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
       <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full">
         {secondItem && (
           <div className="flex-1">
-            <FrontCategoryMainNewsCard
+            <FrontCategoryThirdNewsCard
               item={secondItem}
               showCategory={category === 'all'}
               className="h-full"
@@ -132,7 +148,7 @@ const FrontCardLayoutTwo: React.FC<FrontCardLayoutTwoProps> = ({
         )}
         {fifthItem && (
           <div className="flex-1">
-            <FrontCategoryMainNewsCard
+            <FrontCategoryThirdNewsCard
               item={fifthItem}
               showCategory={category === 'all'}
               className="h-full"

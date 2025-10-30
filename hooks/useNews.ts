@@ -1,21 +1,12 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useEffect } from 'react';
 import type { NewsItem } from '@/types/news';
 import { newsKeys } from '@/lib/queries/queryKeys';
 
-interface NewsListResponse {
-  data: {
-    items: NewsItem[];
-    total: number;
-    page: number;
-    limit: number;
-    has_more: boolean;
-  };
-}
-
 interface UseNewsOptions {
   page?: number;
   limit?: number;
+  offset?: number;
   category?: string | string[];
   tag?: string;
   search?: string;
@@ -29,22 +20,27 @@ export function useNews(options: UseNewsOptions = {}) {
   const {
     page = 1,
     limit = 12,
+    offset,
     category,
     tag,
     search,
     sort = 'newest',
     enabled = true,
     queryKey: customQueryKey,
-    type,
   } = options;
 
-  // Build query key and params
   const { queryKey, queryParams } = useMemo(() => {
-    // If custom query key is provided, use it directly
     if (customQueryKey) {
       const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('limit', limit.toString());
+      if (offset !== undefined) {
+        // If offset is provided, use offset-based pagination
+        params.append('offset', offset.toString());
+        params.append('limit', limit.toString());
+      } else {
+        // Otherwise use page-based pagination
+        params.append('page', page.toString());
+        params.append('limit', limit.toString());
+      }
       if (sort) params.append('sort', sort);
       if (category) {
         const categories = Array.isArray(category) ? category : [category];
@@ -59,22 +55,32 @@ export function useNews(options: UseNewsOptions = {}) {
       };
     }
     
-    // Otherwise, build the query key and params
     const type = options.type || (category ? 'category' : tag ? 'tag' : search ? 'search' : 'featured');
-    const queryKey = newsKeys.list({
+    
+    // Create a query key that includes offset if present
+    const baseQueryKey = {
       type,
-      page,
       limit,
       ...(category && { category }),
       ...(tag && { tag }),
       ...(search && { search }),
       sort
-    });
+    };
     
-    // Build query params for the API call
+    const finalQueryKey = offset !== undefined 
+      ? { ...baseQueryKey, offset }
+      : { ...baseQueryKey, page };
+    
+    const queryKey = newsKeys.list(finalQueryKey);
+    
     const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
+    if (offset !== undefined) {
+      params.append('offset', offset.toString());
+      params.append('limit', limit.toString());
+    } else {
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+    }
     if (sort) params.append('sort', sort);
     if (category) {
       const categories = Array.isArray(category) ? category : [category];
@@ -87,36 +93,64 @@ export function useNews(options: UseNewsOptions = {}) {
       queryKey,
       queryParams: params
     };
-  }, [category, tag, search, page, limit, sort, customQueryKey, options.type]);
+  }, [category, tag, search, page, limit, offset, sort, customQueryKey, options.type]);
 
   useEffect(() => {
     console.log('useNews - Query Key:', queryKey);
     console.log('useNews - Query Params:', queryParams);
-  }, [queryKey, queryParams]);
+    console.log('useNews - Offset:', offset);
+  }, [queryKey, queryParams, offset]);
 
-  // Use the query params from the memoized value
-  const queryFn = async ({ pageParam = 1 }) => {
-    const params = new URLSearchParams(queryParams.toString());
-    params.set('page', pageParam.toString());
-    
-    const response = await fetch(`/api/news?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json();
-  };
-
-  return useInfiniteQuery({
+  // Always use useQuery, and handle the response format
+  const queryResult = useQuery({
     queryKey,
-    queryFn,
-    getNextPageParam: (lastPage) => {
-      return lastPage.data.has_more ? lastPage.data.page + 1 : undefined;
+    queryFn: async () => {
+      const response = await fetch(`/api/news?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
     },
-    initialPageParam: 1,
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
+
+  // Format the result to match the expected structure
+  return {
+    ...queryResult,
+    data: queryResult.data ? {
+      // Handle both direct items array and nested data.items structure
+      pages: [{
+        data: {
+          // Check if the response has a data property with items, otherwise use the response directly
+          items: Array.isArray(queryResult.data.data?.items) 
+            ? queryResult.data.data.items 
+            : Array.isArray(queryResult.data.data)
+              ? queryResult.data.data
+              : Array.isArray(queryResult.data)
+                ? queryResult.data
+                : [],
+          // Get total count or default to items length
+          total: queryResult.data.total || queryResult.data.data?.total || 0,
+          // Calculate has_more based on offset/limit or default to false
+          has_more: offset !== undefined 
+            ? (offset + limit) < (queryResult.data.total || queryResult.data.data?.total || 0)
+            : false,
+          offset: offset,
+          limit: limit
+        }
+      }]
+    } : undefined,
+    // Calculate pagination states
+    hasNextPage: offset !== undefined 
+      ? (offset + limit) < (queryResult.data?.total || queryResult.data?.data?.total || 0)
+      : false,
+    fetchNextPage: () => Promise.resolve(),
+    isFetchingNextPage: false,
+    hasPreviousPage: offset ? offset > 0 : false,
+    fetchPreviousPage: () => Promise.resolve(),
+  };
 }
 
 export function useNewsItem(id: string) {

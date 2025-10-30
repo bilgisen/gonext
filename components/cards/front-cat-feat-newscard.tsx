@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
 
-interface FrontCategoryThirdNewsCardProps {
+interface FrontCategoryFeatNewsCardProps {
   item: NewsItem;
   className?: string;
   showCategory?: boolean;
@@ -13,7 +13,7 @@ interface FrontCategoryThirdNewsCardProps {
   showReadTime?: boolean;
 }
 
-const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
+const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   item,
   className,
   showCategory = true,
@@ -82,7 +82,7 @@ const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
       )}
     >
       {/* Image Container with taller height */}
-      <div className="relative w-full pt-[60%] overflow-hidden">
+      <div className="relative w-full pt-[65%] overflow-hidden">
         {imageKey ? (
           <BlobImage
             imageKey={imageKey}
@@ -106,7 +106,7 @@ const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
       </div>
 
       {/* Content */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-4 mt-4 mb-4 flex-1 flex flex-col">
         {/* Category */}
         {showCategory && item.category && (
           <span className="text-xs font-medium text-primary mb-2">
@@ -115,11 +115,16 @@ const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
         )}
 
         {/* Title */}
-        <h3 className="text-md font-semibold mb-2 line-clamp-2">
+        <h3 className="text-4xl font-bold mb-2 line-clamp-2">
           {item.seo_title}
         </h3>
 
-        
+        {/* Description - optional */}
+        {item.seo_description && (
+          <p className="text-xl text-muted-foreground/90 mb-3 line-clamp-2">
+            {item.seo_description}
+          </p>
+        )}
 
         {/* Date and Read Time - Only show if we have a valid date */}
         {(showDate && formattedDate) || showReadTime ? (
@@ -143,4 +148,4 @@ const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
   );
 };
 
-export default FrontCategoryThirdNewsCard;
+export default FrontCategoryFeatNewsCard;

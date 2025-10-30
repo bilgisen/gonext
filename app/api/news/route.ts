@@ -22,15 +22,23 @@ export async function GET(request: NextRequest) {
     const filters = {
       category: searchParams.get('category') || undefined,
       tag: searchParams.get('tag') || undefined,
-      page: searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1, // Varsayılan 1
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 20, // Varsayılan 20
+      page: searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : undefined,
+      offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!, 10) : undefined,
+      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 20, // Default 20
       search: searchParams.get('search') || undefined,
     };
 
-    // Limitleri kontrol et
-    filters.page = Math.max(1, filters.page);
+    // Validate and set limits
     filters.limit = Math.min(50, Math.max(1, filters.limit)); // Max 50, Min 1
-    const offset = (filters.page - 1) * filters.limit;
+    
+    // If offset is provided, use it directly, otherwise calculate from page
+    let offset: number;
+    if (filters.offset !== undefined) {
+      offset = Math.max(0, filters.offset); // Ensure offset is not negative
+    } else {
+      const page = Math.max(1, filters.page || 1);
+      offset = (page - 1) * filters.limit;
+    }
 
     console.log('📡 API Request:', { filters, url: request.url });
 
@@ -223,8 +231,14 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(news.published_at), desc(news.created_at))
       .limit(filters.limit)
       .offset(offset);
+      
+    console.log('📊 Query details:', { 
+      limit: filters.limit, 
+      offset,
+      whereConditions,
+      itemCount: newsItems.length
+    });
 
-    console.log('🔍 Found news items:', newsItems.length);
     const newsIds = newsItems.map((item) => String(item.id));
 
     // 3. Fetch related data in parallel
