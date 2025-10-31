@@ -102,7 +102,3 @@
   for = "/images/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, must-revalidate"
-
-
-  min_bytes = 1024  # 1KB
-  max_bytes = 10485760  # 10MB

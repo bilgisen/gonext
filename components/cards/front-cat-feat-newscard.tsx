@@ -11,6 +11,8 @@ interface FrontCategoryFeatNewsCardProps {
   showCategory?: boolean;
   showDate?: boolean;
   showReadTime?: boolean;
+  compactTitle?: boolean;
+  showDescription?: boolean;
 }
 
 const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
@@ -19,6 +21,8 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   showCategory = true,
   showDate = true,
   showReadTime = true,
+  compactTitle = false,
+  showDescription = false,
 }) => {
   // Extract the image key from the URL if it's a full URL
   const imageKey = item.image ? item.image.split('/').pop() || '' : '';
@@ -106,23 +110,29 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
       </div>
 
       {/* Content */}
-      <div className="p-4 mt-4 mb-4 flex-1 flex flex-col">
+      <div className="p-4 mt-0 mb-2 flex-1 flex flex-col">
         {/* Category */}
         {showCategory && item.category && (
-          <span className="text-xs font-medium text-primary mb-2">
+          <span className="text-sm font-medium text-primary mb-2">
             {item.category}
           </span>
         )}
 
         {/* Title */}
-        <h3 className="text-4xl font-bold mb-2 line-clamp-2">
-          {item.seo_title}
-        </h3>
+        {compactTitle ? (
+          <h3 className="text-md font-semibold line-clamp-2 mb-2">
+            {item.seo_title || item.title}
+          </h3>
+        ) : (
+          <h2 className="text-4xl font-bold mb-2 line-clamp-3">
+            {item.seo_title || item.title}
+          </h2>
+        )}
 
         {/* Description - optional */}
-        {item.seo_description && (
-          <p className="text-xl text-muted-foreground/90 mb-3 line-clamp-2">
-            {item.seo_description}
+        {showDescription && (item.seo_description || item.description) && (
+          <p className="text-muted-foreground/90 mb-3 line-clamp-4">
+            {item.seo_description || item.description}
           </p>
         )}
 
