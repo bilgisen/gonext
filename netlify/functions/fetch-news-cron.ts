@@ -11,9 +11,9 @@ if (process.env.NODE_ENV !== "production") {
   await import("dotenv/config");
 }
 
-const DEFAULT_LIMIT = 50;
+const DEFAULT_LIMIT = 20;
 const DEFAULT_OFFSET = 0;
-const DEFAULT_BATCH_SIZE = 50;
+const DEFAULT_BATCH_SIZE = 20;
 const DEFAULT_FORCE = false;
 
 const fetchNewsScheduledFunction = async (_req: Request, context: { next_run?: string }) => {
