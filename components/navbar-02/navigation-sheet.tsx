@@ -18,8 +18,13 @@ export const NavigationSheet = () => {
       </VisuallyHidden>
 
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Menu />
+        <Button 
+          variant="outline" 
+          size="icon"
+          className="md:hidden h-10 w-10 bg-amber-400 hover:bg-amber-300 border-amber-600 hover:border-amber-700 text-amber-900"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent className="px-6 py-3">

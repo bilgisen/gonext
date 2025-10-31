@@ -124,14 +124,15 @@ export default function SingleNewsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Breadcrumb
-        items={[
-          { href: '/', label: 'Home' },
-          { href: '/news', label: 'News' },
-          { href: `/${params.category}`, label: params.category || 'Category' },
-          { label: newsItem.seo_title || 'Article' }
-        ]}
-      />
+      <div className="hidden sm:block md:block">
+        <Breadcrumb
+          items={[
+            { href: '/', label: 'Home' },
+            { href: `/${params.category}`, label: params.category || 'Category' },
+            { label: newsItem.seo_title || 'Article' }
+          ]}
+        />
+      </div>
       <NewsArticle newsItem={newsItem} />
 
       {/* Related News Section */}

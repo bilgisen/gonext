@@ -77,7 +77,7 @@ const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-lg overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card text-card-foreground',
+        'bg-card/20 text-card-foreground',
         className
       )}
     >
@@ -115,7 +115,7 @@ const FrontCategoryThirdNewsCard: React.FC<FrontCategoryThirdNewsCardProps> = ({
         )}
 
         {/* Title */}
-        <h3 className="text-md font-semibold mb-2 line-clamp-2">
+        <h3 className="text-lg font-semibold mb-2 line-clamp-3">
           {item.seo_title}
         </h3>
 

@@ -75,7 +75,7 @@ const FrontCategorySecondNewsCard: React.FC<FrontCategorySecondNewsCardProps> = 
       className={cn(
         'group flex flex-col rounded-lg overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card text-card-foreground',
+        'bg-card/20 text-card-foreground',
         className
       )}
     >
@@ -107,13 +107,12 @@ const FrontCategorySecondNewsCard: React.FC<FrontCategorySecondNewsCardProps> = 
       <div className="p-4 flex-1 flex flex-col">
 
         {/* Title */}
-        <h3 className="text-3xl font-bold mb-2 line-clamp-2">
-          {item.seo_title}
-        </h3>
+<h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold mb-2 line-clamp-3">          {item.seo_title}
+        </h2>
 
         {/* Description - optional */}
         {item.seo_description && (
-          <p className="text-md text-muted-foreground mb-3 line-clamp-3">
+          <p className="text-lg sm:text-md md:text-lg text-muted-foreground mb-3 line-clamp-4">
             {item.seo_description}
           </p>
         )}

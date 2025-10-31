@@ -38,9 +38,9 @@ function HomePageContent() {
 
         {/* İlk grid hemen yüklensin */}
         <FrontCategoryLayoutOne
-          mainCategory="world"
+          mainCategory="business"
           secondCategory="turkiye"
-          thirdCategory="business"
+          thirdCategory="world"
           fourthCategory="sports"
           fifthCategory="technology"
           className="mb-8"

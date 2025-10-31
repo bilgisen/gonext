@@ -26,7 +26,7 @@ const Navbar02Page = () => {
             </Button>
 
             {/* Mobile Menu */}
-            <div className="md:hidden">
+            <div className="md:hidden ml-2">
               <NavigationSheet />
             </div>
           </div>

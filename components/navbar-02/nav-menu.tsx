@@ -13,7 +13,7 @@ export const NavMenu = (props: ComponentProps<typeof NavigationMenu>) => (
     <NavigationMenuList className="gap-1 data-[orientation=vertical]:-ms-2 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start data-[orientation=vertical]:justify-start">
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="#" className="text-foreground hover:text-foreground/80">
+          <Link href="/turkiye" className="text-foreground hover:text-foreground/80">
             Türkiye
           </Link>
         </NavigationMenuLink>
@@ -34,21 +34,21 @@ export const NavMenu = (props: ComponentProps<typeof NavigationMenu>) => (
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="#" className="text-foreground hover:text-foreground/80">
+          <Link href="/technology" className="text-foreground hover:text-foreground/80">
             Technology
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="#" className="text-foreground hover:text-foreground/80">
+          <Link href="/culture" className="text-foreground hover:text-foreground/80">
             Arts & Culture
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="#" className="text-foreground hover:text-foreground/80">
+          <Link href="/sports" className="text-foreground hover:text-foreground/80">
             Sports
           </Link>
         </NavigationMenuLink>

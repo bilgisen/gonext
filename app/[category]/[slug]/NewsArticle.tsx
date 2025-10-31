@@ -133,11 +133,11 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         {newsItem.category && (
           <div className="mb-4">
             <a 
-              href={`/${newsItem.category.toLowerCase()}`}
+              href={`/${newsItem.category.toLowerCase() === 'türkiye' ? 'turkiye' : newsItem.category.toLowerCase()}`}
               className="text-xl font-medium text-foreground hover:text-primary"
             >
-              {newsItem.category === 'turkiye' ? 'Türkiye' : 
-               newsItem.category === 'technology' ? 'Technology' :
+              {newsItem.category.toLowerCase() === 'turkiye' || newsItem.category.toLowerCase() === 'türkiye' ? 'Türkiye' : 
+               newsItem.category.toLowerCase() === 'technology' ? 'Technology' :
                newsItem.category.charAt(0).toUpperCase() + newsItem.category.slice(1)}
             </a>
           </div>
