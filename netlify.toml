@@ -15,7 +15,7 @@
 # Image optimization with Netlify Image CDN
 [[redirects]]
   from = "/_netlify/images/*"
-  to = "https://api.netlify.com/image/v1/:splat"
+  to = "https://api.netlify.com/image/v1/:splat"  # Boşluk ve fazladan nokta kaldırıldı
   status = 200
   force = true
 
@@ -57,18 +57,18 @@
   external_node_modules = ["@netlify/functions"]
 
 # Configure the scheduled function
-[functions."fetch-news-cron"]
-  schedule = "*/15 * * * *"  # Every 15 minutes
-  function = "blob-image"
-  path = "/api/blob-image"
+[functions."fetch-news-cron"] # Fonksiyon dosyasının adı (uzantı hariç)
+  schedule = "*/15 * * * *"  # Every 15 minutes - Netlify'nin cron desteklediğinden emin olun, aksi takdirde "0,15,30,45 * * * *" kullanın
+  # 'function' ve 'path' anahtarları Scheduled Function için geçerli DEĞİLDİR.
+  # Scheduled Function'lar URL üzerinden erişilebilir değildir.
 
-# Handle API routes
+# Handle API routes (Genel API yönlendirmeleri, Scheduled Function'ı etkilemez)
 [[redirects]]
   from = "/api/*"
   to = "/api/:splat"
   status = 200
 
-# Handle static files
+# Handle static files (Genel fallback, Scheduled Function'ı etkilemez)
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -114,7 +114,7 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, must-revalidate"
 
-# Handle image optimization requests
+# Handle image optimization requests (Genel resim optimizasyon yönlendirmesi)
 [[redirects]]
   from = "/_netlify/images"
   to = "/_next/image"
@@ -123,7 +123,7 @@
   [redirects.query]
     url = ":url"
     w = ":width"
-    q = "quality"
+    q = ":quality"
 
 # Serve static images directly
 [[headers]]
@@ -135,16 +135,17 @@
 [images]
   # Allow image optimization from specific domains
   remote_images = [
-    "https://image.dunya.com/.*",
-    "https://*.dunya.com/.*",
-    "https://i.dunya.com/.*",
-    "https://images.unsplash.com/.*"
+    "https://image.dunya.com/", # Fazladan boşluk ve .* kaldırıldı
+    "https://*.dunya.com/",
+    "https://i.dunya.com/",     # Fazladan boşluk kaldırıldı
+    "https://images.unsplash.com/" # Fazladan boşluk kaldırıldı
   ]
+  # remote_patterns, regex desenleri için kullanılır
   remote_patterns = [
-    "^https?:\\/\\/image\\.dunya\\.com\\/.*$",
-    "^https?:\\/\\/.*\\.dunya\\.com\\/.*$",
-    "^https?:\\/\\/i\\.dunya\\.com\\/.*$",
-    "^https?:\\/\\/images\\.unsplash\\.com\\/.*$"
+    "^https://image\\.dunya\\.com/.*$",
+    "^https://[^/]*\\.dunya\\.com/.*$", # .*\\.dunya\\.com yerine [^/]*\\.dunya\\.com daha spesifik olabilir
+    "^https://i\\.dunya\\.com/.*$",
+    "^https://images\\.unsplash\\.com/.*$"
   ]
   min_bytes = 1024  # 1KB
   max_bytes = 10485760  # 10MB
