@@ -78,7 +78,7 @@ const FrontCategoryMainNewsCard: React.FC<FrontCategoryMainNewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-lg overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card text-card-foreground',
+        'bg-card/50 text-card-foreground',
         className
       )}
     >
@@ -103,7 +103,7 @@ const FrontCategoryMainNewsCard: React.FC<FrontCategoryMainNewsCardProps> = ({
             <span className="text-muted-foreground">No image</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-lineer-to-t from-black/60 to-transparent" />
         
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
           {showCategory && item.category && (

@@ -41,6 +41,9 @@ const fetchNewsScheduledFunction = async (_req: Request, context: { next_run?: s
       result = await fetchNewsIncremental({ limit, offset, force });
     }
 
+    // 'result' değişkenini TypeScript uyarısını önlemek ve değerini loglamak için kullanıyoruz.
+    console.log("📊 Fetch result summary:", result);
+
     const status = await getSystemStatus();
     console.log(`✅ API Healthy: ${status.apiHealthy}`);
     console.log(`✅ DB Connected: ${status.databaseConnected}`);
@@ -51,16 +54,14 @@ const fetchNewsScheduledFunction = async (_req: Request, context: { next_run?: s
       console.log(`  ${op}: ${m.count} ops, ${Math.round(m.averageTime)}ms avg`);
     }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: "News fetch completed", result }),
-    };
+    // Zamanlanmış fonksiyon olduğu için bir yanıt döndürmüyoruz.
+    // return { statusCode: 200, body: JSON.stringify(...) }; satırı kaldırıldı.
+    // return; // Veya bu satırı da kaldırabilirsiniz, fonksiyon zaten burada bitecek ve undefined dönecek.
   } catch (error) {
     console.error("💥 Scheduled Function Error:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: (error as Error).message }),
-    };
+    // Hata durumunda da bir şey döndürmeden fonksiyonu sonlandırıyoruz.
+    // Netlify, hatayı loglayacaktır.
+    // throw error; // Alternatif: Hatanın loglanmasını sağlamak için fırlatabilirsiniz.
   }
 };
 

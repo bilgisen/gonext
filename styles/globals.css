@@ -45,119 +45,76 @@
     --radius-xl: 20px;
 }
 
-/* ---------- Light theme (existing, slightly polished) ---------- */
 :root {
-    /* Apple Light Theme Colors */
-    --background: #ffffff;
-    --foreground: #0b0b0d; /* stronger contrast than pure black */
-    --card: #ffffff;
-    --card-foreground: #0b0b0d;
-    --popover: #ffffff;
-    --popover-foreground: #0b0b0d;
-    --primary: #0071e3; /* Apple Blue */
-    --primary-foreground: #ffffff;
-    --secondary: #f5f5f7; /* Apple Light Gray */
-    --secondary-foreground: #1d1d1f;
-    --muted: #f5f5f7;
-    --muted-foreground: #6e6e73; /* subtle but readable */
-    --accent: #0071e3;
-    --accent-foreground: #ffffff;
-    --destructive: #ff3b30;
-    --destructive-foreground: #ffffff;
-    --border: #e6e6ea; /* slightly tuned for contrast */
-    --input: #f7f7f8;
-    --ring: rgba(0,113,227,0.45);
-    --chart-1: #0071e3;
-    --chart-2: #34c759;
-    --chart-3: #ff9500;
-    --chart-4: #ffcc00;
-    --chart-5: #af52de;
-    --sidebar: #f7f7f8;
-    --sidebar-foreground: #1d1d1f;
-    --sidebar-primary: #0071e3;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #eef0f4;
-    --sidebar-accent-foreground: #1d1d1f;
-    --sidebar-border: #e6e6ea;
-    --sidebar-ring: rgba(0,113,227,0.45);
-
-    /* Fonts */
-    --font-apple-system:
-        -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue",
-        Helvetica, sans-serif;
-    --font-sf-mono: "SF Mono", Menlo, monospace;
-    --font-sans: var(--font-apple-system);
-    --font-serif: "New York", Georgia, serif;
-    --font-mono: var(--font-sf-mono);
-
-    /* Radii & Shadows */
-    --radius: 10px;
-    --shadow-2xs: 0px 1px 2px rgba(0,0,0,0.04);
-    --shadow-xs: 0px 1px 3px rgba(0,0,0,0.08);
-    --shadow-sm: 0px 2px 4px rgba(0,0,0,0.08);
-    --shadow: 0px 2px 6px rgba(0,0,0,0.08);
-    --shadow-md: 0px 6px 14px rgba(0,0,0,0.08);
-    --shadow-lg: 0px 12px 28px rgba(0,0,0,0.08);
-    --shadow-xl: 0px 20px 40px rgba(0,0,0,0.10);
-    --shadow-2xl: 0px 28px 60px rgba(0,0,0,0.12);
+  --radius: 0.5rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.795 0.184 86.047);
+  --primary-foreground: oklch(0.421 0.095 57.708);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.795 0.184 86.047);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.795 0.184 86.047);
+  --sidebar-primary-foreground: oklch(0.421 0.095 57.708);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.795 0.184 86.047);
 }
 
-/* ---------- Dark theme: .dark class, data-theme and prefers-color-scheme ---------- */
-/* Use both .dark and [data-theme="dark"] to be flexible for toggles */
-.dark,
-:root[data-theme="dark"] {
-    /* Core */
-    --background: #0b0c0e;         /* near-black but not pure black for depth */
-    --foreground: #e6eef8;         /* soft bright for long reading */
-    --card: #0f1113;               /* card slightly lighter than bg */
-    --card-foreground: #e6eef8;
-    --popover: #0f1113;
-    --popover-foreground: #e6eef8;
-
-    /* Primary / Accents */
-    --primary: #3aa0ff;            /* slightly lighter blue for contrast on dark */
-    --primary-foreground: #0b0c0e;
-    --accent: #60d37a;             /* green accent tuned for dark */
-    --accent-foreground: #07120a;
-    --destructive: #ff6b6b;        /* softer destructive on dark */
-    --destructive-foreground: #0b0c0e;
-
-    /* Secondary / Muted */
-    --secondary: #0d0f12;          /* subtle panel */
-    --secondary-foreground: #c7d2e5;
-    --muted: #131419;
-    --muted-foreground: #9aa6bb;   /* lower contrast but legible */
-
-    /* Borders, inputs, rings */
-    --border: rgba(255,255,255,0.06);     /* thin luminous border */
-    --input: rgba(255,255,255,0.03);      /* subtle field fill */
-    --ring: rgba(58,160,255,0.28);        /* halo for focus in dark */
-    --sidebar: #0e1012;
-    --sidebar-foreground: #d9e6fb;
-    --sidebar-primary: #3aa0ff;
-    --sidebar-primary-foreground: #071426;
-    --sidebar-accent: #13151a;
-    --sidebar-accent-foreground: #bfcfe8;
-    --sidebar-border: rgba(255,255,255,0.04);
-    --sidebar-ring: rgba(58,160,255,0.30);
-
-    /* Charts (higher contrast on dark) */
-    --chart-1: #3aa0ff;
-    --chart-2: #34d27a;
-    --chart-3: #ffb86b;
-    --chart-4: #ffd54d;
-    --chart-5: #c48bff;
-
-    /* Shadows adapted for dark (glow-ish, subtle) */
-    --shadow-2xs: 0 1px 2px rgba(0,0,0,0.6);
-    --shadow-xs: 0 2px 6px rgba(2,6,23,0.6);
-    --shadow-sm: 0 6px 12px rgba(2,6,23,0.6);
-    --shadow: 0 10px 20px rgba(2,6,23,0.6);
-    --shadow-md: 0 16px 40px rgba(2,6,23,0.6);
-    --shadow-lg: 0 24px 60px rgba(2,6,23,0.6);
-    --shadow-xl: 0 32px 80px rgba(2,6,23,0.6);
-    --shadow-2xl: 0 48px 120px rgba(2,6,23,0.65);
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.795 0.184 86.047);
+  --primary-foreground: oklch(0.421 0.095 57.708);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.554 0.135 66.442);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.795 0.184 86.047);
+  --sidebar-primary-foreground: oklch(0.421 0.095 57.708);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.554 0.135 66.442);
 }
+
+
 
 /* If user's system prefers dark, set data-theme automatically (non-invasive) */
 @media (prefers-color-scheme: dark) {
@@ -283,6 +240,21 @@
         line-height: 2rem;
         font-size: 1.2rem;
     }
+
+.prose ul li,
+.prose ol li {
+    margin-bottom: 2rem;
+    line-height: 2rem;
+    font-size: 1.2rem;
+    /* Madde işaretlerini görünür yap */
+    list-style-type: disc; /* Veya "decimal" gibi diğer stiller */
+    padding-left: 1rem; /* Gerekirse madde işaretlerinin konumunu ayarlayın */
+}
+
+/* Varsa sıralı listeler için */
+.prose ol li {
+    list-style-type: decimal;
+}
 
      .prose h2 {
         margin-bottom: 1rem;

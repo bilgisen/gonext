@@ -79,9 +79,9 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
     <Link 
       href={`/${categorySlug}/${item.slug}`}
       className={cn(
-        'group flex flex-col rounded-lg overflow-hidden',
+        'group flex flex-col rounded-md overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card text-card-foreground',
+        'bg-card/20 text-card-foreground',
         className
       )}
     >

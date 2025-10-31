@@ -1,3 +1,4 @@
+// lib/news/index.ts
 import { NewsApiItem } from './types';
 import { fetchNewsFromApi } from './api-client';
 import { insertNews } from './db-operations';
