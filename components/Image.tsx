@@ -1,4 +1,3 @@
-import { OptimizedImage } from '@/lib/image-utils';
 import { type CSSProperties } from 'react';
 
 interface ImageProps {
@@ -63,20 +62,7 @@ export default function Image({
       className={`relative ${className}`} 
       style={{ width: '100%', height: '100%', ...style }}
     >
-      <OptimizedImage
-        src={src}
-        alt={alt || ''}
-        width={width}
-        height={height}
-        quality={quality}
-        priority={priority}
-        loading={loading}
-        sizes={sizes}
-        placeholder={placeholder}
-        blurDataURL={blurDataURL}
-        className="w-full h-full object-cover"
-        {...props}
-      />
+      
     </div>
   );
 }
