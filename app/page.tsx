@@ -37,9 +37,14 @@ function HomePageContent() {
         <Separator className="mb-6"/>
 
         {/* İlk grid hemen yüklensin */}
-        <FrontCategoryLayoutOne/>
-        
-        
+        <FrontCategoryLayoutOne
+          mainCategory="world"
+          secondCategory="turkiye"
+          thirdCategory="business"
+          fourthCategory="sports"
+          fifthCategory="technology"
+          className="mb-8"
+        />
       </section>
 
       {/* Diğer kategoriler lazy load olur */}
