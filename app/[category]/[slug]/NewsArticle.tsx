@@ -190,25 +190,6 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         </div>
       )}
 
-      {/* TL;DR Section */}
-      {newsItem.tldr && newsItem.tldr.length > 0 && (
-        <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-3 uppercase tracking-wide">
-            TL;DR
-          </h3>
-          <ul className="space-y-2">
-            {newsItem.tldr.map((item, index) => (
-              <li key={index} className="flex items-start text-sm text-blue-700 dark:text-blue-300">
-                <span className="flex w-5 h-5 bg-blue-500 text-white text-xs rounded-full items-center justify-center mr-3 mt-0.5 shrink-0">
-                  {index + 1}
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* Article Content */}
       <div className="prose dark:prose-invert max-w-none mb-8">
         <MarkdownRenderer>

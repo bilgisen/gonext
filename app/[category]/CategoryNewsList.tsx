@@ -67,7 +67,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
   
   // Handle retry logic
   const handleRetry = useCallback(() => {
-    const queryKey = ['news', 'infinite', { category, limit: filters.limit || 20 }];
+    const queryKey = ['news', 'infinite', { category, limit: filters.limit || 24 }];
     
     // Reset retry count when retrying
     setRetryCount(0);
@@ -175,19 +175,14 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
           {allNews.slice(0, 2).map((newsItem, index) => (
             <div key={newsItem.id} className={cn(
               index === 0 ? 'md:col-span-2' : 'md:col-span-1',
-              index === 1 ? 'hidden md:block' : ''
+              index === 1 ? 'hidden md:block' : '',
+              'flex flex-col h-full'
             )}>
               <CategoryHero 
                 news={newsItem} 
                 variant={index === 0 ? 'large' : 'small'}
                 className="h-full" 
               />
-              <a 
-                href={`/${newsItem.category.toLowerCase()}`}
-                className="text-xl font-medium text-foreground hover:text-primary"
-              >
-                {formatCategoryName(newsItem.category)}
-              </a>
             </div>
           ))}
         </div>
