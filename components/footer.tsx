@@ -119,47 +119,6 @@ const Footer = () => {
               </div>
             ))}
 
-            {/* Social and Contact Column */}
-            <div className="col-span-full sm:col-span-2 md:col-span-3 lg:col-span-2 xl:col-span-1">
-              <h6 className="font-semibold text-foreground tracking-tight">
-                Contact Us
-              </h6>
-              <ul className="mt-6 space-y-3">
-                <li>
-                  <Link
-                    href="mailto:info@example.com"
-                    className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm flex items-center gap-2"
-                  >
-                    <MailIcon className="w-4 h-4" />
-                    Email
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://example.com"
-                    target="_blank"
-                    className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm flex items-center gap-2"
-                  >
-                    <GlobeIcon className="w-4 h-4" />
-                    example.com
-                  </Link>
-                </li>
-              </ul>
-              <div className="mt-6 flex space-x-4">
-                {socialLinks.map((social, index) => (
-                  <div key={index}>
-                    <Link
-                      href={social.href}
-                      target="_blank"
-                      className="text-muted-foreground hover:text-foreground transition-colors duration-200 block"
-                    >
-                      <social.icon className="w-5 h-5" />
-                      <span className="sr-only">{social.icon.name}</span>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
           <Separator />
           <div className="py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-x-2 gap-y-5 px-6 xl:px-0">
