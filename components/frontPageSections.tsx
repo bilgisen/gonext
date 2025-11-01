@@ -111,7 +111,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
         )}
 
         {compactTitle ? (
-          <h3 className="text-lg font-medium mb-0 line-clamp-3">
+          <h3 className="text-lg md:text-lg sm:text-xl font-medium mb-0 line-clamp-3">
             {item.seo_title}
           </h3>
         ) : (
@@ -267,14 +267,25 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
       break;
     case 'c':
       // 1/4, 1/4, 1/2
-      // Sol sütun (1/4) için: secondItem
-      // Sağ sütun (1/4) için: thirdItem
-      // Orta sütun (1/2) için: firstItem
-      // 1/4 sütunlarda 2 kart isteniyorsa, her sütuna 2 kart koymalıyız.
-      // Yani: Sol sütun: secondItem, fourthItem. Sağ sütun: thirdItem, fifthItem.
+      // Sol sütun (1/4) için: secondItem, fourthItem
+      // Sağ sütun (1/4) için: thirdItem, fifthItem
+      // Orta sütun (1/2) için: firstItem (ana haber)
+      // Mobilde: firstItem üstte (order-1), diğerleri altta
       layoutContent = (
         <>
-          <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full">
+          {/* Ana haber - Mobilde üstte, masaüstünde sağda */}
+          <div className="col-span-12 md:col-span-6 order-1 md:order-3">
+            {firstItem && (
+              <NewsCard
+                item={firstItem}
+                showDescription
+                className="h-full"
+              />
+            )}
+          </div>
+          
+          {/* Sol sütun - Mobilde ortada */}
+          <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full order-2 md:order-1">
             {secondItem && (
               <div className="flex-1">
                 <NewsCard
@@ -296,7 +307,9 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
               </div>
             )}
           </div>
-          <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full">
+          
+          {/* Sağ sütun - Mobilde altta */}
+          <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full order-3 md:order-2">
             {thirdItem && (
               <div className="flex-1">
                 <NewsCard
@@ -316,15 +329,6 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
                   className="h-full"
                 />
               </div>
-            )}
-          </div>
-          <div className="col-span-12 md:col-span-6">
-            {firstItem && (
-              <NewsCard
-                item={firstItem}
-                showDescription
-                className="h-full"
-              />
             )}
           </div>
         </>

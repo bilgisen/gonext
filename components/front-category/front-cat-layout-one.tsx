@@ -5,11 +5,10 @@ import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Calendar, Clock, RefreshCw } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNewsFromDatabase } from '@/hooks/queries/useExternalQueries';
-import { useCallback } from 'react';
 
 // ... (FrontCategoryFeatNewsCard tanımı aynı) ...
 interface FrontCategoryFeatNewsCardProps {
@@ -113,7 +112,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
 
         {compactTitle ? (
-          <h3 className="text-lg font-medium line-height-tight line-clamp-2 mb-0">
+          <h3 className="text-lg sm:text-lg font-medium line-height-tight line-clamp-2 mb-0">
             {item.seo_title || item.title}
           </h3>
         ) : (
@@ -164,7 +163,7 @@ const FrontCategoryLayoutOne = ({
   initialData,
 }: FrontCategoryLayoutOneProps) => {
   // Ana haber (Turkey)
-  const { data: mainNewsData, refetch: refetchMain } = useQuery({
+  const { data: mainNewsData } = useQuery({
     queryKey: ['news', { category: 'turkiye', limit: 1, sort: 'newest' }],
     queryFn: () => fetchNewsFromDatabase({ category: 'turkiye', limit: 1, sort: 'newest' }),
     staleTime: 0, // initialData ile başlatıldıktan sonra hemen yenile
@@ -174,7 +173,7 @@ const FrontCategoryLayoutOne = ({
   });
 
   // Sol kolon (Business) - 2 haber
-  const { data: leftNewsData, refetch: refetchLeft } = useQuery({
+  const { data: leftNewsData } = useQuery({
     queryKey: ['news', { category: 'business', limit: 2, sort: 'newest' }],
     queryFn: () => fetchNewsFromDatabase({ category: 'business', limit: 2, sort: 'newest' }),
     staleTime: 0,
@@ -184,7 +183,7 @@ const FrontCategoryLayoutOne = ({
   });
 
   // Sağ kolon (World) - 2 haber
-  const { data: rightNewsData, refetch: refetchRight } = useQuery({
+  const { data: rightNewsData } = useQuery({
     queryKey: ['news', { category: 'world', limit: 2, sort: 'newest' }],
     queryFn: () => fetchNewsFromDatabase({ category: 'world', limit: 2, sort: 'newest' }),
     staleTime: 0,
@@ -192,13 +191,6 @@ const FrontCategoryLayoutOne = ({
     initialData: initialData.rightItems.length > 0 ? { items: initialData.rightItems.filter(Boolean) as NewsItem[], total: initialData.rightItems.length, has_more: false, offset: 0, limit: 2 } : undefined,
     // initialDataUpdatedAt kaldırıldı
   });
-
-  const handleRefresh = useCallback(() => {
-    // Sadece bu bileşenin verilerini yenile
-    refetchMain();
-    refetchLeft();
-    refetchRight();
-  }, [refetchMain, refetchLeft, refetchRight]);
 
   // Verileri uygun formatta al
   const mainItem = mainNewsData?.items?.[0] || null;
@@ -262,13 +254,6 @@ const FrontCategoryLayoutOne = ({
         ))}
       </div>
 
-      <button
-        onClick={handleRefresh}
-        className="fixed bottom-6 right-6 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors z-50"
-        aria-label="Refresh content"
-      >
-        <RefreshCw className="w-6 h-6" />
-      </button>
     </div>
   );
 };
