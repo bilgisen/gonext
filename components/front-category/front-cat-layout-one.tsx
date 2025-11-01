@@ -1,15 +1,13 @@
 // components/FrontCategoryLayoutOne.tsx
 import React, { memo } from 'react';
-// dynamic import kaldırıldı
-import { useNews } from '@/hooks/useNews';
 import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
-import BlobImage from '@/components/BlobImage'; // BlobImage hala import ediliyor
+import BlobImage from '@/components/BlobImage';
 
-// FrontCategoryFeatNewsCard içeriği buraya taşındı
+// FrontCategoryFeatNewsCard içeriği burada tanımlanıyor
 interface FrontCategoryFeatNewsCardProps {
   item: NewsItem;
   className?: string;
@@ -29,31 +27,24 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   compactTitle = false,
   showDescription = false,
 }) => {
-  // Extract the image key from the URL if it's a full URL
   const imageKey = item.image ? item.image.split('/').pop() || '' : '';
 
-  // Get the category slug, ensuring it's in the correct format
   const getCategorySlug = (): string => {
-    // If the category is an object with a slug property, use that
     if (item.category && typeof item.category === 'object' && 'slug' in item.category) {
       return (item.category as any).slug || 'turkiye';
     }
-    // If it's a string, try to convert it to a slug
     if (typeof item.category === 'string') {
       return item.category.toLowerCase() === 'türkiye' ? 'turkiye' : item.category.toLowerCase();
     }
-    // Default to 'turkiye' if no valid category is found
     return 'turkiye';
   };
 
   const categorySlug = getCategorySlug();
 
-  // Format the date with time, only if it's a valid and non-default date
   const formatDate = (dateString?: string | null): string => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
-      // Check if the date is invalid, default (1970), or specifically January 1, 2001
       if (isNaN(date.getTime()) ||
           date.getFullYear() <= 1970 ||
           (date.getFullYear() === 2001 && date.getMonth() === 0 && date.getDate() === 1)) {
@@ -66,17 +57,14 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
     }
   };
 
-  // Try to get the most recent valid date
   const formattedDate = [
     item.published_at,
     item.created_at,
     item.updated_at
   ].reduce((result, date) => {
-    if (result) return result; // If we already have a valid date, keep it
-    if (!date) return '';       // Skip if date is null/undefined
-
+    if (result) return result;
+    if (!date) return '';
     const d = new Date(date);
-    // Only accept dates after 2001 (or any reasonable threshold)
     return (d.getFullYear() > 2001) ? formatDate(date) : '';
   }, '');
 
@@ -90,7 +78,6 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         className
       )}
     >
-      {/* Image Container with taller height */}
       <div className="relative w-full pt-[65%] overflow-hidden">
         {imageKey ? (
           <BlobImage
@@ -114,33 +101,29 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-4 mt-0 mb-2 flex-1 flex flex-col">
-        {/* Category */}
+      <div className="p-4 mt-0 mb-0 flex-1 flex flex-col">
         {showCategory && item.category && (
-          <span className="text-sm font-medium text-primary mb-2">
+          <span className="text-sm font-medium text-primary mb-0">
             {item.category}
           </span>
         )}
 
-        {/* Title */}
         {compactTitle ? (
-          <h3 className="text-xl font-semibold line-clamp-3 mb-2">
+          <h3 className="text-lg font-medium line-height-tight line-clamp-2 mb-0">
             {item.seo_title || item.title}
           </h3>
         ) : (
-<h2 className="text-2xl sm:text-xl md:text-2xl lg:text-4xl font-bold mb-2 spacing-tight line-clamp-3">            {item.seo_title || item.title}
+          <h2 className="text-3xl sm:text-xl md:text-2xl lg:text-4xl font-bold mb-2 spacing-tight line-clamp-3">
+            {item.seo_title || item.title}
           </h2>
         )}
 
-        {/* Description - optional */}
         {showDescription && (item.seo_description || item.description) && (
           <p className="text-lg text-muted-foreground/90 mb-3 line-clamp-4">
             {item.seo_description || item.description}
           </p>
         )}
 
-        {/* Date and Read Time - Only show if we have a valid date */}
         {(showDate && formattedDate) || showReadTime ? (
           <div className="mt-auto pt-2 text-xs text-muted-foreground flex items-center gap-4">
             {showDate && formattedDate && (
@@ -162,133 +145,77 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   );
 };
 
-// Ana bileşenin geri kalanı
+// Prop type definition for the layout component
 interface FrontCategoryLayoutOneProps {
-  mainCategory?: string;
-  secondCategory?: string;
-  thirdCategory?: string;
-  fourthCategory?: string;
-  fifthCategory?: string;
   className?: string;
-  // Card tipleri artık FrontCategoryFeatNewsCardProps ile uyumlu olmalı
-  MainCard?: React.ComponentType<FrontCategoryFeatNewsCardProps>;
-  SecondCard?: React.ComponentType<FrontCategoryFeatNewsCardProps>;
-  ThirdCard?: React.ComponentType<FrontCategoryFeatNewsCardProps>;
-  FourthCard?: React.ComponentType<FrontCategoryFeatNewsCardProps>;
-  FifthCard?: React.ComponentType<FrontCategoryFeatNewsCardProps>;
+  initialData: {
+    mainItem: NewsItem | null;
+    leftItems: (NewsItem | null)[]; // Now accepts an array of items for the left column
+    rightItems: (NewsItem | null)[]; // Now accepts an array of items for the right column
+  };
 }
 
 const FrontCategoryLayoutOne: React.FC<FrontCategoryLayoutOneProps> = memo(({
-  mainCategory = 'sports',
-  secondCategory = 'world',
-  thirdCategory = 'business',
-  fourthCategory = 'technology',
-  fifthCategory = 'turkiye',
   className = '',
-  MainCard = FrontCategoryFeatNewsCard, // Varsayılan kart artık entegre edilmiş olan
-  SecondCard = FrontCategoryFeatNewsCard,
-  ThirdCard = FrontCategoryFeatNewsCard,
-  FourthCard = FrontCategoryFeatNewsCard,
-  FifthCard = FrontCategoryFeatNewsCard,
+  initialData,
 }) => {
-  const formatCategory = (cat: string) =>
-    cat && cat !== 'all'
-      ? cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()
-      : undefined;
+  const { mainItem, leftItems, rightItems } = initialData;
 
-  // Define all news queries at the top level
-  const mainNews = useNews({
-    category: formatCategory(mainCategory),
-    limit: 1,
-    sort: 'newest',
-    enabled: true
-  });
-
-  const secondNews = useNews({
-    category: formatCategory(secondCategory),
-    limit: 1,
-    sort: 'newest',
-    enabled: true
-  });
-
-  const thirdNews = useNews({
-    category: formatCategory(thirdCategory),
-    limit: 1,
-    sort: 'newest',
-    enabled: true
-  });
-
-  const fourthNews = useNews({
-    category: formatCategory(fourthCategory),
-    limit: 1,
-    sort: 'newest',
-    enabled: true
-  });
-
-  const fifthNews = useNews({
-    category: formatCategory(fifthCategory),
-    limit: 1,
-    sort: 'newest',
-    enabled: true
-  });
-
-  // Combine loading and error states
-  const isLoading = mainNews.isLoading || secondNews.isLoading ||
-                   thirdNews.isLoading || fourthNews.isLoading ||
-                   fifthNews.isLoading;
-
-  const isError = mainNews.error || secondNews.error ||
-                 thirdNews.error || fourthNews.error ||
-                 fifthNews.error;
-
-  // Extract news items
-  const items = [
-    mainNews.data?.pages?.[0]?.data?.items?.[0],
-    secondNews.data?.pages?.[0]?.data?.items?.[0],
-    thirdNews.data?.pages?.[0]?.data?.items?.[0],
-    fourthNews.data?.pages?.[0]?.data?.items?.[0],
-    fifthNews.data?.pages?.[0]?.data?.items?.[0]
-  ];
-
-  if (isLoading) {
+  // Eğer ana öğe yoksa, loading veya error state göster
+  if (!mainItem) {
     return (
       <div className={cn('grid grid-cols-1 gap-6 md:grid-cols-3', className)}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-64 animate-pulse rounded-lg bg-muted/30" />
-        ))}
+        <p className="text-muted-foreground text-center py-4">Loading initial content...</p>
+        {/* veya skeleton loader */}
       </div>
     );
   }
-
-  if (isError || items.some((i) => !i)) {
-    return (
-      <div className={cn('rounded-lg border border-dashed p-8 text-center', className)}>
-        <p className="text-muted-foreground">
-          Error or insufficient news.
-        </p>
-      </div>
-    );
-  }
-
-  const [mainItem, secondItem, thirdItem, fourthItem, fifthItem] = items;
 
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-12 gap-5 w-full', className)}>
-      {/* Sol kolon - Mobilde 3. sırada */}
-      <div className="md:col-span-3 flex flex-col gap-4 order-3 md:order-0">
-        <MainCard item={mainItem!} showCategory compactTitle showDescription={false} className="h-full" />
-        <ThirdCard item={thirdItem!} showCategory compactTitle showDescription={false} className="h-full" />
-      </div>
-
-      {/* Orta kolon - Mobilde 1. sırada (İstenen) */}
-      <div className="md:col-span-6 order-1 md:order-0">
-        <SecondCard item={secondItem!} showCategory showDescription compactTitle={false} className="h-full" />
-      </div>
-
-      {/* Sağ kolon - Mobilde 2. sırada */}
+      {/* Sol kolon - Mobilde 2. sırada */}
       <div className="md:col-span-3 flex flex-col gap-4 order-2 md:order-0">
-        <FourthCard item={fourthItem!} showCategory compactTitle showDescription={false} className="h-full" />
-        <FifthCard item={fifthItem!} showCategory compactTitle showDescription={false} className="h-full" />
+        {leftItems.slice(0, 2).map((item, index) => (
+          item ? (
+            <FrontCategoryFeatNewsCard
+              key={item.id || index}
+              item={item}
+              showCategory
+              compactTitle
+              showDescription={false}
+              className="h-full"
+            />
+          ) : null
+        ))}
+      </div>
+
+      {/* Orta kolon - Mobilde 1. sırada (Main) */}
+      <div className="md:col-span-6 order-1 md:order-0">
+        {mainItem && (
+          <FrontCategoryFeatNewsCard
+            item={mainItem}
+            showCategory
+            showDescription
+            compactTitle={false}
+            className="h-full"
+          />
+        )}
+      </div>
+
+      {/* Sağ kolon - Mobilde 3. sırada */}
+      <div className="md:col-span-3 flex flex-col gap-4 order-3 md:order-0">
+        {rightItems.slice(0, 2).map((item, index) => (
+          item ? (
+            <FrontCategoryFeatNewsCard
+              key={item.id || index}
+              item={item}
+              showCategory
+              compactTitle
+              showDescription={false}
+              className="h-full"
+            />
+          ) : null
+        ))}
       </div>
     </div>
   );

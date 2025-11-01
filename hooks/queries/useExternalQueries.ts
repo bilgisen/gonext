@@ -1,3 +1,4 @@
+// hooks/queries/useExternalQueries.ts
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { newsKeys } from '../../lib/queries/queryKeys';
 import type { NewsFilters, NewsItem } from '../../types/news';
@@ -15,7 +16,7 @@ export interface NewsListResponse {
 
 // Database Query Hooks (using Next.js internal API routes with direct database access)
 
-async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
+export async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
   const params = new URLSearchParams();
 
   if (filters.category) {
@@ -28,18 +29,30 @@ async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
   if (filters.search) params.append('search', filters.search);
+  if (filters.sort) params.append('sort', filters.sort);
+  if (filters.offset) params.append('offset', filters.offset.toString());
 
   const queryString = params.toString();
-  const url = `/api/news${queryString ? `?${queryString}` : ''}`;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  const url = `${baseUrl}/api/news${queryString ? `?${queryString}` : ''}`;
 
   try {
     console.log('📡 Fetching news from:', url);
-    const response = await fetch(url);
-    const result = await response.json();
-
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add this option to handle cookies if needed
+      credentials: 'same-origin',
+    });
+    
     if (!response.ok) {
-      throw new Error(result.message || `Failed to fetch news: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
+      throw new Error(`Failed to fetch news: ${response.status} ${response.statusText}`);
     }
+
+    const result = await response.json();
 
     // Ensure the response has the expected structure
     if (!result || typeof result !== 'object') {
@@ -61,7 +74,13 @@ async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
 }
 
 async function fetchNewsByIdFromDatabase(id: string) {
-  const response = await fetch(`/api/news/${id}`);
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  const response = await fetch(`${baseUrl}/api/news/${id}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'same-origin',
+  });
 
   if (!response.ok) {
     if (response.status === 404) {

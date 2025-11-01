@@ -1,65 +1,39 @@
-'use client';
-import dynamic from 'next/dynamic';
 import FrontCategoryLayoutOne from '@/components/front-category/front-cat-layout-one';
-import { Separator } from '@/components/ui/separator';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu";
+import { getFrontPageHeadlines } from '@/lib/headline-fetching';
+import FrontPageSections from '@/components/frontPageSections';
 
-// Dinamik import (lazy load)
-const FrontCardLayoutTwo = dynamic(
-  () => import('@/components/front-category/front-card-layout-two'),
-  { ssr: false, loading: () => <div className="h-40 bg-muted animate-pulse rounded" /> }
-);
+// Server Component - No 'use client' needed
+export default async function HomePage() {
+  // Fetch headlines on the server
+  const headlineData = await getFrontPageHeadlines();
 
-function HomePageContent() {
+  // Extract required data
+  const initialData = {
+    mainItem: headlineData.turkiye,
+    leftItems: headlineData.business,
+    rightItems: headlineData.world,
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 space-y-12">
-      <section className="mb-12">
-        {/* Headlines */}
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-semibold">Headlines</h2>
-          <NavigationMenu>
-            <NavigationMenuList className="gap-4">
-              {['Istanbul', 'Ankara', 'İzmir'].map((city) => (
-                <NavigationMenuItem key={city}>
-                  <NavigationMenuLink className="text-sm font-medium hover:text-black">
-                    {city}
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              ))}
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
-        <Separator className="mb-6"/>
+    <main className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 space-y-12">
+        <section className="mb-12">
 
-        {/* İlk grid hemen yüklensin */}
-        <FrontCategoryLayoutOne
-          mainCategory="business"
-          secondCategory="turkiye"
-          thirdCategory="world"
-          fourthCategory="sports"
-          fifthCategory="technology"
-          className="mb-8"
-        />
-      </section>
 
-      {/* Diğer kategoriler lazy load olur */}
-      <section className="space-y-12">
-        {['turkiye','world','business','technology','sports','culture'].map((cat) => (
-          <div key={cat} className="space-y-4">
-            <h3 className="text-2xl font-semibold capitalize">{cat}</h3>
-            <FrontCardLayoutTwo category={cat} limit={5} offset={1} />
-          </div>
-        ))}
-      </section>
-    </div>
+          {/* Main headline section with server-rendered data */}
+          <FrontCategoryLayoutOne 
+            initialData={initialData} 
+            className="mb-12"
+          />
+
+          {/* Lazy load other categories */}
+         <FrontPageSections
+  categories={['turkiye', 'business', 'world', 'technology', 'sports', 'culture']}
+  layout={['a', 'c' ]} // 'turkiye'->a, 'business'->b, 'world'->c, 'technology'->a, 'sports'->b, 'culture'->c
+  offset={[1, 2, 2, 2, 1, 0]} // 'turkiye'->1, 'business'->2, 'world'->1, 'technology'->2, 'sports'->1, 'culture'->0
+/>
+        </section>
+      </div>
+    </main>
   );
-}
-
-export default function HomePage() {
-  return <HomePageContent />;
 }

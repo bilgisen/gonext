@@ -1,7 +1,11 @@
+'use client';
+
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useEffect } from 'react';
 import type { NewsItem } from '@/types/news';
 import { newsKeys } from '@/lib/queries/queryKeys';
+
+// This hook is now a Client Component due to 'use client' directive
 
 interface UseNewsOptions {
   page?: number;

@@ -138,6 +138,7 @@ export interface NewsFilters extends BaseFilters {
   sort?: 'newest' | 'oldest' | 'popular';
   type?: 'category' | 'tag' | 'search' | 'featured';
   excludeId?: string;
+  offset?: number;
 }
 
 export interface SearchFilters extends BaseFilters {
