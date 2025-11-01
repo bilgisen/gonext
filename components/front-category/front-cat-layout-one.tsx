@@ -275,18 +275,18 @@ const FrontCategoryLayoutOne: React.FC<FrontCategoryLayoutOneProps> = memo(({
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-12 gap-5 w-full', className)}>
       {/* Sol kolon - Mobilde 3. sırada */}
-      <div className="md:col-span-3 flex flex-col gap-4 order-3 md:order-none">
+      <div className="md:col-span-3 flex flex-col gap-4 order-3 md:order-0">
         <MainCard item={mainItem!} showCategory compactTitle showDescription={false} className="h-full" />
         <ThirdCard item={thirdItem!} showCategory compactTitle showDescription={false} className="h-full" />
       </div>
 
       {/* Orta kolon - Mobilde 1. sırada (İstenen) */}
-      <div className="md:col-span-6 order-1 md:order-none">
+      <div className="md:col-span-6 order-1 md:order-0">
         <SecondCard item={secondItem!} showCategory showDescription compactTitle={false} className="h-full" />
       </div>
 
       {/* Sağ kolon - Mobilde 2. sırada */}
-      <div className="md:col-span-3 flex flex-col gap-4 order-2 md:order-none">
+      <div className="md:col-span-3 flex flex-col gap-4 order-2 md:order-0">
         <FourthCard item={fourthItem!} showCategory compactTitle showDescription={false} className="h-full" />
         <FifthCard item={fifthItem!} showCategory compactTitle showDescription={false} className="h-full" />
       </div>

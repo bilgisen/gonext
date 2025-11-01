@@ -3,9 +3,11 @@ import type { Metadata } from 'next';
 import { Providers } from './providers';
 import { Logo } from '../components/navbar-02/logo';
 import { NavMenu } from '../components/navbar-02/nav-menu';
+import { NavigationSheet } from '../components/navbar-02/navigation-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import '../styles/globals.css';
 import { ThemeProvider } from "@/components/theme-provider";
+import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
   title: {
@@ -62,17 +64,21 @@ export default function RootLayout({
           <Providers>
             <nav className="bg-background/80 backdrop-blur-sm border-b fixed top-0 left-0 right-0 z-50">
               <div className="h-16 flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center gap-12">
+                <div className="flex items-center gap-4 md:gap-12">
                   <Logo />
                   <NavMenu className="hidden md:block" />
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                   <ThemeToggle />
+                  <div className="md:hidden">
+                    <NavigationSheet />
+                  </div>
                 </div>
               </div>
             </nav>
             <main className="pt-16">
               {children}
+              <Footer />
             </main>
           </Providers>
         </ThemeProvider>

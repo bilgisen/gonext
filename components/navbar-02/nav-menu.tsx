@@ -8,12 +8,20 @@ import {
 import Link from "next/link";
 import { ComponentProps } from "react";
 
-export const NavMenu = (props: ComponentProps<typeof NavigationMenu>) => (
+interface NavMenuProps extends ComponentProps<typeof NavigationMenu> {
+  onNavItemClick?: () => void;
+}
+
+export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
   <NavigationMenu {...props}>
     <NavigationMenuList className="gap-1 data-[orientation=vertical]:-ms-2 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start data-[orientation=vertical]:justify-start">
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="/turkiye" className="text-foreground hover:text-foreground/80">
+          <Link 
+            href="/turkiye" 
+            className="text-foreground hover:text-foreground/80"
+            onClick={onNavItemClick}
+          >
             Türkiye
           </Link>
         </NavigationMenuLink>
@@ -27,28 +35,44 @@ export const NavMenu = (props: ComponentProps<typeof NavigationMenu>) => (
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="/world" className="text-foreground hover:text-foreground/80">
+          <Link 
+            href="/dunya" 
+            className="text-foreground hover:text-foreground/80"
+            onClick={onNavItemClick}
+          >
             World
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="/technology" className="text-foreground hover:text-foreground/80">
+          <Link 
+            href="/teknoloji" 
+            className="text-foreground hover:text-foreground/80"
+            onClick={onNavItemClick}
+          >
             Technology
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="/culture" className="text-foreground hover:text-foreground/80">
+          <Link 
+            href="/kultur-sanat" 
+            className="text-foreground hover:text-foreground/80"
+            onClick={onNavItemClick}
+          >
             Arts & Culture
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="/sports" className="text-foreground hover:text-foreground/80">
+          <Link 
+            href="/spor" 
+            className="text-foreground hover:text-foreground/80"
+            onClick={onNavItemClick}
+          >
             Sports
           </Link>
         </NavigationMenuLink>
