@@ -76,7 +76,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-lg overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card/20 text-card-foreground',
+        'bg-card/30 text-card-foreground',
         className
       )}
     >
@@ -115,7 +115,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
             {item.seo_title}
           </h3>
         ) : (
-          <h2 className="text-lg sm:text-xl md:text-xl lg:text-2xl font-semibold mb-2 line-clamp-3">
+          <h2 className="text-2xl sm:text-xl md:text-2xl lg:text-3xl font-medium mb-2 spacing-tight line-clamp-3">
             {item.seo_title}
           </h2>
         )}
