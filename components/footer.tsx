@@ -1,11 +1,9 @@
 import { Separator } from "@/components/ui/separator";
 import {
   GithubIcon,
-  GlobeIcon,
   LinkedinIcon,
   TwitterIcon,
   FacebookIcon,
-  MailIcon,
   InstagramIcon,
   YoutubeIcon,
 } from "lucide-react";
@@ -96,7 +94,7 @@ const Footer = () => {
             {/* Dynamic Footer Sections */}
             {footerSections.map((section) => (
               <div key={section.title}>
-                <h6 className="font-semibold text-foreground tracking-tight">
+                <h6 className="font-semibold text-primary-foreground tracking-tight">
                   <Link
                     href={section.href}
                     className="inline-block hover:underline"
