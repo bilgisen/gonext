@@ -4,7 +4,7 @@ import { Providers } from './providers';
 import { Logo } from '../components/navbar-02/logo';
 import { NavMenu } from '../components/navbar-02/nav-menu';
 import { NavigationSheet } from '../components/navbar-02/navigation-sheet';
-import { ThemeToggle } from '@/components/theme-toggle';
+import  ThemeToggle from '@/components/theme-toggle';
 import '../styles/globals.css';
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from '@/components/footer';
@@ -55,9 +55,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider
+           <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

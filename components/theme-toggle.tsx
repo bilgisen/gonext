@@ -1,61 +1,31 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { SunIcon, MoonIcon } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { useCallback, useRef } from 'react';
+import { MoonIcon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Button } from "./ui/button";
+import { useEffect, useState } from "react";
 
-/**
- * Custom hook to determine if the component has mounted on the client
- * This avoids the need for state updates in effects
- */
-function useIsMounted() {
-  const isMounted = useRef(false);
-  
-  // This runs after the first render on the client
-  if (typeof window !== 'undefined') {
-    isMounted.current = true;
-  }
-  
-  return isMounted.current;
-}
+const ThemeToggle = () => {
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
 
-export function ThemeToggle() {
-  const isMounted = useIsMounted();
-  const { theme, setTheme } = useTheme();
-  
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  }, [theme, setTheme]);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  // On the server, render a placeholder with matching dimensions
-  if (!isMounted) {
-    return (
-      <Button 
-        size="icon" 
-        variant="outline" 
-        className="w-9 h-9" 
-        aria-hidden="true"
-        disabled
-      >
-        <div className="h-4 w-4" />
-      </Button>
-    );
+  if (!mounted) {
+    return <Button variant="outline" size="icon" />;
   }
 
-  // On the client, render the actual theme toggle
   return (
     <Button
-      size="icon"
       variant="outline"
-      onClick={toggleTheme}
-      aria-label="Toggle theme"
+      size="icon"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      {theme === 'light' ? (
-        <MoonIcon className="h-4 w-4" />
-      ) : (
-        <SunIcon className="h-4 w-4" />
-      )}
+      {resolvedTheme === "dark" ? <SunIcon /> : <MoonIcon />}
     </Button>
   );
-}
+};
+
+export default ThemeToggle;

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
+import { Separator } from '@radix-ui/react-separator';
 
 // ... (NewsCard tanımı aynı kalır) ...
 interface NewsCardProps {
@@ -446,6 +447,7 @@ const FrontPageSections: React.FC<FrontPageSectionsProps> = ({
         return (
           <div key={cat} className="space-y-4">
             <h3 className="text-2xl font-semibold capitalize">{cat}</h3>
+            <Separator className="mb-6 pt-0 border border-card-foreground/10"/>
             <FrontPageSection
               category={cat}
               limit={limit}

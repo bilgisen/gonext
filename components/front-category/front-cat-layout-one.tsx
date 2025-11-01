@@ -106,7 +106,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
 
       <div className="p-4 mt-0 mb-0 flex-1 flex flex-col">
         {showCategory && item.category && (
-          <span className="text-sm font-medium text-primary mb-0">
+          <span className="text-sm uppercase font-medium text-primary mb-2">
             {item.category}
           </span>
         )}

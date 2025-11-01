@@ -30,7 +30,7 @@ export default async function HomePage() {
          <FrontPageSections
   categories={['turkiye', 'business', 'world', 'technology', 'sports', 'culture']}
   layout={['a', 'c' ]} // 'turkiye'->a, 'business'->b, 'world'->c, 'technology'->a, 'sports'->b, 'culture'->c
-  offset={[1, 2, 2, 2, 1, 0]} // 'turkiye'->1, 'business'->2, 'world'->1, 'technology'->2, 'sports'->1, 'culture'->0
+  offset={[1, 2, 2, 0, 0, 0]} // 'turkiye'->1, 'business'->2, 'world'->1, 'technology'->2, 'sports'->1, 'culture'->0
 />
         </section>
       </div>

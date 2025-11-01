@@ -90,17 +90,25 @@
         margin-bottom: 8px;
     }
 
-    .prose p {
-        margin-bottom: 8px;
-    }
+  /* Varsa sıralı listeler için */
+.prose ol li {
+    list-style-type: decimal;
+}
 
      .prose h2 {
-        margin-bottom: 8px;
-        margin-top: 18px;
-        color:dimgrey;
-        font-weight: 400;
+        margin-bottom: 1rem;
+        margin-top: 2rem;
+        font-weight: 500;
         font-size: 1.5rem;
+    }
 
+    .prose h1 {
+        margin-bottom: 18px;
+        margin-top: -8px;
+        font-weight: 400;
+        font-size: 1rem;
+        font-style: italic;
+        color: grey;
     }
 
     .diff {
