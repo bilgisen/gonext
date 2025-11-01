@@ -76,7 +76,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-lg overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card/30 text-card-foreground',
+        'bg-card/50 text-card-foreground',
         className
       )}
     >
@@ -111,7 +111,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
         )}
 
         {compactTitle ? (
-          <h3 className="text-lg md:text-lg sm:text-xl font-medium mb-0 line-clamp-3">
+          <h3 className="text-xl sm:text-lg md:text-xl font-medium line-height-tight line-clamp-2 mb-0">
             {item.seo_title}
           </h3>
         ) : (

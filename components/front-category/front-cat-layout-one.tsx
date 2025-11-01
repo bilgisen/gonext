@@ -77,7 +77,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-md overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card/30 text-card-foreground',
+        'bg-card/50 text-card-foreground',
         className
       )}
     >
@@ -112,7 +112,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
 
         {compactTitle ? (
-          <h3 className="text-lg sm:text-xl font-medium line-height-tight line-clamp-2 mb-0">
+          <h3 className="text-xl sm:text-lg md:text-xl font-medium line-height-tight line-clamp-2 mb-0">
             {item.seo_title || item.title}
           </h3>
         ) : (
