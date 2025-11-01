@@ -36,7 +36,7 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link 
-            href="/dunya" 
+            href="/world" 
             className="text-foreground hover:text-foreground/80"
             onClick={onNavItemClick}
           >
@@ -47,7 +47,7 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link 
-            href="/teknoloji" 
+            href="/technology" 
             className="text-foreground hover:text-foreground/80"
             onClick={onNavItemClick}
           >
@@ -58,7 +58,7 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link 
-            href="/kultur-sanat" 
+            href="/cultre" 
             className="text-foreground hover:text-foreground/80"
             onClick={onNavItemClick}
           >
@@ -69,7 +69,7 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link 
-            href="/spor" 
+            href="/sports" 
             className="text-foreground hover:text-foreground/80"
             onClick={onNavItemClick}
           >

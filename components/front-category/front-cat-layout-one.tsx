@@ -125,11 +125,11 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
 
         {/* Title */}
         {compactTitle ? (
-          <h3 className="text-lg font-semibold line-clamp-3 mb-2">
+          <h3 className="text-xl font-semibold line-clamp-3 mb-2">
             {item.seo_title || item.title}
           </h3>
         ) : (
-<h2 className="text-lg sm:text-2xl md:text-3xl lg:text-5xl font-bold mb-2 spacing-tight line-clamp-3">            {item.seo_title || item.title}
+<h2 className="text-2xl sm:text-xl md:text-2xl lg:text-4xl font-bold mb-2 spacing-tight line-clamp-3">            {item.seo_title || item.title}
           </h2>
         )}
 
