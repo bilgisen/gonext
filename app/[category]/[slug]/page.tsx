@@ -1,13 +1,6 @@
 import { Metadata } from 'next';
 import { NewsArticle } from './NewsArticle';
 import { NewsItem } from '@/types/news';
-import dynamic from 'next/dynamic';
-
-// Dynamically import the WidgetSection component with no SSR
-const WidgetSection = dynamic(
-  () => import('@/components/WidgetSection'),
-  { ssr: false }
-);
 
 
 /**
@@ -211,9 +204,6 @@ export default async function Page(props: PageProps) {
           <section>
             <NewsArticle newsItem={newsItem} />
           </section>
-
-          {/* Widget Section - Loaded client-side after initial render */}
-          <WidgetSection />
         </div>
       </main>
     </>

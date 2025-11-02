@@ -67,10 +67,7 @@ const FeatMainNewsCard: React.FC<FeatMainNewsCardProps> = ({
 
   return (
     <div className={cn('group relative h-full w-full', className)}>
-      <Link 
-        href={`/${categorySlug}/${slug}`}
-        className="block h-full rounded-lg overflow-hidden bg-white shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-800"
-      >
+      <div className="h-full rounded-lg overflow-hidden bg-white shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-800">
         {/* Image */}
         <div className="relative h-64 w-full overflow-hidden md:h-80">
           {imageKey ? (
@@ -97,29 +94,33 @@ const FeatMainNewsCard: React.FC<FeatMainNewsCardProps> = ({
               {category.name}
             </span>
           )}
-          <h3 className="mt-4 text-2xl font-bold leading-tight text-gray-900 dark:text-white">
-            {title}
-          </h3>
-          
+          <Link 
+            href={`/${categorySlug}/${slug}`}
+            className="hover:underline"
+          >
+            <h3 className="mt-4 text-2xl font-bold leading-tight text-gray-900 dark:text-white">
+              {title}
+            </h3>
+          </Link>
           {/* Meta Information */}
           {(showDate || showReadTime) && (
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-200">
+            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-300">
               {showDate && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
+                <span className="flex items-center">
+                  <Calendar className="mr-1 h-4 w-4" />
                   {formattedDate}
                 </span>
               )}
               {showReadTime && (
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
+                <span className="flex items-center">
+                  <Clock className="mr-1 h-4 w-4" />
                   {readTime} min read
                 </span>
               )}
             </div>
           )}
         </div>
-      </Link>
+      </div>
     </div>
   );
 };

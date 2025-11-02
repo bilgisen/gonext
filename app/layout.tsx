@@ -8,6 +8,7 @@ import  ThemeToggle from '@/components/theme-toggle';
 import '../styles/globals.css';
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from '@/components/footer';
+import { GeistSans } from 'geist/font/sans';
 
 // Base metadata that provides sensible defaults but allows child routes to override
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       {/* Add suppressHydrationWarning to body to prevent warnings from extensions */}
       <body 
         className="min-h-screen bg-background font-sans antialiased"

@@ -128,7 +128,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
   });
 
   return (
-    <article className="max-w-3xl mx-auto px-0">
+    <article className="max-w-2xl mx-auto px-0">
 
 
       {/* Article Header */}
@@ -137,7 +137,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           <div className="mb-4">
             <a 
               href={`/${newsItem.category.toLowerCase() === 'türkiye' ? 'turkiye' : newsItem.category.toLowerCase()}`}
-              className="text-lg uppercase font-medium text-primary hover:text-foreground"
+              className="text-md uppercase font-medium text-primary hover:text-foreground"
             >
               {newsItem.category.toLowerCase() === 'turkiye' || newsItem.category.toLowerCase() === 'türkiye' ? 'Türkiye' : 
                newsItem.category.toLowerCase() === 'technology' ? 'Technology' :
@@ -145,10 +145,10 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
             </a>
           </div>
         )}
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
+        <h1 className="text-4xl md:text-5xl sm:text-2xl font-medium tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
-          <h3 className="text-2xl md:xl sm:xl font-light text-muted-foreground mb-4 leading-relaxed">
+          <h3 className="text-2xl md:text-xl sm:text-xl font-medium text-muted-foreground mb-4 leading-relaxed">
             {newsItem.seo_description}
           </h3>
         )}
@@ -171,7 +171,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       {/* Article Image */}
       {imageKey && (
         <div className="mb-8">
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+          <div className="relative w-full aspect-4/3 rounded-lg overflow-hidden">
             <BlobImage
               imageKey={imageKey}
               alt={newsItem.image_title || newsItem.seo_title || 'News Image'}
@@ -179,7 +179,6 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
               height={675}
               className="w-full h-full object-cover"
               loading="eager"
-              priority
               onError={(e) => {
                 console.error('Error loading image:', newsItem.image);
                 const target = e.target as HTMLImageElement;
@@ -187,16 +186,12 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
               }}
             />
           </div>
-          {newsItem.image_title && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
-              {newsItem.image_title}
-            </p>
-          )}
+        
         </div>
       )}
 
       {/* Article Content */}
-      <div className="prose dark:prose-invert max-w-none mb-8">
+      <div className="prose dark:prose-invert max-w-none text-md mb-8">
         <MarkdownRenderer>
           {newsItem.content_md || newsItem.seo_description || 'No content available'}
         </MarkdownRenderer>

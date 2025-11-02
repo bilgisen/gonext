@@ -72,8 +72,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   }, '');
 
   return (
-    <Link
-      href={`/${categorySlug}/${item.slug}`}
+    <div
       className={cn(
         'group flex flex-col rounded-md overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
@@ -112,13 +111,23 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
 
         {compactTitle ? (
-          <h3 className="text-xl sm:text-lg md:text-xl font-medium line-height-tight line-clamp-2 mb-0">
-            {item.seo_title || item.title}
-          </h3>
+          <Link 
+            href={`/${categorySlug}/${item.slug}`}
+            className="hover:underline"
+          >
+            <h3 className="text-2xl sm:text-lg md:text-xl font-medium line-height-tight line-clamp-2 mb-0">
+              {item.seo_title || item.title}
+            </h3>
+          </Link>
         ) : (
-          <h2 className="text-3xl sm:text-xl md:text-2xl lg:text-4xl font-bold mb-2 spacing-tight line-clamp-3">
-            {item.seo_title || item.title}
-          </h2>
+          <Link 
+            href={`/${categorySlug}/${item.slug}`}
+            className="hover:underline"
+          >
+            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-semibold mb-2 spacing-tight line-clamp-3">
+              {item.seo_title || item.title}
+            </h2>
+          </Link>
         )}
 
         {showDescription && (item.seo_description || item.description) && (
@@ -144,7 +153,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
           </div>
         ) : null}
       </div>
-    </Link>
+    </div>
   );
 };
 
