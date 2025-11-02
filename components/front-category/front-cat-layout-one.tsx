@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNewsFromDatabase } from '@/hooks/queries/useExternalQueries';
 
@@ -72,31 +71,16 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   }, '');
 
   return (
-   <motion.div
-  whileHover={{ scale: 1.015 }}
-  transition={{ duration: 0.25, ease: 'easeOut' }}
-  className={cn(
-    'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
-    // 🔹 Alt zemin teal + üzerine card → transparent gradient
-    'bg-teal-500 bg-gradient-to-b from-card/95 to-transparent',
-    'border border-border/50 shadow-md transition-all duration-200 hover:shadow-lg',
-    className
-  )}
->
-  {/* --- Shimmer effect (hafif teal parıltı) --- */}
-  <motion.div
-    className="absolute inset-0 bg-[radial-gradient(circle_at_center,theme(colors.teal.500/90),transparent_80%)] z-0"
-    animate={{
-      scale: [1, 1.05, 1],
-      opacity: [0.1, 0.1, 0.2],
-    }}
-    transition={{
-      duration: 8,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    }}
-  />
-
+    <div
+      className={cn(
+        'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
+        'bg-gradient-to-b from-transparent via-card/90 to-transparent',
+        'border border-border/50 shadow-md transition-all duration-200 hover:shadow-lg',
+        className
+      )}
+    >
+      {/* --- Background Shimmer Effect (Teal) --- */}
+      <div className="absolute inset-0 bg-[radial-gradient(80%_100%_at_50%_0%,theme(colors.teal.700/10),transparent_70%)] z-0" />
 
       {/* --- Image --- */}
       <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden z-10">
@@ -135,7 +119,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             href={`/${categorySlug}/${item.slug}`}
             className="hover:underline"
           >
-            <h3 className="text-2xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-2">
+            <h3 className="text-xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2 mb-2">
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (
@@ -178,7 +162,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
           </div>
         ) : null}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

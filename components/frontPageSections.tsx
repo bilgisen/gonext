@@ -9,7 +9,6 @@ import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
 import { Separator } from '@radix-ui/react-separator';
-import { motion } from 'framer-motion';
 
 // ... (NewsCard tanımı aynı kalır) ...
 interface NewsCardProps {
@@ -29,7 +28,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   showDate = true,
   showReadTime = true,
   compactTitle = false,
-  showDescription = false,
+  showDescription = true,
 }) => {
   const imageKey = item.image ? item.image.split('/').pop() || '' : '';
 
@@ -73,30 +72,17 @@ const NewsCard: React.FC<NewsCardProps> = ({
   }, '');
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.015 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+    <div
       className={cn(
         'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
-        'bg-gradient-to-b from-transparent via-card/90 to-transparent',
-        'border border-border/50 shadow-md transition-all duration-5000 hover:shadow-lg',
+        'bg-gradient-to-br from-card/90 via-transparent to-transparent',
+        'border border-border/50 shadow-md transition-all duration-200 hover:shadow-lg',
         'mb-6', // Add margin bottom for spacing between cards
         className
       )}
     >
       {/* --- Background Shimmer Effect (Teal) --- */}
-      <motion.div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_center,theme(colors.teal.700/12),transparent_80%)] z-0"
-        animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.1, 0.2, 0.1],
-        }}
-        transition={{
-          duration: 9,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      <div className="absolute inset-0 bg-[radial-gradient(100%_100%_at_0%_0%,theme(colors.teal.800/40),transparent_70%)] z-0" />
 
       {/* --- Image --- */}
       <div className="relative w-full pt-[75%] md:pt-[56.25%] overflow-hidden z-10">
@@ -123,7 +109,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       </div>
 
       {/* --- Content --- */}
-      <div className="relative z-10 p-4 mt-0 mb-4 flex-1 flex flex-col">
+      <div className="relative z-10 p-4 flex-1 flex flex-col">
         {showCategory && item.category && (
           <span className="text-sm uppercase font-medium text-primary mb-2">
             {item.category}
@@ -132,7 +118,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
         {compactTitle ? (
           <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
-            <h3 className="text-2xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-2">
+            <h3 className="text-2xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2 ">
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (
@@ -143,7 +129,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </Link>
         ) : (
           <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
-            <h2 className="text-3xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
+            <h2 className="text-3xl py-2 sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
               {item.seo_title || item.title}
             </h2>
           </Link>
@@ -156,7 +142,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
         )}
 
         {(showDate && formattedDate) || showReadTime ? (
-          <div className="mt-auto pt-2 text-xs text-muted-foreground flex items-center gap-4">
+          <div className="mt-auto pt-0 text-xs text-muted-foreground flex items-center gap-4">
             {showDate && formattedDate && (
               <span className="flex items-center">
                 <Calendar className="w-3 h-3 mr-1" />
@@ -172,7 +158,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </div>
         ) : null}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
