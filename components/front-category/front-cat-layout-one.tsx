@@ -76,7 +76,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-md overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card/50 text-card-foreground',
+        'bg-card/60 text-card-foreground',
         className
       )}
     >
