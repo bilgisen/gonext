@@ -7,7 +7,7 @@ import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers, type NewsFilters } from '@/lib/urlFilters';
 import { cn } from '@/lib/utils';
 import { CATEGORY_MAPPINGS } from '@/types/news';
-import { BentoNewsCard } from './BentoNewsCard';
+import FrontCategoryFeatNewsCard from '@/components/cards/front-cat-feat-newscard';
 import { CategoryHero } from './categoryHero';
 
 interface CategoryNewsListProps {
@@ -187,10 +187,17 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
           ))}
         </div>
         
-        {/* Remaining items as BentoNewsCard */}
+        {/* Remaining items as featured news cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allNews.slice(2).map((newsItem, index) => (
-            <BentoNewsCard key={newsItem.id} news={newsItem} index={index} />
+          {allNews.slice(2).map((newsItem) => (
+            <FrontCategoryFeatNewsCard 
+              key={newsItem.id} 
+              item={newsItem} 
+              showCategory={true}
+              showDate={true}
+              showReadTime={true}
+              showDescription={true}
+            />
           ))}
         </div>
       </div>
