@@ -131,7 +131,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
 
         {showDescription && (item.seo_description || item.description) && (
-          <p className="text-lg text-muted-foreground/90 mb-3 line-clamp-4">
+          <p className="text-xl text-muted-foreground/90 mb-3 line-clamp-4">
             {item.seo_description || item.description}
           </p>
         )}
