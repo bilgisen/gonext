@@ -267,6 +267,7 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
               <NewsCard
                 item={secondItem}
                 showCategory={category === 'all'}
+                showDescription
                 compactTitle
                 className="h-full"
               />
@@ -286,6 +287,7 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
               <NewsCard
                 item={thirdItem}
                 showCategory={category === 'all'}
+                showDescription
                 compactTitle
                 className="h-full"
               />
