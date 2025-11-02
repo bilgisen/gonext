@@ -80,7 +80,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         className
       )}
     >
-      <div className="relative w-full pt-[100%] md:pt-[65%] overflow-hidden">
+      <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden">
         {imageKey ? (
           <BlobImage
             imageKey={imageKey}
@@ -103,7 +103,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
       </div>
 
-      <div className="p-4 mt-0 mb-0 flex-1 flex flex-col">
+      <div className="p-4 mt-0 mb-4 flex-1 flex flex-col">
         {showCategory && item.category && (
           <span className="text-sm uppercase font-medium text-primary mb-2">
             {item.category}
@@ -115,9 +115,14 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             href={`/${categorySlug}/${item.slug}`}
             className="hover:underline"
           >
-            <h3 className="text-3xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-0">
+            <h3 className="text-2xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-2">
               {item.seo_title || item.title}
             </h3>
+            {showDescription && (item.seo_description || item.description) && (
+              <p className="text-base text-muted-foreground/90 line-clamp-3 md:hidden">
+                {item.seo_description || item.description}
+              </p>
+            )}
           </Link>
         ) : (
           <Link 
