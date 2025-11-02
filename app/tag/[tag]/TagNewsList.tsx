@@ -13,7 +13,7 @@ interface TagNewsListProps {
 
 export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
     const [filters] = useState<NewsFilters>({
-        tag,
+        tag, // Ensure tag is passed to filters
         ...urlHelpers.parseNewsFilters(new URLSearchParams(
             Object.entries(searchParams).map(([key, value]) =>
                 Array.isArray(value) ? [key, value[0]] : [key, value || '']
@@ -21,11 +21,10 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         )),
     });
 
-    // Create a new object with only the properties that useInfiniteNews expects
+    // Create query params with explicit tag from props
     const queryParams = {
-        tag: filters.tag || tag,
+        tag: tag, // Use the tag from props directly to ensure it's always used
         limit: filters.limit || 10,
-        // Only include excludeId if it exists in filters
         ...(filters.excludeId && { excludeId: String(filters.excludeId) })
     };
 

@@ -82,28 +82,42 @@ export async function GET(request: NextRequest) {
 
     // Etiket filtresi
     if (filters.tag) {
+      // First, find the tag ID
       const tagResult = await db
         .select({ id: tags.id })
         .from(tags)
-        .where(eq(tags.name, filters.tag));
+        .where(eq(sql`LOWER(${tags.name})`, filters.tag.toLowerCase()));
 
       if (tagResult.length > 0) {
         const tagId = tagResult[0].id;
-        // Create a subquery for news with the matching tag
+        
+        // Create a subquery to find news items with this tag
         const newsWithTag = db.$with('news_with_tag').as(
-          db.selectDistinct({ id: news.id })
-            .from(news)
-            .innerJoin(news_tags, eq(news.id, news_tags.news_id))
+          db.selectDistinct({ news_id: news_tags.news_id })
+            .from(news_tags)
             .where(eq(news_tags.tag_id, tagId))
         );
         
-        // Add the condition using the subquery
+        // Add the join condition to the main query
         whereConditions.push(
-          inArray(news.id, db.select({ id: newsWithTag.id }).from(newsWithTag))
+          inArray(news.id, db.select({ id: newsWithTag.news_id }).from(newsWithTag))
         );
         
         // Add the WITH clause to the main query
         withQueries.push(newsWithTag);
+      } else {
+        // If tag doesn't exist, return empty result
+        console.log(`Tag '${filters.tag}' not found`);
+        return NextResponse.json({
+          success: true,
+          data: {
+            items: [],
+            total: 0,
+            page: filters.page || 1,
+            limit: filters.limit,
+            has_more: false,
+          },
+        });
       }
     }
 
@@ -196,8 +210,33 @@ export async function GET(request: NextRequest) {
       finalWhereConditions.push(categoryCondition);
     }
 
-    // Build and execute the query
-    const newsItems = await db
+    // Define the news item result type based on the database schema
+    type NewsItemResult = {
+      id: number;
+      source_guid: string;
+      source_id: string | null;
+      title: string;
+      seo_title: string | null;
+      seo_description: string | null;
+      excerpt: string | null;
+      content_md: string | null;
+      slug: string;
+      canonical_url: string | null;
+      status: string | null;
+      visibility: string | null;
+      word_count: number | null;
+      reading_time_min: number | null;
+      published_at: Date | null;
+      created_at: Date | null;  // Made nullable
+      updated_at: Date | null;  // Made nullable
+      media_external_url: string | null;
+      media_storage_path: string | null;
+      media_alt_text: string | null;
+      media_caption: string | null;
+    };
+
+    // Create a base query builder with all the necessary joins
+    const baseQuery = db
       .select({
         // News fields
         id: news.id,
@@ -231,6 +270,30 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(news.published_at), desc(news.created_at))
       .limit(filters.limit)
       .offset(offset);
+
+    // Execute the query with CTEs if we have any
+    let newsItems: NewsItemResult[] = [];
+    
+    try {
+      if (withQueries.length > 0) {
+        // For CTEs, we need to build the query differently
+        const cte = withQueries[0];
+        const result = await db
+          .with(cte)
+          .select()
+          .from(baseQuery.as('subquery'))
+          .innerJoin(cte, sql`${cte}.news_id = subquery.id`);
+          
+        newsItems = Array.isArray(result) ? result.map(r => r.subquery) : [];
+      } else {
+        // Direct query without CTEs
+        const result = await baseQuery;
+        newsItems = Array.isArray(result) ? result : [];
+      }
+    } catch (error) {
+      console.error('Error fetching news items:', error);
+      newsItems = [];
+    }
       
     console.log('📊 Query details:', { 
       limit: filters.limit, 

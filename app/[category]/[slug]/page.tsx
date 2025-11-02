@@ -1,13 +1,12 @@
 import { Metadata } from 'next';
 import { NewsArticle } from './NewsArticle';
 import { NewsItem } from '@/types/news';
+import { getFrontPageHeadlines } from '@/lib/headline-fetching';
+import FrontPageSections from '@/components/frontPageSections';
 
-// Re-export for client components
-// export { getOptimizedImageUrl };
 
 /**
  * Fetches a single news item by slug
- * Bu fonksiyon artık sadece bu sayfada tanımlanıyor ve sunucu tarafında çalışır.
  */
 async function getNewsItem(slug: string | undefined): Promise<NewsItem | null> {
   if (!slug) {
@@ -198,13 +197,29 @@ export default async function Page(props: PageProps) {
     );
   }
 
+  // Fetch headlines data for the widget
+  await getFrontPageHeadlines();
+
   return (
     <>
-      {/* JsonLd component'ini burada render ediyoruz */}
       <JsonLd newsItem={newsItem} />
-      <div className="container mx-auto px-4 py-8">
-        <NewsArticle newsItem={newsItem} />
-      </div>
+      <main className="min-h-screen">
+        <div className="container mx-auto px-4 py-8 space-y-12">
+          {/* Main Article */}
+          <section>
+            <NewsArticle newsItem={newsItem} />
+          </section>
+
+          {/* Widget Section */}
+          <section className="mt-12">
+            <FrontPageSections
+              categories={['turkiye', 'business', 'world', 'technology', 'sports', 'culture']}
+              layout={['a', 'c']}
+              offset={[0, 0]}
+            />
+          </section>
+        </div>
+      </main>
     </>
   );
 }

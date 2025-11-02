@@ -8,12 +8,26 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
  * Generates standard metadata for a news article
  */
 export function generateNewsMetadata(newsItem: NewsItem) {
-  const { seo_title, seo_description, tags = [], published_at, updated_at } = newsItem;
+  const { 
+    seo_title, 
+    seo_description, 
+    tags = [],  // According to NewsItem type, tags is string[]
+    published_at, 
+    updated_at,
+  } = newsItem;
+
+  // Ensure tags is an array and filter out any empty strings
+  const validTags = Array.isArray(tags) 
+    ? tags.filter((tag): tag is string => Boolean(tag && typeof tag === 'string'))
+    : [];
+
+  // Create a comma-separated list of unique tags for keywords
+  const keywords = [...new Set(validTags)].join(', ');
   
   return {
     title: seo_title,
     description: seo_description,
-    keywords: tags.join(', '),
+    keywords: keywords,
     // Add other standard metadata
     robots: 'index, follow',
     author: 'Your News Organization',
@@ -121,6 +135,7 @@ export function generateJsonLd(newsItem: NewsItem) {
 
 /**
  * Helper to get optimized image URL using the /api/images/[key] endpoint
+ * Always returns absolute URLs for use in metadata
  */
 function getOptimizedImageUrl(
   imageUrl: string,
@@ -138,7 +153,7 @@ function getOptimizedImageUrl(
     return imageUrl;
   }
 
-  // If it's a blob: URL, extract the key
+  // If it's a blob: URL, extract the key and create API URL
   if (imageUrl.startsWith('blob:')) {
     const blobKey = imageUrl.split('/').pop();
     if (!blobKey) return '';
@@ -149,7 +164,8 @@ function getOptimizedImageUrl(
     if (options.quality) params.set('q', options.quality.toString());
     if (options.format) params.set('fm', options.format);
     
-    return `/api/images/${encodeURIComponent(blobKey)}${params.toString() ? `?${params.toString()}` : ''}`;
+    const path = `/api/images/${encodeURIComponent(blobKey)}${params.toString() ? `?${params.toString()}` : ''}`;
+    return `${SITE_URL}${path}`;
   }
   
   // For local paths, ensure they're absolute

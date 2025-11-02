@@ -12,12 +12,12 @@ import { Logo } from "./navbar-02/logo";
 
 const footerSections = [
   {
-    title: "Turkey",
-    href: "/turkey", // Adjusted for English
+    title: "Türkiye",
+    href: "/turkiye", // Adjusted for English
     links: [
       { title: "Politics", href: "/topic/politics" },
-      { title: "Istanbul", href: "/tags/istanbul" },
-      { title: "Ankara", href: "/tags/ankara" },
+      { title: "Istanbul", href: "/tag/istanbul" },
+      { title: "Ankara", href: "/tag/ankara" },
     ],
   },
   {
@@ -42,18 +42,18 @@ const footerSections = [
     title: "Technology",
     href: "/technology",
     links: [
-      { title: "Google", href: "/tags/google" },
+      { title: "Google", href: "/tag/google" },
       { title: "AI", href: "/topic/ai" },
-      { title: "Apple", href: "/topic/apple" },
+      { title: "Apple", href: "/tag/apple" },
     ],
   },
   {
     title: "Sports",
     href: "/sports",
     links: [
-      { title: "Fenerbahçe", href: "/tags/fenerbahce" },
-      { title: "Beşiktaş", href: "/tags/besiktas" },
-      { title: "Galatasaray", href: "/tags/galatasaray" },
+      { title: "Fenerbahçe", href: "/tag/fenerbahce" },
+      { title: "Beşiktaş", href: "/tag/besiktas" },
+      { title: "Galatasaray", href: "/tag/galatasaray" },
     ],
   },
   {
@@ -78,23 +78,26 @@ const socialLinks = [
 
 const Footer = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       <div className="grow bg-muted" />
       <footer className="border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="max-w-7xl mx-auto">
-          <div className="py-12 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-x-8 gap-y-10 px-6 xl:px-0">
-            {/* Logo and Description Column */}
-            <div className="col-span-full xl:col-span-1">
+        <div className="max-w-6xl mx-auto">
+          {/* Logo and Description Section - Moved to top */}
+          <div className="py-8 px-6 xl:px-0 border-b">
+            <div className="max-w-2xl">
               <Logo />
               <p className="mt-4 text-muted-foreground text-sm leading-relaxed">
                 Stay updated with the latest news and insights.
               </p>
             </div>
+          </div>
+          
+          <div className="py-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-x-8 gap-y-10 px-6 xl:px-0">
 
             {/* Dynamic Footer Sections */}
             {footerSections.map((section) => (
               <div key={section.title}>
-                <h6 className="font-semibold text-primary-foreground tracking-tight">
+                <h6 className="font-semibold text-foreground tracking-tight">
                   <Link
                     href={section.href}
                     className="inline-block hover:underline"
@@ -102,7 +105,7 @@ const Footer = () => {
                     {section.title}
                   </Link>
                 </h6>
-                <ul className="mt-6 space-y-3">
+                <ul className="mt-2 space-y-1">
                   {section.links.map((link) => (
                     <li key={link.title}>
                       <Link

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import BlobImage from '@/components/BlobImage';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { NewsItem } from '@/types/news';
 
 interface NewsArticleProps {
@@ -136,7 +137,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           <div className="mb-4">
             <a 
               href={`/${newsItem.category.toLowerCase() === 'türkiye' ? 'turkiye' : newsItem.category.toLowerCase()}`}
-              className="text-xl font-medium text-foreground hover:text-primary"
+              className="text-lg uppercase font-medium text-primary hover:text-foreground"
             >
               {newsItem.category.toLowerCase() === 'turkiye' || newsItem.category.toLowerCase() === 'türkiye' ? 'Türkiye' : 
                newsItem.category.toLowerCase() === 'technology' ? 'Technology' :
@@ -147,7 +148,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
-          <h3 className="text-xl font-light text-muted-foreground mb-4 leading-relaxed">
+          <h3 className="text-2xl mD:xl sm:xl font-light text-muted-foreground mb-4 leading-relaxed">
             {newsItem.seo_description}
           </h3>
         )}
@@ -203,15 +204,18 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
 
       {/* Tags Section */}
       {newsItem.tags && newsItem.tags.length > 0 && (
-        <div className="mb-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="mb-8">
           <div className="flex flex-wrap gap-2">
-            {newsItem.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-              >
-                {tag}
-              </span>
+            {newsItem.tags
+              .filter(tag => tag && typeof tag === 'string')
+              .map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer rounded-md"
+                >
+                  {tag}
+                </Link>
             ))}
           </div>
         </div>
