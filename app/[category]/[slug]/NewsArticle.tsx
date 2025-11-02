@@ -1,12 +1,14 @@
+// app/[category]/[slug]/NewsArticle.tsx
+
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import BlobImage from '@/components/BlobImage';
-import { NewsItem } from '@/types/news';
+import { useRouter } from 'next/navigation';
+import type { NewsItem } from '@/types/news';
 
 interface NewsArticleProps {
   newsItem: NewsItem;
@@ -17,7 +19,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
   
   if (!newsItem) {
     return (
-      <div className="max-w-4xl mx-auto px-0">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center">
           <div className="text-red-500 mb-4">
             <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,6 +177,8 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
               width={1200}
               height={675}
               className="w-full h-full object-cover"
+              loading="eager"
+              priority
               onError={(e) => {
                 console.error('Error loading image:', newsItem.image);
                 const target = e.target as HTMLImageElement;

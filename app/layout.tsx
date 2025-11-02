@@ -9,31 +9,46 @@ import '../styles/globals.css';
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from '@/components/footer';
 
+// Base metadata that provides sensible defaults but allows child routes to override
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://newstr.netlify.app'),
   title: {
     default: 'NewsTR - Latest News & Breaking Stories',
-    template: '%s | NewsTR'
+    template: '%s | NewsTR',
   },
   description: 'Get the latest news, breaking stories, and in-depth analysis across all categories. Stay informed with NewsTR - your trusted source for news.',
-  keywords: 'news, breaking news, latest news, world news, politics, technology, sports, business, health, entertainment',
+  applicationName: 'NewsTR',
+  referrer: 'origin-when-cross-origin',
+  keywords: ['news', 'breaking news', 'latest news', 'world news', 'politics', 'technology', 'sports', 'entertainment'],
   authors: [{ name: 'NewsTR Team' }],
   creator: 'NewsTR',
   publisher: 'NewsTR',
-  metadataBase: new URL('https://newstr.netlify.app'),
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  // OpenGraph with minimal defaults that won't override child routes
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://newstr.netlify.app',
-    title: 'NewsTR - Latest News & Breaking Stories',
-    description: 'Get the latest news, breaking stories, and in-depth analysis across all categories.',
     siteName: 'NewsTR',
+    images: [
+      {
+        url: '/images/og-default.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'NewsTR - Latest News & Breaking Stories',
+      },
+    ],
   },
+  // Twitter with minimal defaults
   twitter: {
     card: 'summary_large_image',
-    title: 'NewsTR - Latest News & Breaking Stories',
-    description: 'Get the latest news, breaking stories, and in-depth analysis across all categories.',
     creator: '@newstr',
+    site: '@newstr',
   },
+  // Default robots settings (can be overridden by child routes)
   robots: {
     index: true,
     follow: true,
@@ -54,7 +69,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      {/* Add suppressHydrationWarning to body to prevent warnings from extensions */}
+      <body 
+        className="min-h-screen bg-background font-sans antialiased"
+        suppressHydrationWarning
+      >
            <ThemeProvider
           attribute="class"
           defaultTheme="dark"
