@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
-import { NewsCard } from '@/app/[category]/NewsCard';
+import FrontCategoryMainNewsCard from '@/components/cards/front-cat-main-newscard';
 
 // Helper function to clean filters
 const cleanFilters = (filters: Record<string, any>): Record<string, any> => {
@@ -59,12 +59,12 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
   if (error instanceof Error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 dark:text-red-400 mb-4">
+        <div className="text-destructive mb-4">
           An error occurred while loading news
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
         >
           Try Again
         </button>
@@ -76,27 +76,29 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     if (!data?.pages?.length) {
       return (
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400">No news found matching your criteria.</p>
+          <p className="text-muted-foreground">No news found matching your criteria.</p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
-        {data.pages.map((page, i) => (
-          <div key={i} className="space-y-6">
-            {page.data?.items?.map((news: any) => {
-              const processedNews = processNewsItem(news);
-              return (
-                <div key={processedNews.id} className="hover:shadow-lg transition-shadow">
-                  <NewsCard
-                    news={processedNews}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {data.pages.flatMap((page, i) => 
+          page.data?.items?.map((news: any) => {
+            const processedNews = processNewsItem(news);
+            return (
+              <div key={processedNews.id} className="h-full">
+                <FrontCategoryMainNewsCard
+                  item={processedNews}
+                  showCategory={true}
+                  showDate={true}
+                  showReadTime={true}
+                  className="h-full"
+                />
+              </div>
+            );
+          })
+        )}
       </div>
     );
   };
@@ -119,14 +121,14 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
   return (
     <div className="space-y-6">
       {/* Filter Panel - TODO: Implement later */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+      <div className="bg-card p-4 rounded-lg border">
         <div className="flex flex-wrap gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-muted-foreground">
             {data?.pages[0]?.data?.total ? `Total ${data.pages[0].data.total} news articles` : 'Loading news...'}
           </span>
           {Object.entries(cleanFilters(filters)).map(([key, value]) => 
             value ? (
-              <span key={key} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs">
+              <span key={key} className="px-2 py-1 bg-primary/10 text-primary-foreground/90 rounded text-xs">
                 {key}: {String(value)}
               </span>
             ) : null
@@ -143,7 +145,7 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
           <button
             onClick={handleLoadMore}
             disabled={isFetchingNextPage}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isFetchingNextPage ? 'Loading...' : 'Load More News'}
           </button>
@@ -153,7 +155,7 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
       {/* Loading indicator for infinite scroll */}
       {isFetchingNextPage && (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       )}
     </div>
@@ -162,19 +164,19 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
 
 // Loading skeleton for news cards
 const NewsCardSkeleton = () => (
-  <div className="animate-pulse group relative flex flex-col sm:flex-row gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-    <div className="w-full sm:w-40 h-40 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+  <div className="animate-pulse group relative flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-lg shadow">
+    <div className="w-full sm:w-40 h-40 bg-muted rounded-lg"></div>
     <div className="flex-1 space-y-3">
-      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      <div className="h-4 bg-muted rounded w-24"></div>
+      <div className="h-6 bg-muted rounded w-3/4"></div>
       <div className="space-y-2">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+        <div className="h-4 bg-muted rounded"></div>
+        <div className="h-4 bg-muted rounded w-5/6"></div>
+        <div className="h-4 bg-muted rounded w-4/6"></div>
       </div>
       <div className="flex gap-2">
-        <div className="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-        <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        <div className="h-6 w-16 bg-muted rounded-full"></div>
+        <div className="h-6 w-20 bg-muted rounded-full"></div>
       </div>
     </div>
   </div>

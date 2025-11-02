@@ -122,7 +122,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (
-              <p className="text-xl text-muted-foreground/90 line-clamp-5 md:hidden">
+              <p className="text-xl mt-2 text-muted-foreground/90 line-clamp-5 md:hidden">
                 {item.seo_description || item.description}
               </p>
             )}

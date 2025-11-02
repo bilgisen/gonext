@@ -80,7 +80,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
       )}
     >
       {/* --- Background Shimmer Effect (Teal) --- */}
-      <div className="absolute inset-0 bg-[radial-gradient(80%_100%_at_50%_0%,theme(colors.teal.700/10),transparent_70%)] z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(100%_100%_at_0%_0%,theme(colors.teal.700/10),transparent_70%)] z-0" />
 
       {/* --- Image --- */}
       <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden z-10">
@@ -119,7 +119,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             href={`/${categorySlug}/${item.slug}`}
             className="hover:underline"
           >
-            <h3 className="text-xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2 mb-2">
+            <h3 className="text-2xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2 ">
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (

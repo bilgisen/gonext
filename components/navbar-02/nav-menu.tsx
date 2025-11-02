@@ -29,7 +29,7 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link href="/business" className="text-foreground hover:text-foreground/80">
-            Business
+            Business & Economy
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
