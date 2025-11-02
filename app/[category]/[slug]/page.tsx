@@ -1,8 +1,13 @@
 import { Metadata } from 'next';
 import { NewsArticle } from './NewsArticle';
 import { NewsItem } from '@/types/news';
-import { getFrontPageHeadlines } from '@/lib/headline-fetching';
-import FrontPageSections from '@/components/frontPageSections';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the WidgetSection component with no SSR
+const WidgetSection = dynamic(
+  () => import('@/components/WidgetSection'),
+  { ssr: false }
+);
 
 
 /**
@@ -197,9 +202,6 @@ export default async function Page(props: PageProps) {
     );
   }
 
-  // Fetch headlines data for the widget
-  await getFrontPageHeadlines();
-
   return (
     <>
       <JsonLd newsItem={newsItem} />
@@ -210,14 +212,8 @@ export default async function Page(props: PageProps) {
             <NewsArticle newsItem={newsItem} />
           </section>
 
-          {/* Widget Section */}
-          <section className="mt-12">
-            <FrontPageSections
-              categories={['turkiye', 'business', 'world', 'technology', 'sports', 'culture']}
-              layout={['a', 'c']}
-              offset={[0, 0]}
-            />
-          </section>
+          {/* Widget Section - Loaded client-side after initial render */}
+          <WidgetSection />
         </div>
       </main>
     </>
