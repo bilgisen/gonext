@@ -118,7 +118,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             <h3 className="text-2xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-2">
               {item.seo_title || item.title}
             </h3>
-            {showDescription && (item.seo_description || item.description) && (
+            {showDescription && (item.seo_description || item.description) && compactTitle && (
               <p className="text-base text-muted-foreground/90 line-clamp-3 md:hidden">
                 {item.seo_description || item.description}
               </p>
@@ -232,7 +232,7 @@ const FrontCategoryLayoutOne = ({
               item={item}
               showCategory
               compactTitle
-              showDescription={false}
+              showDescription={true}
               className="h-full"
             />
           ) : null
@@ -261,7 +261,7 @@ const FrontCategoryLayoutOne = ({
               item={item}
               showCategory
               compactTitle
-              showDescription={false}
+              showDescription={true}
               className="h-full"
             />
           ) : null
