@@ -120,45 +120,40 @@ export function generateJsonLd(newsItem: NewsItem) {
 }
 
 /**
- * Helper to get optimized image URL from Netlify Blob
+ * Helper to get optimized image URL using the /api/images/[key] endpoint
  */
 function getOptimizedImageUrl(
-  blobUrl: string,
+  imageUrl: string,
   options: {
     width?: number;
     height?: number;
     quality?: number;
-    format?: 'webp' | 'jpg' | 'png' | 'avif';
+    format?: 'webp' | 'jpg' | 'png' | 'avif' | 'jpeg';
   } = {}
 ): string {
-  if (!blobUrl) return '';
+  if (!imageUrl) return '';
   
-  // If it's not a Netlify Blob URL, return as is
-  if (!blobUrl.includes('netlify.blob.core.windows.net')) {
-    return blobUrl.startsWith('http') ? blobUrl : `${SITE_URL}${blobUrl.startsWith('/') ? '' : '/'}${blobUrl}`;
+  // If it's already a full URL, return as is
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
   }
 
-  try {
-    const url = new URL(blobUrl);
+  // If it's a blob: URL, extract the key
+  if (imageUrl.startsWith('blob:')) {
+    const blobKey = imageUrl.split('/').pop();
+    if (!blobKey) return '';
+    
     const params = new URLSearchParams();
-
-    // Add optimization parameters
     if (options.width) params.set('w', options.width.toString());
     if (options.height) params.set('h', options.height.toString());
     if (options.quality) params.set('q', options.quality.toString());
     if (options.format) params.set('fm', options.format);
-
-    // If we have any params, add them to the URL
-    if (params.toString()) {
-      // Check if URL already has query params
-      const separator = url.search ? '&' : '?';
-      return `${blobUrl}${separator}${params.toString()}`;
-    }
-  } catch (error) {
-    console.error('Error optimizing image URL:', error);
+    
+    return `/api/images/${encodeURIComponent(blobKey)}${params.toString() ? `?${params.toString()}` : ''}`;
   }
-
-  return blobUrl;
+  
+  // For local paths, ensure they're absolute
+  return imageUrl.startsWith('/') ? `${SITE_URL}${imageUrl}` : `${SITE_URL}/${imageUrl}`;
 }
 
 /**
