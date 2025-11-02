@@ -76,7 +76,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
       className={cn(
         'group flex flex-col rounded-md overflow-hidden',
         'transition-all duration-200 hover:shadow-md',
-        'bg-card/60 text-card-foreground',
+        'bg-card/70 text-card-foreground',
         className
       )}
     >
@@ -115,7 +115,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             href={`/${categorySlug}/${item.slug}`}
             className="hover:underline"
           >
-            <h3 className="text-2xl sm:text-lg md:text-xl font-medium line-height-tight line-clamp-2 mb-0">
+            <h3 className="text-3xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-0">
               {item.seo_title || item.title}
             </h3>
           </Link>
@@ -124,14 +124,14 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             href={`/${categorySlug}/${item.slug}`}
             className="hover:underline"
           >
-            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-semibold mb-2 spacing-tight line-clamp-3">
+            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
               {item.seo_title || item.title}
             </h2>
           </Link>
         )}
 
         {showDescription && (item.seo_description || item.description) && (
-          <p className="text-xl text-muted-foreground/90 mb-3 line-clamp-4">
+          <p className="text-xl text-muted-foreground/90 mb-3 line-clamp-5">
             {item.seo_description || item.description}
           </p>
         )}
