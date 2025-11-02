@@ -145,10 +145,10 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
             </a>
           </div>
         )}
-        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
-          <h3 className="text-2xl mD:xl sm:xl font-light text-muted-foreground mb-4 leading-relaxed">
+          <h3 className="text-2xl md:xl sm:xl font-light text-muted-foreground mb-4 leading-relaxed">
             {newsItem.seo_description}
           </h3>
         )}
