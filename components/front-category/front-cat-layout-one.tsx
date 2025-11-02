@@ -80,7 +80,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         className
       )}
     >
-      <div className="relative w-full pt-[65%] overflow-hidden">
+      <div className="relative w-full pt-[100%] md:pt-[65%] overflow-hidden">
         {imageKey ? (
           <BlobImage
             imageKey={imageKey}
