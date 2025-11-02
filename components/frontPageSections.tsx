@@ -143,7 +143,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </Link>
         ) : (
           <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
-            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
+            <h2 className="text-3xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
               {item.seo_title || item.title}
             </h2>
           </Link>
