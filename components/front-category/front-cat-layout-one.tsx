@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNewsFromDatabase } from '@/hooks/queries/useExternalQueries';
 
-// ... (FrontCategoryFeatNewsCard tanımı aynı) ...
 interface FrontCategoryFeatNewsCardProps {
   item: NewsItem;
   className?: string;
@@ -72,15 +72,34 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   }, '');
 
   return (
-    <div
-      className={cn(
-        'group flex flex-col rounded-md overflow-hidden',
-        'transition-all duration-200 hover:shadow-md',
-        'bg-card/70 text-card-foreground',
-        className
-      )}
-    >
-      <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden">
+   <motion.div
+  whileHover={{ scale: 1.015 }}
+  transition={{ duration: 0.25, ease: 'easeOut' }}
+  className={cn(
+    'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
+    // 🔹 Alt zemin teal + üzerine card → transparent gradient
+    'bg-teal-500 bg-gradient-to-b from-card/95 to-transparent',
+    'border border-border/50 shadow-md transition-all duration-200 hover:shadow-lg',
+    className
+  )}
+>
+  {/* --- Shimmer effect (hafif teal parıltı) --- */}
+  <motion.div
+    className="absolute inset-0 bg-[radial-gradient(circle_at_center,theme(colors.teal.500/90),transparent_80%)] z-0"
+    animate={{
+      scale: [1, 1.05, 1],
+      opacity: [0.1, 0.1, 0.2],
+    }}
+    transition={{
+      duration: 8,
+      repeat: Infinity,
+      ease: 'easeInOut',
+    }}
+  />
+
+
+      {/* --- Image --- */}
+      <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden z-10">
         {imageKey ? (
           <BlobImage
             imageKey={imageKey}
@@ -103,7 +122,8 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
         )}
       </div>
 
-      <div className="p-4 mt-0 mb-4 flex-1 flex flex-col">
+      {/* --- Content --- */}
+      <div className="relative z-10 p-4 mt-0 mb-4 flex-1 flex flex-col">
         {showCategory && item.category && (
           <span className="text-sm uppercase font-medium text-primary mb-2">
             {item.category}
@@ -119,7 +139,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (
-              <p className="text-base text-muted-foreground/90 line-clamp-3 md:hidden">
+              <p className="text-xl text-muted-foreground/90 line-clamp-5 md:hidden">
                 {item.seo_description || item.description}
               </p>
             )}
@@ -158,7 +178,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
           </div>
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

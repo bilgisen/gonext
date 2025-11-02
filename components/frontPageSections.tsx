@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
 import { Separator } from '@radix-ui/react-separator';
+import { motion } from 'framer-motion';
 
 // ... (NewsCard tanımı aynı kalır) ...
 interface NewsCardProps {
@@ -72,16 +73,33 @@ const NewsCard: React.FC<NewsCardProps> = ({
   }, '');
 
   return (
-    <Link
-      href={`/${categorySlug}/${item.slug}`}
+    <motion.div
+      whileHover={{ scale: 1.015 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
       className={cn(
-        'group flex flex-col rounded-lg overflow-hidden',
-        'transition-all duration-200 hover:shadow-md',
-        'bg-card/50 text-card-foreground',
+        'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
+        'bg-gradient-to-b from-transparent via-card/90 to-transparent',
+        'border border-border/50 shadow-md transition-all duration-5000 hover:shadow-lg',
+        'mb-6', // Add margin bottom for spacing between cards
         className
       )}
     >
-      <div className="relative w-full pt-[60%] overflow-hidden">
+      {/* --- Background Shimmer Effect (Teal) --- */}
+      <motion.div
+        className="absolute inset-0 bg-[radial-gradient(circle_at_center,theme(colors.teal.700/12),transparent_80%)] z-0"
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0.1, 0.2, 0.1],
+        }}
+        transition={{
+          duration: 9,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+
+      {/* --- Image --- */}
+      <div className="relative w-full pt-[75%] md:pt-[56.25%] overflow-hidden z-10">
         {imageKey ? (
           <BlobImage
             imageKey={imageKey}
@@ -104,26 +122,36 @@ const NewsCard: React.FC<NewsCardProps> = ({
         )}
       </div>
 
-      <div className="p-4 flex-1 flex flex-col">
+      {/* --- Content --- */}
+      <div className="relative z-10 p-4 mt-0 mb-4 flex-1 flex flex-col">
         {showCategory && item.category && (
-          <span className="text-xs font-medium text-primary mb-2">
+          <span className="text-sm uppercase font-medium text-primary mb-2">
             {item.category}
           </span>
         )}
 
         {compactTitle ? (
-          <h3 className="text-xl sm:text-lg md:text-xl font-medium line-height-tight line-clamp-2 mb-0">
-            {item.seo_title}
-          </h3>
+          <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
+            <h3 className="text-2xl sm:text-xl md:text-2xl font-medium line-height-tight line-clamp-2 mb-2">
+              {item.seo_title || item.title}
+            </h3>
+            {showDescription && (item.seo_description || item.description) && compactTitle && (
+              <p className="text-xl text-muted-foreground/90 line-clamp-5 md:hidden">
+                {item.seo_description || item.description}
+              </p>
+            )}
+          </Link>
         ) : (
-          <h2 className="text-2xl sm:text-xl md:text-2xl lg:text-3xl font-medium mb-2 spacing-tight line-clamp-3">
-            {item.seo_title}
-          </h2>
+          <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
+            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
+              {item.seo_title || item.title}
+            </h2>
+          </Link>
         )}
 
-        {showDescription && item.seo_description && (
-          <p className="text-lg sm:text-md md:text-lg text-muted-foreground mb-3 line-clamp-4">
-            {item.seo_description}
+        {showDescription && (item.seo_description || item.description) && !compactTitle && (
+          <p className="text-xl text-muted-foreground/90 mb-3 line-clamp-5">
+            {item.seo_description || item.description}
           </p>
         )}
 
@@ -144,7 +172,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </div>
         ) : null}
       </div>
-    </Link>
+    </motion.div>
   );
 };
 
