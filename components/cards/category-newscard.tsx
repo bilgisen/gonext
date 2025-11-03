@@ -19,7 +19,7 @@ interface FrontCategoryFeatNewsCardProps {
 const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   item,
   className,
-  showCategory = true,
+  showCategory = false,
   showDate = true,
   showReadTime = true,
   compactTitle = false,
@@ -121,18 +121,18 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
 
         {/* Title */}
         {compactTitle ? (
-          <h3 className="text-md font-semibold line-clamp-2 mb-2">
+          <h3 className="text-md font-medium line-clamp-3 mb-2">
             {item.seo_title || item.title}
           </h3>
         ) : (
-          <h2 className="text-4xl font-bold mb-2 line-clamp-3">
+          <h2 className="text-2xl font-medium mb-2 line-clamp-3">
             {item.seo_title || item.title}
           </h2>
         )}
 
         {/* Description - optional */}
         {showDescription && (item.seo_description || item.description) && (
-          <p className="text-muted-foreground/90 mb-3 line-clamp-4">
+          <p className="text-lg text-muted-foreground/90 mb-3 line-clamp-4">
             {item.seo_description || item.description}
           </p>
         )}

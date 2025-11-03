@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "next-sitemap",
     "start": "next start",
     "lint": "next lint",
     "test:news": "tsx scripts/test-news-fetch.ts",
@@ -72,6 +73,7 @@
   "devDependencies": {
     "@netlify/functions": "^5.0.1",
     "@tailwindcss/postcss": "^4.1.15",
+    "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "drizzle-kit": "^0.31.5",

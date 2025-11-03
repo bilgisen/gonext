@@ -1,4 +1,5 @@
 // @ts-check
+import path from 'path';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -14,6 +15,19 @@ const nextConfig = {
   
   // Fix for module resolution in app directory
   transpilePackages: [],
+  
+  // Webpack configuration for path aliases
+  webpack: (config) => {
+    // Add path aliases
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(process.cwd()),
+      '@/db': path.resolve(process.cwd(), 'db'),
+    };
+    
+    // Important: return the modified config
+    return config;
+  },
   
   // Image optimization configuration
   images: {

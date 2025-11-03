@@ -1,16 +1,16 @@
 // app/api/news/route.ts
-import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db/client';
-import {
-  news,
-  categories,
-  tags,
-  media,
-  news_categories,
-  news_tags,
+import { and, eq, desc, sql, inArray, or, ilike } from 'drizzle-orm';
+import { NextResponse, NextRequest } from 'next/server';
+import { 
+  news, 
+  categories, 
+  tags, 
+  media, 
+  news_categories, 
+  news_tags 
 } from '@/db/schema';
-import { eq, and, or, ilike, inArray, desc, sql } from 'drizzle-orm';
-import { CATEGORY_MAPPINGS, NewsItem, NewsListResponse } from '@/types/news'; // CATEGORY_MAPPINGS ve NewsItem/NewsListResponse import edin
+import { CATEGORY_MAPPINGS, NewsItem, NewsListResponse } from '@/types/news';
 
 export const runtime = 'nodejs';
 

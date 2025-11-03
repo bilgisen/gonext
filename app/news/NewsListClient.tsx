@@ -145,7 +145,7 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
           <button
             onClick={handleLoadMore}
             disabled={isFetchingNextPage}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-primary/90 text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isFetchingNextPage ? 'Loading...' : 'Load More News'}
           </button>

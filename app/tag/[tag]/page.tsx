@@ -28,19 +28,19 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
     const formattedTag = tag.charAt(0).toUpperCase() + tag.slice(1).replace(/-/g, ' ');
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-card border-b">
                 <div className="container mx-auto px-4 py-8">
                     <div className="text-center">
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        <h1 className="text-4xl font-bold text-foreground mb-4">
                             #{formattedTag}
                         </h1>
-                        <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+                        <p className="text-xl text-muted-foreground mb-6">
                             News articles tagged with &quot;{formattedTag}&quot;
                         </p>
                         <div className="flex justify-center">
-                            <span className="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
+                            <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
                                 Tag: {formattedTag}
                             </span>
                         </div>

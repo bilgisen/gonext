@@ -7,7 +7,7 @@ import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers, type NewsFilters } from '@/lib/urlFilters';
 import { cn } from '@/lib/utils';
 import { CATEGORY_MAPPINGS } from '@/types/news';
-import FrontCategoryFeatNewsCard from '@/components/cards/front-cat-feat-newscard';
+import FrontCategoryFeatNewsCard from '@/components/cards/category-newscard';
 import { CategoryHero } from './categoryHero';
 
 interface CategoryNewsListProps {
@@ -193,7 +193,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
             <FrontCategoryFeatNewsCard 
               key={newsItem.id} 
               item={newsItem} 
-              showCategory={true}
+              showCategory={false}
               showDate={true}
               showReadTime={true}
               showDescription={true}
@@ -207,9 +207,9 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
           <button
             onClick={handleLoadMore}
             disabled={isFetchingNextPage}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-6 py-3 bg-primary/60 text-foreground rounded-lg hover:bg-primary disabled:opacity-50"
           >
-            {isFetchingNextPage ? 'Loading...' : 'Load More'}
+            {isFetchingNextPage ? 'Loading...' : 'Load More News'}
           </button>
         </div>
       )}
