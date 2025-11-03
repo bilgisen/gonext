@@ -4,18 +4,6 @@ import { and, gte, desc, isNotNull } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
 import { format } from 'date-fns';
 
-type NewsSitemapEntry = {
-  loc: string;
-  lastmod: string;
-  news: {
-    publication: {
-      name: string;
-      language: string;
-    };
-    publication_date: string;
-    title: string;
-  };
-};
 
 export async function GET(_request: NextRequest) {
   try {
