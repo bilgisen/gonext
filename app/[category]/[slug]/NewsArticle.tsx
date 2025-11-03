@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import ShareButton from '@/components/ui/share-button';
 import BlobImage from '@/components/BlobImage';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -148,10 +149,18 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         <h1 className="text-4xl md:text-5xl sm:text-2xl font-medium tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
-          <h3 className="text-2xl md:text-xl sm:text-xl font-medium text-muted-foreground mb-4 leading-relaxed">
-            {newsItem.seo_description}
-          </h3>
+          <p className="text-xl text-muted-foreground mb-4">{newsItem.seo_description}</p>
         )}
+
+        {/* Share Buttons - Large */}
+        <div className="mb-8">
+          <ShareButton 
+            url={`${typeof window !== 'undefined' ? window.location.href : ''}`}
+            title={newsItem.seo_title || newsItem.title}
+            description={newsItem.seo_description || ''}
+            variant="large"
+          />
+        </div>
 
       
         <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6 space-x-2">
@@ -196,6 +205,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           {newsItem.content_md || newsItem.seo_description || 'No content available'}
         </MarkdownRenderer>
       </div>
+
 
       {/* Tags Section */}
       {newsItem.tags && newsItem.tags.length > 0 && (

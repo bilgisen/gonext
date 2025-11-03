@@ -5,6 +5,7 @@ import type { NewsItem } from '@/types/news';
 import { format } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
+import ShareButton from '@/components/ui/share-button';
 
 interface FrontCategoryFeatNewsCardProps {
   item: NewsItem;
@@ -154,6 +155,15 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             )}
           </div>
         ) : null}
+        
+        <div className="flex justify-end mt-2">
+          <ShareButton 
+            url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${categorySlug}/${item.slug}`}
+            title={item.seo_title || item.title}
+            description={item.seo_description || item.description}
+            className="text-muted-foreground hover:text-foreground"
+          />
+        </div>
       </div>
     </Link>
   );

@@ -11,6 +11,7 @@ import {
   news_tags 
 } from '@/db/schema';
 import { CATEGORY_MAPPINGS, NewsItem, NewsListResponse } from '@/types/news';
+import { updateNewsTimestamps } from '@/lib/news/date-utils';
 
 export const runtime = 'nodejs';
 
@@ -349,7 +350,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 5. Build the final response
-    const items = newsItems.map(newsItem => {
+    let items = newsItems.map(newsItem => {
       const newsId = newsItem.id;
       const newsCategories = categoriesByNewsId[newsId] || [];
       const newsTags = tagsByNewsId[newsId] || [];
@@ -379,6 +380,7 @@ export async function GET(request: NextRequest) {
         image_desc: newsItem.media_caption || newsItem.media_alt_text || '',
         original_url: newsItem.canonical_url || '',
         file_path: newsItem.media_storage_path || '',
+        // We'll update these timestamps with our custom logic
         created_at: newsItem.created_at?.toISOString() || new Date().toISOString(),
         published_at: (newsItem.published_at || newsItem.created_at)?.toISOString() || new Date().toISOString(),
         updated_at: (newsItem.updated_at || newsItem.created_at)?.toISOString() || new Date().toISOString(),
@@ -386,6 +388,17 @@ export async function GET(request: NextRequest) {
         read_time: typeof newsItem.reading_time_min === 'number' ? newsItem.reading_time_min : 0,
         is_bookmarked: undefined
       } as NewsItem;
+    });
+
+    // 6. Update timestamps for all news items
+    items = items.map(item => {
+      const updatedItem = updateNewsTimestamps(item);
+      return {
+        ...item,
+        created_at: updatedItem.created_at,
+        published_at: updatedItem.published_at,
+        updated_at: updatedItem.updated_at
+      };
     });
 
     console.log('🔍 Processed items:', items.length);
