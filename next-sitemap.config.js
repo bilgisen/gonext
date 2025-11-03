@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 const config = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://newstr.netlify.app',
   generateRobotsTxt: true,
   sitemapSize: 5000,
   changefreq: 'daily',
@@ -15,6 +15,7 @@ const config = {
     '/_error/*',
     '/404',
     '/500',
+    '/sitemap-news.xml', // We'll handle this separately
   ],
   
   // Generate a sitemap index that references both sitemaps
@@ -22,8 +23,7 @@ const config = {
   
   // Additional sitemaps to include in the sitemap index
   additionalSitemaps: [
-    `${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/api/sitemap`,
-    `${process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'}/api/sitemap/news`,
+    `${process.env.NEXT_PUBLIC_SITE_URL || 'https://newstr.netlify.app'}/sitemap-news.xml`,
   ],
   
   // Robots.txt configuration
