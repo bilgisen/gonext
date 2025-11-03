@@ -30,14 +30,23 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
   // Prefetch functionality is currently not used
   // const { prefetchNewsDetail } = usePrefetchNews();
 
+  const [sortBy, setSortBy] = useState<'published_at' | 'created_at'>('published_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
     error,
-  } = useInfiniteNews(filters);
+    refetch,
+  } = useInfiniteNews({
+    ...filters,
+    sortBy,
+    sortOrder,
+  });
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -45,6 +54,23 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     }
   };
 
+
+  // Handle error state
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-destructive mb-4">
+          Error loading news: {error?.message || 'Unknown error'}
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -77,6 +103,28 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
       return (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No news found matching your criteria.</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
+      );
+    }
+
+    // Check if any page has items
+    const hasItems = data.pages.some(page => page?.data?.items?.length > 0);
+    if (!hasItems) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No news articles found.</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Refresh
+          </button>
         </div>
       );
     }
@@ -120,19 +168,40 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Filter Panel - TODO: Implement later */}
+      {/* Filter and Sort Panel */}
       <div className="bg-card p-4 rounded-lg border">
-        <div className="flex flex-wrap gap-2">
-          <span className="text-sm text-muted-foreground">
-            {data?.pages[0]?.data?.total ? `Total ${data.pages[0].data.total} news articles` : 'Loading news...'}
-          </span>
-          {Object.entries(cleanFilters(filters)).map(([key, value]) => 
-            value ? (
-              <span key={key} className="px-2 py-1 bg-primary/10 text-primary-foreground/90 rounded text-xs">
-                {key}: {String(value)}
-              </span>
-            ) : null
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {data?.pages[0]?.data?.total ? `Total ${data.pages[0].data.total} news articles` : 'Loading news...'}
+            </span>
+            {Object.entries(cleanFilters(filters)).map(([key, value]) => 
+              value ? (
+                <span key={key} className="px-2 py-1 bg-primary/10 text-primary-foreground/90 rounded text-xs">
+                  {key}: {String(value)}
+                </span>
+              ) : null
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'published_at' | 'created_at')}
+              className="text-sm bg-background border rounded px-2 py-1"
+            >
+              <option value="published_at">Publish Date</option>
+              <option value="created_at">Creation Date</option>
+            </select>
+            
+            <button
+              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+              className="p-1 rounded hover:bg-muted"
+              title={sortOrder === 'asc' ? 'Sort ascending' : 'Sort descending'}
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
         </div>
       </div>
 

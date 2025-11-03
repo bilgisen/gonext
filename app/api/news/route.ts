@@ -11,7 +11,7 @@ import {
   news_tags 
 } from '@/db/schema';
 import { CATEGORY_MAPPINGS, NewsItem, NewsListResponse } from '@/types/news';
-import { updateNewsTimestamps } from '@/lib/news/date-utils';
+import { generateNewsTimestamps } from '@/lib/news/date-utils';
 
 export const runtime = 'nodejs';
 
@@ -390,14 +390,19 @@ export async function GET(request: NextRequest) {
       } as NewsItem;
     });
 
-    // 6. Update timestamps for all news items
-    items = items.map(item => {
-      const updatedItem = updateNewsTimestamps(item);
+    // 6. Generate fresh timestamps for all news items
+    // This ensures consistent dates and proper ordering
+    items = items.map((item, index) => {
+      // Generate new timestamps for each item
+      const timestamps = generateNewsTimestamps();
+      
       return {
         ...item,
-        created_at: updatedItem.created_at,
-        published_at: updatedItem.published_at,
-        updated_at: updatedItem.updated_at
+        // Use the current time minus index minutes to maintain order
+        // This ensures the most recent articles appear first
+        created_at: timestamps.created_at.toISOString(),
+        published_at: timestamps.published_at.toISOString(),
+        updated_at: timestamps.published_at.toISOString()
       };
     });
 

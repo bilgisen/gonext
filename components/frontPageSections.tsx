@@ -1,3 +1,4 @@
+// components/frontPageSections.tsx
 'use client';
 
 import { memo } from 'react';
@@ -6,11 +7,14 @@ import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Calendar, Clock } from 'lucide-react';
+import { Clock, Heart, Bookmark } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import BlobImage from '@/components/BlobImage';
-import { Separator } from '@radix-ui/react-separator';
+// Paylaşım butonunuzun doğru dosya yoluna göre import edilmesi gerekiyor
+// Örneğin, yukarıda oluşturduğumuz gibi components/ui/ShareButton.tsx ise:
+import ShareButton from '@/components/ui/share-button'; // veya doğru yol
 
-// ... (NewsCard tanımı aynı kalır) ...
+// ... (NewsCard tanımı) ...
 interface NewsCardProps {
   item: NewsItem;
   className?: string;
@@ -71,20 +75,20 @@ const NewsCard: React.FC<NewsCardProps> = ({
     return (d.getFullYear() > 2001) ? formatDate(date) : '';
   }, '');
 
+  // Paylaşılacak tam URL
+  const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com'}/${categorySlug}/${item.slug}`;
+
   return (
     <div
       className={cn(
-        'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
-        'bg-gradient-to-br from-card/90 via-transparent to-transparent',
-        'border border-border/50 shadow-md transition-all duration-200 hover:shadow-lg',
-        'mb-6', // Add margin bottom for spacing between cards
+        'relative group flex flex-col rounded-md overflow-hidden',
+        'bg-linear-to-b from-card to-card/20',
+        'border border-border/50 transition-all duration-200 hover:shadow-md',
+        'mb-0',
         className
       )}
     >
-      {/* --- Background Shimmer Effect (Teal) --- */}
-      <div className="absolute inset-0 bg-[radial-gradient(100%_100%_at_0%_0%,theme(colors.teal.800/40),transparent_70%)] z-0" />
-
-      {/* --- Image --- */}
+      {/* --- Image with Read Time --- */}
       <div className="relative w-full pt-[75%] md:pt-[56.25%] overflow-hidden z-10">
         {imageKey ? (
           <BlobImage
@@ -106,19 +110,39 @@ const NewsCard: React.FC<NewsCardProps> = ({
             <span className="text-muted-foreground">No image</span>
           </div>
         )}
+
+        {/* Read Time Badge */}
+        {showReadTime && item.read_time && (
+          <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span>{item.read_time} min</span>
+          </div>
+        )}
       </div>
 
       {/* --- Content --- */}
       <div className="relative z-10 p-4 flex-1 flex flex-col">
+        {/* Moved Time to Top */}
+        {showDate && formattedDate && (
+          <div className="mb-1">
+            <span className="text-xs text-muted-foreground/80">
+              ~{formatDistanceToNow(new Date(item.published_at || item.created_at || item.updated_at || new Date()), {
+                addSuffix: true,
+                includeSeconds: false
+              }).replace('about ', '')}
+            </span>
+          </div>
+        )}
+
         {showCategory && item.category && (
-          <span className="text-sm uppercase font-medium text-primary mb-2">
+          <span className="text-sm uppercase font-medium text-primary mb-1">
             {item.category}
           </span>
         )}
 
         {compactTitle ? (
           <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
-            <h3 className="text-2xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2 ">
+            <h3 className="text-2xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2">
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (
@@ -129,7 +153,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </Link>
         ) : (
           <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
-            <h2 className="text-3xl py-2 sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
+            <h2 className="text-3xl py-1 sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
               {item.seo_title || item.title}
             </h2>
           </Link>
@@ -141,22 +165,32 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </p>
         )}
 
-        {(showDate && formattedDate) || showReadTime ? (
-          <div className="mt-auto pt-0 text-xs text-muted-foreground flex items-center gap-4">
-            {showDate && formattedDate && (
-              <span className="flex items-center">
-                <Calendar className="w-3 h-3 mr-1" />
-                {formattedDate}
-              </span>
-            )}
-            {showReadTime && item.read_time && (
-              <span className="flex items-center">
-                <Clock className="w-3 h-3 mr-1" />
-                {item.read_time} min read
-              </span>
-            )}
+        {/* Buttons - Moved to bottom left */}
+        <div className="mt-auto pt-2 border-t border-border/20">
+          <div className="flex items-center gap-3 text-muted-foreground/80">
+            <button
+              type="button"
+              className="p-1 rounded-full hover:text-primary transition-colors"
+              aria-label="Like"
+            >
+              <Heart className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              className="p-1 rounded-full hover:text-primary transition-colors"
+              aria-label="Save"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+            </button>
+            {/* ShareButton prop hatası düzeltildi */}
+            <ShareButton
+              url={shareUrl}
+              title={item.seo_title || item.title || ''}
+              text={item.seo_description || item.description || ''}
+              className="p-1 hover:text-primary transition-colors"
+            />
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );
@@ -242,10 +276,6 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
   switch (layoutType) {
     case 'b':
       // 1/4 - 1/2 - 1/4
-      // Bu layout'ta sadece 1 tane 1/4 sütun var (solda). 2 kartı alt alta koymak için sağ sütunu da kullanmamız gerekir.
-      // Ancak soru sadece 1/4 sütunlarda 2 kart istiyor. 'b' için tek bir kartı sola koyabiliriz.
-      // Eğer 'b' için de 2 kart isteniyorsa, sağ sütuna da bir kart daha eklenmeli veya yapı değiştirilmeli.
-      // Mevcut yapıya göre 'b' için sadece bir 1/4 sütun var, o da solda.
       layoutContent = (
         <>
           <div className="col-span-12 md:col-span-3">
@@ -284,13 +314,12 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
       break;
     case 'c':
       // 1/4, 1/4, 1/2
-      // Sol sütun (1/4) için: secondItem, fourthItem
-      // Sağ sütun (1/4) için: thirdItem, fifthItem
-      // Orta sütun (1/2) için: firstItem (ana haber)
-      // Mobilde: firstItem üstte (order-1), diğerleri altta
+      // Ana haber - Mobilde üstte (order-1), masaüstünde sağda (md:order-3)
+      // Sol sütun - Mobilde ortada (order-2), masaüstünde solda (md:order-1)
+      // Sağ sütun - Mobilde altta (order-3), masaüstünde ortada (md:order-2)
       layoutContent = (
         <>
-          {/* Ana haber - Mobilde üstte, masaüstünde sağda */}
+          {/* Ana haber */}
           <div className="col-span-12 md:col-span-6 order-1 md:order-3">
             {firstItem && (
               <NewsCard
@@ -300,8 +329,8 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
               />
             )}
           </div>
-          
-          {/* Sol sütun - Mobilde ortada */}
+
+          {/* Sol sütun */}
           <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full order-2 md:order-1">
             {secondItem && (
               <div className="flex-1">
@@ -324,8 +353,8 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
               </div>
             )}
           </div>
-          
-          {/* Sağ sütun - Mobilde altta */}
+
+          {/* Sağ sütun */}
           <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full order-3 md:order-2">
             {thirdItem && (
               <div className="flex-1">
@@ -353,11 +382,7 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
       break;
     case 'a':
     default:
-      // 1/2, 1/4; 1/4 (Orijinal layout)
-      // Sol sütun (1/2) için: firstItem
-      // Orta sütun (1/4) için: secondItem
-      // Sağ sütun (1/4) için: thirdItem
-      // 1/4 sütunlarda 2 kart isteniyorsa: Orta sütun: secondItem, fourthItem. Sağ sütun: thirdItem, fifthItem.
+      // 1/2, 1/4; 1/4
       layoutContent = (
         <>
           <div className="col-span-12 md:col-span-6">
@@ -463,7 +488,7 @@ const FrontPageSections: React.FC<FrontPageSectionsProps> = ({
         return (
           <div key={cat} className="space-y-4">
             <h3 className="text-2xl font-semibold capitalize">{cat}</h3>
-            <Separator className="mb-6 pt-0 border border-card-foreground/10"/>
+            <div className="mb-6 pt-0 border-t border-card-foreground/10 w-full"></div>
             <FrontPageSection
               category={cat}
               limit={limit}

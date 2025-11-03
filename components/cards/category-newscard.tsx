@@ -138,9 +138,11 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
           </p>
         )}
 
-        {/* Date and Read Time - Only show if we have a valid date */}
-        {(showDate && formattedDate) || showReadTime ? (
-          <div className="mt-auto pt-2 text-xs text-muted-foreground flex items-center gap-4">
+        
+        {/* Date, Read Time, and Share Button */}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          {/* Date and Read Time - Only show if we have a valid date */}
+          <div className="text-xs text-muted-foreground flex items-center gap-4">
             {showDate && formattedDate && (
               <span className="flex items-center">
                 <Calendar className="w-3 h-3 mr-1" />
@@ -154,15 +156,16 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
               </span>
             )}
           </div>
-        ) : null}
-        
-        <div className="flex justify-end mt-2">
-          <ShareButton 
-            url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${categorySlug}/${item.slug}`}
-            title={item.seo_title || item.title}
-            description={item.seo_description || item.description}
-            className="text-muted-foreground hover:text-foreground"
-          />
+          
+          {/* Share Button */}
+          <div className="flex items-center">
+            <ShareButton 
+              url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${categorySlug}/${item.slug}`}
+              title={item.seo_title || item.title || ''}
+              text={item.seo_description || item.description || ''}
+              className="h-4 w-4 p-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors"
+            />
+          </div>
         </div>
       </div>
     </Link>

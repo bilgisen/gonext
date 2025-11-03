@@ -1,149 +1,142 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
+import { 
+  Share2, 
+  Check, 
+  Copy,
+  MessageSquare,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Send,
+  ChevronDown
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-
-import { X, Facebook, Linkedin, MessageSquare, Share2 } from 'lucide-react';
-
-type ShareVariant = 'small' | 'large';
+  DropdownMenuSeparator,
+} from './dropdown-menu';
 
 interface ShareButtonProps {
-  url: string;
-  title?: string;
-  description?: string;
+  title: string;
+  text?: string;
+  url?: string;
   className?: string;
-  variant?: ShareVariant;
 }
 
-const ShareButton: React.FC<ShareButtonProps> = ({ 
-  url, 
-  title = '', 
-  description = '',
-  className = '',
-  variant = 'small'
-}) => {
-  const shareToX = () => {
-    // Twitter (X) prefers title + URL format
-    const text = title || '';
-    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-    window.open(shareUrl, '_blank', 'noopener,noreferrer');
-  };
+export default function ShareButton({ 
+  title, 
+  text, 
+  url,
+  className = '' 
+}: ShareButtonProps) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
 
-  const shareToFacebook = () => {
-    // Facebook can handle Open Graph meta tags, we just need to pass the URL
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title || '')}`;
-    window.open(shareUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const shareToLinkedIn = () => {
-    // LinkedIn can handle Open Graph meta tags, we can include title and summary
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title || '')}&summary=${encodeURIComponent(description || '')}`;
-    window.open(shareUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const shareToWhatsApp = () => {
-    // For WhatsApp, we'll use the web version which works on both mobile and desktop
-    const text = `${title || ''}%0A%0A${description || ''}%0A%0A${url}`;
-    const shareUrl = `https://web.whatsapp.com/send?text=${text}`;
-    // Fallback to WhatsApp Web if the app doesn't open
-    setTimeout(() => {
-      window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
-    }, 300);
-    window.open(shareUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const nativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: title,
-          text: description,
-          url: url,
-        });
-      } catch (err) {
-        console.log("Native share failed or was cancelled:", err);
-      }
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Kopyalama hatası:', err);
     }
   };
 
-  // Share buttons for the large variant
-  const shareButtons = [
-    { 
-      name: 'X', 
-      icon: <X className="h-4 w-4" />, 
-      onClick: shareToX 
-    },
-    { 
-      name: 'Facebook', 
-      icon: <Facebook className="h-4 w-4" />, 
-      onClick: shareToFacebook 
-    },
-    { 
-      name: 'LinkedIn', 
-      icon: <Linkedin className="h-4 w-4" />, 
-      onClick: shareToLinkedIn 
-    },
-    { 
-      name: 'WhatsApp', 
-      icon: <MessageSquare className="h-4 w-4" />, 
-      onClick: shareToWhatsApp 
-    },
-  ];
+  const shareToSocial = (platform: string) => {
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedTitle = encodeURIComponent(title);
+    
+    const urls: Record<string, string> = {
+      twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+      whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+    };
 
-  if (variant === 'large') {
-    return (
-      <div className={`flex items-center ${className}`}>
-        <div className="flex items-center gap-3">
-          {shareButtons.map((button) => (
-            <Button
-              key={button.name}
-              variant="outline"
-              size="sm"
-              className="h-10 w-10 p-0 flex items-center justify-center"
-              onClick={button.onClick}
-              title={`Share on ${button.name}`}
-              aria-label={`Share on ${button.name}`}
-            >
-              {React.cloneElement(button.icon, { className: 'h-5 w-5' })}
-              <span className="sr-only">Share on {button.name}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
-    );
-  }
+    if (urls[platform]) {
+      window.open(urls[platform], '_blank', 'width=600,height=400');
+    }
+  };
 
-  // Default small variant (dropdown)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={`p-1 h-auto ${className}`}>
-          <Share2 className="h-4 w-4" />
-          <span className="sr-only">Paylaş</span>
-        </Button>
+        <button 
+          className={`inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-accent transition-colors ${className}`}
+          aria-label="Share"
+        >
+          <Share2 className="h-5 w-5 text-foreground/80 hover:text-foreground" />
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={nativeShare} className="cursor-pointer">
-          Share (Native)
+      <DropdownMenuContent className="w-56 p-2" align="end">
+        {/* Link Kopyalama */}
+        <DropdownMenuItem 
+          onClick={copyToClipboard}
+          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+        >
+          {copied ? (
+            <>
+              <Check size={20} className="text-green-600" />
+              <span className="text-green-600 dark:text-green-500">Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy size={20} className="text-foreground/80" />
+              <span className="text-foreground">Copy Link</span>
+            </>
+          )}
         </DropdownMenuItem>
-        {shareButtons.map((button) => (
-          <DropdownMenuItem 
-            key={button.name}
-            onClick={button.onClick} 
-            className="cursor-pointer"
-          >
-            {button.name}
-          </DropdownMenuItem>
-        ))}
+
+        <DropdownMenuSeparator />
+
+        {/* Sosyal Medya Butonları */}
+        <DropdownMenuItem 
+          onClick={() => shareToSocial('whatsapp')}
+          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+        >
+          <MessageSquare className="w-5 h-5 text-green-500" />
+          <span className="text-foreground">WhatsApp</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem 
+          onClick={() => shareToSocial('twitter')}
+          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+        >
+          <Twitter className="w-5 h-5 text-black" />
+          <span className="text-foreground">X (Twitter)</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem 
+          onClick={() => shareToSocial('facebook')}
+          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+        >
+          <Facebook className="w-5 h-5 text-blue-600" />
+          <span className="text-foreground">Facebook</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem 
+          onClick={() => shareToSocial('linkedin')}
+          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+        >
+          <Linkedin className="w-5 h-5 text-blue-700" />
+          <span className="text-foreground">LinkedIn</span>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem 
+          onClick={() => shareToSocial('telegram')}
+          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+        >
+          <Send className="w-5 h-5 text-blue-400" />
+          <span className="text-foreground">Telegram</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-
-export default ShareButton;
+}

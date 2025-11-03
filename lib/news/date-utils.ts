@@ -1,65 +1,52 @@
 /**
- * Date utility functions for news articles
+ * Generates sequential timestamps for news articles
+ * Ensures each article gets a unique, sequential timestamp
+ * 
+ * @param previousDate Optional previous date to base the next timestamp on
+ * @returns Object containing created_at and published_at dates
  */
-
-/**
- * Generates a random number between min and max (inclusive)
- */
-function getRandomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**
- * Formats a date to ISO string with timezone offset
- */
-function formatDateWithOffset(date: Date): string {
-  const tzOffset = -date.getTimezoneOffset();
-  const offsetSign = tzOffset >= 0 ? '+' : '-';
-  const pad = (num: number) => num.toString().padStart(2, '0');
-  
-  const offsetHours = Math.floor(Math.abs(tzOffset) / 60);
-  const offsetMinutes = Math.abs(tzOffset) % 60;
-  const offsetString = `${offsetSign}${pad(offsetHours)}:${pad(offsetMinutes)}`;
-  
-  // Format as ISO string and replace the Z with our timezone offset
-  return date.toISOString().replace('Z', offsetString);
-}
-
-/**
- * Generates timestamps for a news article based on the current time
- * @returns Object containing created_at and published_at timestamps
- */
-export function generateNewsTimestamps(): {
-  created_at: string;
-  published_at: string;
+export function generateNewsTimestamps(previousDate?: Date): {
+  created_at: Date;
+  published_at: Date;
 } {
   const now = new Date();
   
-  // Generate a random number of minutes between 3 and 15 for created_at
-  const randomMinutesAgo = getRandomInt(3, 15);
-  const createdDate = new Date(now.getTime() - randomMinutesAgo * 60 * 1000);
+  // If we have a previous date, use it as the base, otherwise use current time
+  const baseDate = previousDate ? new Date(previousDate) : now;
   
-  // published_at is 2 minutes after created_at
-  const publishedDate = new Date(createdDate.getTime() + 2 * 60 * 1000);
+  // Add 1 minute to the base date for the next article
+  const nextDate = new Date(baseDate.getTime() + 60000);
+  
+  // Create dates with 1 minute intervals for created_at and published_at
+  const createdDate = new Date(nextDate);
+  const publishedDate = new Date(nextDate.getTime() + 60000); // 1 minute after created
   
   return {
-    created_at: formatDateWithOffset(createdDate),
-    published_at: formatDateWithOffset(publishedDate)
+    created_at: createdDate,
+    published_at: publishedDate
   };
 }
 
 /**
- * Updates the timestamps of news items to use our generated dates
+ * Generates timestamps for a new article using the latest article's date
+ * @param latestArticleDate Optional date of the latest article to ensure sequential ordering
  */
-export function updateNewsTimestamps<T extends { created_at?: string | Date | null; published_at?: string | Date | null }>(
-  newsItem: T
-): T {
-  const timestamps = generateNewsTimestamps();
+export async function generateTimestampsForNewArticle(latestArticleDate?: Date) {
+  // If we don't have a latest article date, use current time
+  if (!latestArticleDate) {
+    return generateNewsTimestamps();
+  }
   
-  return {
-    ...newsItem,
-    created_at: timestamps.created_at,
-    published_at: timestamps.published_at,
-    updated_at: timestamps.published_at // Set updated_at to match published_at
-  };
+  // Generate timestamps based on the latest article's date
+  return generateNewsTimestamps(latestArticleDate);
+}
+
+/**
+ * Updates timestamps for all articles to ensure they're sequential
+ * This should be run after importing articles to fix any timestamp issues
+ */
+export async function fixArticleTimestamps() {
+  // This function would need to be implemented based on your database
+  // It should fetch all articles, sort them by created_at, and update their timestamps sequentially
+  console.warn('fixArticleTimestamps() needs to be implemented with database access');
 }

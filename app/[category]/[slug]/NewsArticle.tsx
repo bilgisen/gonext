@@ -3,7 +3,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Calendar, Clock, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft  } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import ShareButton from '@/components/ui/share-button';
@@ -70,7 +70,20 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
     }
 
     try {
-      const date = new Date(dateString);
+      // Handle the case where the date string might have a timezone offset
+      let date: Date;
+      
+      // If the date string ends with Z (UTC) or has a timezone offset
+      if (dateString.endsWith('Z') || dateString.includes('+')) {
+        date = new Date(dateString);
+      } else {
+        // For dates without timezone, assume they're in local time
+        date = new Date(dateString);
+        // If the date is invalid, try parsing it as ISO string
+        if (isNaN(date.getTime())) {
+          date = new Date(dateString + 'Z'); // Try appending Z for UTC
+        }
+      }
 
       // Check if the date is valid and not the default date (January 1, 0001)
       if (isNaN(date.getTime()) || date.getFullYear() <= 1) {
@@ -79,14 +92,16 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       }
 
       const currentYear = new Date().getFullYear();
-      // Only check for obviously invalid future dates (more than 1 year in future)
+      // Check for obviously invalid future dates (more than 1 year in future)
       if (date.getFullYear() > currentYear + 1) {
         console.log('Suspicious future date:', date);
         return '';
       }
 
       // Format as "Month Day, Year at HH:MM" (e.g., "October 30, 2025 at 14:30")
-      return format(date, 'MMMM d, yyyy \'at\' HH:mm');
+      // Convert to local time for display
+      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      return format(localDate, 'MMMM d, yyyy \'at\' HH:mm');
     } catch (error) {
       console.error('Error formatting date:', error, 'Date string:', dateString);
       return '';
@@ -98,20 +113,27 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
     const dates = [
       newsItem.published_at,
       newsItem.created_at,
-      newsItem.updated_at,
-      new Date().toISOString() // Fallback to current date if all else fails
-    ];
+      newsItem.updated_at
+    ].filter(Boolean); // Remove any null/undefined values
 
     for (const dateStr of dates) {
       if (!dateStr) continue;
       
+      // Skip if it's a default/zero date
+      if (dateStr.startsWith('0001-01-01')) continue;
+      
       const date = new Date(dateStr);
-      // Accept dates between 2000 and next year
-      if (!isNaN(date.getTime()) && date.getFullYear() > 2000 && date.getFullYear() <= new Date().getFullYear() + 1) {
+      
+      // Check if the date is valid and within a reasonable range
+      if (!isNaN(date.getTime()) && 
+          date.getFullYear() > 2000 && 
+          date.getFullYear() <= new Date().getFullYear() + 1) {
         return dateStr;
       }
     }
-    return null;
+    
+    // If no valid date found in the item, use current date as fallback
+    return new Date().toISOString();
   };
 
   const bestDate = getBestAvailableDate();
@@ -153,13 +175,20 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         )}
 
         {/* Share Buttons - Large */}
-        <div className="mb-8">
-          <ShareButton 
-            url={`${typeof window !== 'undefined' ? window.location.href : ''}`}
-            title={newsItem.seo_title || newsItem.title}
-            description={newsItem.seo_description || ''}
-            variant="large"
-          />
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex-1 border-t border-border/50"></div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Share:</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted/50 hover:bg-muted transition-colors">
+              <ShareButton 
+                url={`${typeof window !== 'undefined' ? window.location.href : ''}`}
+                title={newsItem.seo_title || newsItem.title || ''}
+                text={newsItem.seo_description || ''}
+                className="h-8 w-8 flex items-center justify-center hover:bg-primary/10 rounded-full transition-colors"
+              />
+            </div>
+          </div>
+          <div className="flex-1 border-t border-border/50"></div>
         </div>
 
       

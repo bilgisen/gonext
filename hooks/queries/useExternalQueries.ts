@@ -139,38 +139,51 @@ export function useInfiniteNews({
   tag,
   limit = 10,
   excludeId,
+  sortBy = 'published_at',
+  sortOrder = 'desc',
 }: {
   category?: string;
   tag?: string;
   limit?: number;
   excludeId?: string;
-}) {
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+} = {}) {
   return useInfiniteQuery({
-    queryKey: ['news', 'infinite', { category, tag, limit, excludeId }],
+    queryKey: ['news', 'infinite', { category, tag, limit, excludeId, sortBy, sortOrder }],
     queryFn: async ({ pageParam = 1 }) => {
       try {
-        console.log(`🔄 Fetching page ${pageParam} for category: ${category}`);
+        console.log(`🔄 Fetching page ${pageParam} for category: ${category || 'all'}`);
+        
         const response = await fetchNewsFromDatabase({
           category,
           tag,
           page: pageParam as number,
           limit,
           excludeId,
+          sort: sortOrder === 'asc' ? sortBy : `-${sortBy}`,
         });
 
-        // Ensure the response has the expected structure
-        if (!response || !response.items) {
-          console.error('❌ Invalid response structure:', response);
-          throw new Error('Invalid response format from server');
+        // Debug log the raw response
+        console.log('📡 Raw API Response:', JSON.stringify(response, null, 2));
+
+        // Handle different response structures
+        const items = response?.items || response?.data?.items || [];
+        const total = response?.total || response?.data?.total || 0;
+        
+        if (!Array.isArray(items)) {
+          console.error('❌ Invalid items array in response:', items);
+          throw new Error('Invalid items format in response');
         }
 
-        const hasMore = response.items.length >= (limit || 10);
-        console.log(`✅ Fetched ${response.items.length} items, has more: ${hasMore}`);
+        // Calculate if there are more items to load
+        const hasMore = items.length >= (limit || 10);
+        console.log(`✅ Fetched ${items.length} items, has more: ${hasMore}`);
 
         return {
           data: {
-            items: response.items || [],
-            total: response.total || 0,
+            items,
+            total,
             page: pageParam,
             limit,
             has_more: hasMore,
@@ -178,7 +191,16 @@ export function useInfiniteNews({
         };
       } catch (error) {
         console.error('❌ Error in useInfiniteNews queryFn:', error);
-        throw error; // Re-throw to let React Query handle the error
+        // Return empty data structure to prevent UI errors
+        return {
+          data: {
+            items: [],
+            total: 0,
+            page: pageParam,
+            limit,
+            has_more: false,
+          },
+        };
       }
     },
     initialPageParam: 1,
@@ -187,7 +209,7 @@ export function useInfiniteNews({
       return allPages.length + 1;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
     retry: 1,
     retryDelay: 1000,
   });

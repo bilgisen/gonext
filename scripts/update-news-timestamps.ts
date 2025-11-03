@@ -1,18 +1,18 @@
-// scripts/update-news-timestamps.ts
+// scripts/update-news-timestamps-fixed.ts
 import { db } from '@/db/client';
 import { news } from '@/db/schema';
-import { and, eq, isNotNull } from 'drizzle-orm';
-import { generateNewsTimestamps } from '@/lib/news/date-utils';
+import { and, eq, isNotNull, asc } from 'drizzle-orm';
+import { formatDateWithOffset } from '@/lib/news/date-utils';
 
 /**
- * Updates timestamps for all news articles in the database
+ * Updates timestamps for all news articles in the database while preserving order
  */
 async function updateNewsTimestamps() {
-  console.log('🚀 Starting news timestamps update...');
+  console.log('🚀 Starting news timestamps update (preserving order)...');
   
   try {
-    // 1. Fetch all news articles
-    console.log('📥 Fetching all news articles...');
+    // 1. Fetch all news articles ordered by their original ID to preserve order
+    console.log('📥 Fetching all news articles in order...');
     
     const allNews = await db
       .select()
@@ -23,25 +23,32 @@ async function updateNewsTimestamps() {
           isNotNull(news.published_at)
         )
       )
-      .orderBy(news.id);
+      .orderBy(asc(news.id)); // Order by ID to preserve original order
 
     console.log(`📊 Found ${allNews.length} news articles to process`);
 
-    // 2. Process each article
+    // 2. Process each article with sequential timestamps
     let updatedCount = 0;
+    const now = new Date();
+    
+    // Start from October 29, 2023 and increment by 1 hour for each article
+    let currentDate = new Date('2023-10-29T00:00:00.000Z');
     
     for (const newsItem of allNews) {
       try {
-        // Generate new timestamps using our utility function
-        const { created_at, published_at } = generateNewsTimestamps();
+        // Increment by 1 hour for each article
+        currentDate.setHours(currentDate.getHours() + 1);
         
-        // Update the article
+        // Create a new Date object for this article
+        const articleDate = new Date(currentDate);
+        
+        // Update the article with the new timestamp
         await db
           .update(news)
           .set({
-            created_at: new Date(created_at),
-            published_at: new Date(published_at),
-            updated_at: new Date(published_at) // Same as published_at
+            created_at: articleDate,
+            published_at: articleDate,
+            updated_at: articleDate
           })
           .where(eq(news.id, newsItem.id));
         
@@ -56,6 +63,9 @@ async function updateNewsTimestamps() {
     }
     
     console.log(`\n✨ Successfully updated timestamps for ${updatedCount} news articles`);
+    // Set the start date to October 29, 2023
+    const startDate = new Date('2023-10-29T00:00:00.000Z');
+    console.log(`📅 Articles are now ordered from ${startDate.toISOString()} to ${currentDate.toISOString()}`);
     
   } catch (error) {
     console.error('❌ Error updating news timestamps:', error);
