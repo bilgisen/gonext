@@ -2,7 +2,6 @@
 import { db } from '@/db/client';
 import { news } from '@/db/schema';
 import { and, eq, isNotNull, asc } from 'drizzle-orm';
-import { formatDateWithOffset } from '@/lib/news/date-utils';
 
 /**
  * Updates timestamps for all news articles in the database while preserving order
@@ -29,7 +28,6 @@ async function updateNewsTimestamps() {
 
     // 2. Process each article with sequential timestamps
     let updatedCount = 0;
-    const now = new Date();
     
     // Start from October 29, 2023 and increment by 1 hour for each article
     let currentDate = new Date('2023-10-29T00:00:00.000Z');

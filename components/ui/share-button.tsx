@@ -9,8 +9,7 @@ import {
   Twitter,
   Facebook,
   Linkedin,
-  Send,
-  ChevronDown
+  Send
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -51,13 +50,14 @@ export default function ShareButton({
   const shareToSocial = (platform: string) => {
     const encodedUrl = encodeURIComponent(shareUrl);
     const encodedTitle = encodeURIComponent(title);
+    const encodedText = text ? encodeURIComponent(text) : '';
     
     const urls: Record<string, string> = {
-      twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-      whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
-      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+      twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}${encodedText ? `%0A%0A${encodedText}` : ''}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}${encodedText ? `&quote=${encodedText}` : ''}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}${encodedText ? `&summary=${encodedText}` : ''}`,
+      whatsapp: `https://wa.me/?text=${encodedTitle}%0A%0A${encodedText ? `${encodedText}%0A%0A` : ''}${encodedUrl}`,
+      telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}${encodedText ? `%0A%0A${encodedText}` : ''}`,
     };
 
     if (urls[platform]) {

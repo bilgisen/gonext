@@ -1,7 +1,7 @@
 // scripts/update-all-news-timestamps.ts
 import { db } from '@/db/client';
 import { news } from '@/db/schema';
-import { and, eq, isNotNull, desc } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 
 /**
  * Updates timestamps for all news articles in the database using the new logic

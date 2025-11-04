@@ -30,8 +30,26 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
   // Prefetch functionality is currently not used
   // const { prefetchNewsDetail } = usePrefetchNews();
 
-  const [sortBy, setSortBy] = useState<'published_at' | 'created_at'>('published_at');
+  type SortOption = 'newest' | 'oldest' | 'popular';
+  
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Map UI sort options to API sort options
+  const getApiSortOption = (): { sortBy: SortOption; sortOrder: 'asc' | 'desc' } => {
+    switch (sortBy) {
+      case 'newest':
+        return { sortBy: 'newest', sortOrder: 'desc' };
+      case 'oldest':
+        return { sortBy: 'oldest', sortOrder: 'asc' };
+      case 'popular':
+        return { sortBy: 'popular', sortOrder: 'desc' };
+      default:
+        return { sortBy: 'newest', sortOrder: 'desc' };
+    }
+  };
+  
+  const apiSort = getApiSortOption();
 
   const {
     data,
@@ -44,8 +62,8 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     refetch,
   } = useInfiniteNews({
     ...filters,
-    sortBy,
-    sortOrder,
+    sortBy: apiSort.sortBy,
+    sortOrder: apiSort.sortOrder,
   });
 
   const handleLoadMore = () => {
@@ -82,7 +100,7 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     );
   }
 
-  if (error instanceof Error) {
+  if (error && typeof error === 'object' && 'message' in error) {
     return (
       <div className="text-center py-12">
         <div className="text-destructive mb-4">
@@ -187,11 +205,12 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
           <div className="flex items-center gap-2">
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'published_at' | 'created_at')}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="text-sm bg-background border rounded px-2 py-1"
             >
-              <option value="published_at">Publish Date</option>
-              <option value="created_at">Creation Date</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="popular">Most Popular</option>
             </select>
             
             <button

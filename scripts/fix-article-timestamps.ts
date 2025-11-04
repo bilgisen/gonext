@@ -1,7 +1,7 @@
 // scripts/fix-article-timestamps.ts
 import { db } from '../db/client';
 import { news } from '../db/schema';
-import { asc, desc, eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 async function fixArticleTimestamps() {
   try {

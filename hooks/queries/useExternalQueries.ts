@@ -134,19 +134,21 @@ export function useFeaturedNews(limit = 6) {
 /**
  * Hook for infinite scroll news list
  */
+type SortOption = 'newest' | 'oldest' | 'popular';
+
 export function useInfiniteNews({
   category,
   tag,
   limit = 10,
   excludeId,
-  sortBy = 'published_at',
+  sortBy = 'newest',
   sortOrder = 'desc',
 }: {
   category?: string;
   tag?: string;
   limit?: number;
   excludeId?: string;
-  sortBy?: string;
+  sortBy?: SortOption;
   sortOrder?: 'asc' | 'desc';
 } = {}) {
   return useInfiniteQuery({
@@ -161,7 +163,7 @@ export function useInfiniteNews({
           page: pageParam as number,
           limit,
           excludeId,
-          sort: sortOrder === 'asc' ? sortBy : `-${sortBy}`,
+          sort: sortBy,
         });
 
         // Debug log the raw response

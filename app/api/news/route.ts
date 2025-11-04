@@ -1,6 +1,6 @@
 // app/api/news/route.ts
 import { db } from '@/db/client';
-import { and, eq, desc, sql, inArray, or, ilike } from 'drizzle-orm';
+import { and, eq, desc, sql, inArray, or, ilike, asc } from 'drizzle-orm';
 import { NextResponse, NextRequest } from 'next/server';
 import { 
   news, 
@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!, 10) : undefined,
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 20, // Default 20
       search: searchParams.get('search') || undefined,
+      sort: searchParams.get('sort') || 'newest', // Default to 'newest'
     };
 
     // Validate and set limits
@@ -236,6 +237,22 @@ export async function GET(request: NextRequest) {
       media_caption: string | null;
     };
 
+    // Determine sort order based on the sort parameter
+    let orderByClause;
+    switch (filters.sort) {
+      case 'oldest':
+        orderByClause = [asc(news.published_at), asc(news.created_at)];
+        break;
+      case 'popular':
+        // Fall back to sorting by published_at in descending order for popularity
+        orderByClause = [desc(news.published_at), desc(news.created_at)];
+        break;
+      case 'newest':
+      default:
+        orderByClause = [desc(news.published_at), desc(news.created_at)];
+        break;
+    }
+
     // Create a base query builder with all the necessary joins
     const baseQuery = db
       .select({
@@ -268,7 +285,7 @@ export async function GET(request: NextRequest) {
       .innerJoin(news_categories, eq(news.id, news_categories.news_id))
       .innerJoin(categories, eq(news_categories.category_id, categories.id))
       .where(and(...finalWhereConditions))
-      .orderBy(desc(news.published_at), desc(news.created_at))
+      .orderBy(...orderByClause)
       .limit(filters.limit)
       .offset(offset);
 
@@ -390,21 +407,21 @@ export async function GET(request: NextRequest) {
       } as NewsItem;
     });
 
-    // 6. Generate fresh timestamps for all news items
-    // This ensures consistent dates and proper ordering
-    items = items.map((item, index) => {
-      // Generate new timestamps for each item
-      const timestamps = generateNewsTimestamps();
-      
-      return {
-        ...item,
-        // Use the current time minus index minutes to maintain order
-        // This ensures the most recent articles appear first
-        created_at: timestamps.created_at.toISOString(),
-        published_at: timestamps.published_at.toISOString(),
-        updated_at: timestamps.published_at.toISOString()
-      };
-    });
+    // Only generate fresh timestamps if sort is not by date
+    // This preserves the original timestamps for date-based sorting
+    if (filters.sort !== 'newest' && filters.sort !== 'oldest') {
+      items = items.map((item) => {
+        // Generate new timestamps for each item
+        const timestamps = generateNewsTimestamps();
+        
+        return {
+          ...item,
+          created_at: timestamps.created_at.toISOString(),
+          published_at: timestamps.published_at.toISOString(),
+          updated_at: timestamps.published_at.toISOString()
+        };
+      });
+    }
 
     console.log('🔍 Processed items:', items.length);
 
