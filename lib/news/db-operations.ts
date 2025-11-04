@@ -11,22 +11,21 @@ import {
   import_logs
 } from '../../db/schema';
 import { processAndSaveTags } from './tags-utils';
-import {
-  NewsInsertData,
-  NewsApiItem,
+import type { 
+  NewsInsertData, 
+  NewsApiItem
+} from './types';
+import { 
   NewsFetchError,
   ValidationError
 } from './types';
 import { createSlug, createUniqueSlug } from './slug-utils';
-import { 
-  extractCategoryFromUrls, 
-  createCategorySlug,
-  CATEGORY_MAPPINGS,
-  type Category
-} from './category-utils';
-import { processNewsImage } from './image-processor';
+import { extractCategoryFromUrls } from './category-utils';
+import { generateNewsTimestamps, formatTurkishDate } from './date-utils';
+import { processMarkdownContent } from './html-content';
 import { checkDuplicateNews } from './duplicate-check';
 import { parseNewsDate } from '@/lib/utils/date-utils';
+import { processNewsImage } from './image-processor'; // Import the image processing function
 
 /**
  * Source'u bulur veya oluşturur
@@ -99,7 +98,7 @@ export async function findOrCreateCategory(categoryName: string): Promise<number
     }
 
     // If not found by name, try by slug
-    const slug = createCategorySlug(categoryName);
+    const slug = createSlug(categoryName, { maxLength: 50 });
     const existingBySlug = await db
       .select({ id: categories.id })
       .from(categories)
@@ -267,18 +266,18 @@ export async function createNewsRecord(
       title: insertData.title,
       slug: insertData.slug,
       source_guid: insertData.source_guid,
-      source_id: insertData.source_id || null,
+      source_id: insertData.source_id ? String(insertData.source_id) : undefined,
       seo_title: insertData.seo_title || insertData.title,
       seo_description: insertData.seo_description || '',
       excerpt: insertData.excerpt || '',
       content_md: insertData.content_md || '',
       content_html: insertData.content_html || '',
       tldr_count: insertData.tldr?.length || 0,
-      main_media_id: insertData.main_media_id || null,
+      main_media_id: insertData.main_media_id || undefined,
       canonical_url: insertData.canonical_url || null,
       status: insertData.status || 'draft',
       visibility: insertData.visibility || 'public',
-      editor_id: insertData.editor_id || null,
+      editor_id: insertData.editor_id || undefined,
       word_count: insertData.word_count || 0,
       reading_time_min: insertData.reading_time_min || insertData.read_time || 0,
       published_at: insertData.published_at 
@@ -292,8 +291,8 @@ export async function createNewsRecord(
         : new Date(),
       created_at: insertData.created_at ? new Date(insertData.created_at) : now,
       updated_at: insertData.updated_at ? new Date(insertData.updated_at) : now,
-      meta: insertData.meta || null,
-      source_fk: insertData.source_fk || null
+      meta: insertData.meta ? JSON.stringify(insertData.meta) : null,
+      source_fk: insertData.source_fk || undefined
     };
 
     const newNews = await db
@@ -397,7 +396,7 @@ export async function insertNews(
   const { processImage = true, skipDuplicates = true } = options;
 
   try {
-    // Duplicate kontrolü
+    // Check for duplicate
     if (skipDuplicates) {
       const isDuplicate = await checkDuplicateNews(apiItem);
       if (isDuplicate) {
@@ -405,50 +404,61 @@ export async function insertNews(
       }
     }
 
-    // Source ID bul/oluştur
+    // Get or create source
     const sourceUrl = new URL(apiItem.original_url).origin;
     const sourceId = await findOrCreateSource(sourceUrl);
 
-    // Extract category from URL
+    // Extract category from URL using category-utils
     const categoryName = extractCategoryFromUrls([apiItem.original_url]);
+    const categoryId = await findOrCreateCategory(categoryName);
 
-    // If we still don't have a valid category, try the item's category
-    const finalCategory = (categoryName || apiItem.category || 'turkiye').toLowerCase();
-    
-    // Always use mapped category name for consistency
-    const mappedCategoryName = (CATEGORY_MAPPINGS[finalCategory] || finalCategory) as Category;
+    // Process tags - ensure tags is an array of strings
+    const tagNames = Array.isArray(apiItem.tags) 
+      ? apiItem.tags.map(tag => typeof tag === 'string' ? tag : tag.name || String(tag))
+      : [];
+    const tagIds = tagNames.length > 0 ? await findOrCreateTags(tagNames) : [];
 
-    const categoryId = await findOrCreateCategory(mappedCategoryName);
-
-    // Tags oluştur
-    const tagIds = await findOrCreateTags(apiItem.tags || []);
-
-    // Slug oluştur (unique)
+    // Generate unique slug
     const existingSlugs = await db
       .select({ slug: news.slug })
       .from(news)
-      .where(sql`1=1`) // Tüm slug'ları al
-      .then(rows => rows.map(row => row.slug));
+      .then((rows: { slug: string }[]) => rows.map(row => row.slug));
 
     const baseSlug = createSlug(apiItem.seo_title);
     const slug = createUniqueSlug(baseSlug, existingSlugs);
 
-    // Image processing
+    // Process image if needed
     let mainMediaId: number | undefined;
-    if (processImage && apiItem.image) {
+    const imageUrl = apiItem.image_url || apiItem.image;
+    if (processImage && imageUrl) {
       try {
+        // Use the image processor to download, process, and upload to Netlify CDN
         const imageResult = await processNewsImage(
-          apiItem.image,
+          imageUrl,
           apiItem.seo_title,
           { width: 800, height: 600, quality: 85 }
         );
 
         if (imageResult.success && imageResult.url) {
+          // Create a media record with the processed image data from Netlify CDN
           mainMediaId = await createMediaRecord({
-            url: imageResult.url,
-            path: imageResult.path || '',
-            metadata: imageResult.metadata || {},
+            url: imageResult.url, // This is now the Netlify CDN URL
+            path: imageResult.path || '', // The storage path in the CDN
+            metadata: imageResult.metadata || {}, // Metadata from the processed image
           });
+        } else {
+          console.warn(`Image processing failed for ${imageUrl}, reason: ${imageResult.error}`);
+          // Optionally, you could still store the external URL if processing fails
+          // const [mediaRecord] = await db.insert(media).values({
+          //   original_name: imageUrl.split('/').pop() || 'image.jpg',
+          //   external_url: imageUrl,
+          //   mime_type: 'image/jpeg',
+          //   alt_text: (apiItem.image_alt || apiItem.image_title || '').substring(0, 1024),
+          //   caption: (apiItem.image_caption || apiItem.image_desc || '').substring(0, 2000),
+          //   created_at: new Date(),
+          //   updated_at: new Date()
+          // }).returning({ id: media.id });
+          // if (mediaRecord) mainMediaId = mediaRecord.id;
         }
       } catch (error) {
         console.error('Image processing failed:', error);
@@ -456,62 +466,146 @@ export async function insertNews(
       }
     }
 
-    // Reading time hesapla
+    // Calculate reading time
     const wordCount = apiItem.content_md.split(/\s+/).length;
-    const readingTimeMin = Math.ceil(wordCount / 200); // 200 words per minute
+    const readingTime = Math.ceil(wordCount / 200); // 200 words per minute
 
-    // Insert data hazırla
-    const insertData: NewsInsertData = {
-      source_guid: apiItem.source_guid,
-      source_id: apiItem.id,
-      source_fk: sourceId,
-      title: apiItem.seo_title,
-      seo_title: apiItem.seo_title,
-      seo_description: apiItem.seo_description,
-      excerpt: apiItem.seo_description.substring(0, 200),
-      content_md: apiItem.content_md,
-      main_media_id: mainMediaId,
+    // Prepare insert data - handle all possible API response formats
+    const title = apiItem.title || 
+                 apiItem.seo_title || 
+                 apiItem.original_url?.split('/').pop()?.replace(/-/g, ' ') || 
+                 'Untitled';
+    
+    const seoTitle = apiItem.seo_title || title;
+    const seoDescription = apiItem.seo_description || 
+                          apiItem.excerpt || 
+                          title.substring(0, 160);
+    
+    // Generate sequential timestamps for the article in Istanbul timezone
+    const { created_at, published_at } = generateNewsTimestamps();
+    
+    // Debug log for timestamps
+    const [createdAtFormatted, publishedAtFormatted] = await Promise.all([
+      formatTurkishDate(created_at),
+      formatTurkishDate(published_at)
+    ]);
+    
+    console.log('Generated timestamps:', {
+      created_at: createdAtFormatted,
+      published_at: publishedAtFormatted
+    });
+
+    // Ensure source_id is always a string or undefined for Drizzle
+    const sourceIdValue = apiItem.id != null ? String(apiItem.id) : undefined;
+    
+    // Process markdown content to HTML
+    const processedContent = processMarkdownContent({
+      content_md: apiItem.content_md || '',
+      content_html: apiItem.content_html || ''
+    });
+
+    // Create insert data with proper types for the database
+    const insertData = {
+      title,
       slug,
-      canonical_url: apiItem.original_url,
-      status: 'published',
-      visibility: 'public',
+      source_guid: apiItem.source_guid || sourceIdValue || '',
+      source_id: sourceIdValue, // Already converted to string or undefined
+      source_fk: sourceId || undefined, // Convert null to undefined for Drizzle
+      excerpt: seoDescription.substring(0, 200),
+      content_md: apiItem.content_md || '',
+      content_html: processedContent.content_html,
+      seo_title: seoTitle,
+      seo_description: seoDescription,
+      status: 'published' as const,
+      visibility: 'public' as const,
       word_count: wordCount,
-      reading_time_min: readingTimeMin,
-      // Handle published_at with proper type safety
-      published_at: (() => {
-        const dateStr = apiItem.published_at || apiItem.created_at;
-        return dateStr ? new Date(dateStr) : null;
-      })(),
+      reading_time_min: readingTime,
+      published_at: published_at,
+      created_at: created_at,
+      updated_at: new Date(),
+      canonical_url: apiItem.original_url || null,
+      main_media_id: mainMediaId || undefined, // Convert null to undefined for Drizzle
       meta: {
-        tldr: apiItem.tldr,
-        image_title: apiItem.image_title,
-        image_desc: apiItem.image_desc,
-        file_path: apiItem.file_path,
-      },
+        tldr: apiItem.tldr || [],
+        file_path: apiItem.file_path || '',
+        image_url: apiItem.image || apiItem.image_url || '',
+        image_alt: apiItem.image_alt || apiItem.image_title || '',
+        image_caption: apiItem.image_caption || apiItem.image_desc || ''
+      }
+    } satisfies Omit<NewsInsertData, 'id' | 'editor_id'>;
+
+    // Prepare the data for insertion with proper types for Drizzle
+    const insertValues = {
+      ...insertData,
+      source_id: insertData.source_id as string | undefined, // Ensure string or undefined
+      source_fk: insertData.source_fk || null,
+      main_media_id: insertData.main_media_id || null,
+      published_at: insertData.published_at || new Date(),
+      created_at: insertData.created_at || new Date(),
+      updated_at: insertData.updated_at || new Date(),
     };
 
-    // News record oluştur
-    const newsId = await createNewsRecord(apiItem, insertData);
+    // Insert news record with proper typing
+    const [insertedNews] = await db.insert(news)
+      .values(insertValues as any) // Type assertion to handle Drizzle's strict types
+      .returning({ id: news.id });
 
-    // Relations oluştur
-    await linkNewsToCategories(newsId, [categoryId]);
-    await linkNewsToTags(newsId, tagIds);
-
-    if (mainMediaId) {
-      await linkNewsToMedia(newsId, mainMediaId);
+    if (!insertedNews) {
+      throw new Error('Failed to insert news');
     }
+
+    const newsId = insertedNews.id;
+
+    // Link categories    // Link news to categories
+    if (categoryId) {
+      await db.insert(news_categories).values({
+        news_id: newsId,
+        category_id: categoryId
+        // created_at is auto-generated in the schema
+      });
+    }
+
+    // Link news to tags
+    if (tagIds.length > 0) {
+      await db.insert(news_tags).values(
+        tagIds.map(tagId => ({
+          news_id: newsId,
+          tag_id: tagId,
+          created_at: new Date()
+        }))
+      );
+    }
+
+    // Link media if exists    // Link news to media (main image)
+    if (mainMediaId) {
+      await db.insert(news_media).values({
+        news_id: newsId,
+        media_id: mainMediaId,
+        is_main: true, // Changed from is_featured to is_main to match schema
+        position: 1 // Add position as it's required
+      });
+    }
+
+    // Create import log
+    await db.insert(import_logs).values({
+      source_id: sourceId,
+      external_file: apiItem.original_url || '',
+      imported_at: new Date(),
+      imported_count: 1,
+      meta: {
+        source: 'news-fetch-cli',
+        source_guid: apiItem.source_guid,
+        status: 'completed',
+        error_count: 0,
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString()
+      }
+    });
 
     return newsId;
   } catch (error) {
-    if (error instanceof ValidationError || error instanceof NewsFetchError) {
-      throw error;
-    }
-
-    throw new NewsFetchError(
-      'Failed to insert news',
-      'INSERT_ERROR',
-      error as Error
-    );
+    console.error('Error in insertNews:', error);
+    throw error;
   }
 }
 

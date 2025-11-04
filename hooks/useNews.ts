@@ -51,7 +51,7 @@ export function useNews(options: UseNewsOptions = {}) {
         params.append('category', categories.join(','));
       }
       if (tag) params.append('tag', tag);
-      if (search) params.append('search', search);
+      // Search is now handled by Algolia, don't include in database query
       
       return {
         queryKey: customQueryKey,
@@ -109,11 +109,27 @@ export function useNews(options: UseNewsOptions = {}) {
   const queryResult = useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await fetch(`/api/news?${queryParams.toString()}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      try {
+        const response = await fetch(`/api/news?${queryParams.toString()}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          const errorMessage = data?.error || 'Network response was not ok';
+          const errorDetails = data?.details || '';
+          throw new Error(`${errorMessage}${errorDetails ? `: ${errorDetails}` : ''}`);
+        }
+        
+        // Ensure the response has the expected structure
+        if (!data || !data.data) {
+          console.error('Invalid API response format:', data);
+          throw new Error('Invalid API response format');
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Error fetching news:', error);
+        throw error;
       }
-      return response.json();
     },
     enabled,
     staleTime: 5 * 60 * 1000,
@@ -121,31 +137,64 @@ export function useNews(options: UseNewsOptions = {}) {
   });
 
   // Format the result to match the expected structure
+  const formattedData = useMemo(() => {
+    if (!queryResult.data) return undefined;
+    
+    // Extract items from the response
+    let items: any[] = [];
+    let total = 0;
+    
+    try {
+      // Handle different response formats
+      if (Array.isArray(queryResult.data.data?.items)) {
+        items = queryResult.data.data.items;
+        total = queryResult.data.data.total || 0;
+      } else if (Array.isArray(queryResult.data.data)) {
+        items = queryResult.data.data;
+        total = queryResult.data.total || items.length;
+      } else if (Array.isArray(queryResult.data)) {
+        items = queryResult.data;
+        total = items.length;
+      } else if (queryResult.data.data && typeof queryResult.data.data === 'object') {
+        // Handle case where data is a single object
+        items = [queryResult.data.data];
+        total = 1;
+      }
+      
+      return {
+        pages: [{
+          data: {
+            items,
+            total,
+            page: queryResult.data.data?.page || 1,
+            limit: queryResult.data.data?.limit || limit,
+            has_more: offset !== undefined 
+              ? (offset + limit) < total
+              : false,
+            offset: offset || 0,
+          }
+        }]
+      };
+    } catch (error) {
+      console.error('Error formatting news data:', error);
+      return {
+        pages: [{
+          data: {
+            items: [],
+            total: 0,
+            page: 1,
+            limit,
+            has_more: false,
+            offset: offset || 0,
+          }
+        }]
+      };
+    }
+  }, [queryResult.data, limit, offset]);
+  
   return {
     ...queryResult,
-    data: queryResult.data ? {
-      // Handle both direct items array and nested data.items structure
-      pages: [{
-        data: {
-          // Check if the response has a data property with items, otherwise use the response directly
-          items: Array.isArray(queryResult.data.data?.items) 
-            ? queryResult.data.data.items 
-            : Array.isArray(queryResult.data.data)
-              ? queryResult.data.data
-              : Array.isArray(queryResult.data)
-                ? queryResult.data
-                : [],
-          // Get total count or default to items length
-          total: queryResult.data.total || queryResult.data.data?.total || 0,
-          // Calculate has_more based on offset/limit or default to false
-          has_more: offset !== undefined 
-            ? (offset + limit) < (queryResult.data.total || queryResult.data.data?.total || 0)
-            : false,
-          offset: offset,
-          limit: limit
-        }
-      }]
-    } : undefined,
+    data: formattedData,
     // Calculate pagination states
     hasNextPage: offset !== undefined 
       ? (offset + limit) < (queryResult.data?.total || queryResult.data?.data?.total || 0)

@@ -12,6 +12,15 @@ export interface NewsListResponse {
     limit: number;
     has_more: boolean;
   };
+  error?: string;
+}
+
+interface NewsApiResponse {
+  items: NewsItem[];
+  total: number;
+  page: number;
+  limit: number;
+  has_more: boolean;
 }
 
 // Database Query Hooks (using Next.js internal API routes with direct database access)
@@ -28,7 +37,7 @@ export async function fetchNewsFromDatabase(filters: NewsFilters = {}) {
   if (filters.tag) params.append('tag', filters.tag);
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
-  if (filters.search) params.append('search', filters.search);
+  // Note: Search is handled by Algolia, not in the database query
   if (filters.sort) params.append('sort', filters.sort);
   if (filters.offset) params.append('offset', filters.offset.toString());
 
@@ -151,7 +160,7 @@ export function useInfiniteNews({
   sortBy?: SortOption;
   sortOrder?: 'asc' | 'desc';
 } = {}) {
-  return useInfiniteQuery({
+  return useInfiniteQuery<NewsApiResponse>({
     queryKey: ['news', 'infinite', { category, tag, limit, excludeId, sortBy, sortOrder }],
     queryFn: async ({ pageParam = 1 }) => {
       try {
@@ -162,58 +171,45 @@ export function useInfiniteNews({
           tag,
           page: pageParam as number,
           limit,
-          excludeId,
           sort: sortBy,
+          status: 'published', // Explicitly request published news
+          ...(excludeId && { excludeId }),
         });
 
-        // Debug log the raw response
         console.log('📡 Raw API Response:', JSON.stringify(response, null, 2));
 
-        // Handle different response structures
-        const items = response?.items || response?.data?.items || [];
-        const total = response?.total || response?.data?.total || 0;
-        
-        if (!Array.isArray(items)) {
-          console.error('❌ Invalid items array in response:', items);
-          throw new Error('Invalid items format in response');
+        if (!response || !Array.isArray(response.items)) {
+          console.error('❌ Invalid response format from API:', response);
+          throw new Error('Invalid response format: missing items array');
+        }
+        if (!response || !Array.isArray(response.items)) {
+          console.error('❌ Invalid response format:', response);
+          throw new Error('Invalid response format: missing items array');
         }
 
-        // Calculate if there are more items to load
-        const hasMore = items.length >= (limit || 10);
-        console.log(`✅ Fetched ${items.length} items, has more: ${hasMore}`);
-
-        return {
-          data: {
-            items,
-            total,
-            page: pageParam,
-            limit,
-            has_more: hasMore,
-          },
+        // Ensure all required fields are present
+        const result: NewsApiResponse = {
+          items: response.items,
+          total: response.total || response.items.length,
+          page: response.page || (pageParam as number),
+          limit: response.limit || limit,
+          has_more: response.has_more || response.items.length >= limit,
         };
+
+        console.log(`✅ Fetched ${result.items.length} items, has more: ${result.has_more}`);
+        return result;
       } catch (error) {
         console.error('❌ Error in useInfiniteNews queryFn:', error);
-        // Return empty data structure to prevent UI errors
-        return {
-          data: {
-            items: [],
-            total: 0,
-            page: pageParam,
-            limit,
-            has_more: false,
-          },
-        };
+        throw error;
       }
     },
-    initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      if (!lastPage?.data?.has_more) return undefined;
+      if (!lastPage.has_more) return undefined;
       return allPages.length + 1;
     },
+    initialPageParam: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000,   // 10 minutes
-    retry: 1,
-    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -239,6 +235,7 @@ export function useRelatedNews(currentSlug: string, limit: number = 6) {
     enabled: !!currentSlug,
   });
 }
+
 export function usePrefetchNews() {
   const queryClient = useQueryClient();
 

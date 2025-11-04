@@ -5,7 +5,6 @@ import { insertNews } from './db-operations';
 import { getDuplicateStats } from './duplicate-check';
 import { createImportLog } from './db-operations';
 import { sql } from 'drizzle-orm';
-import { fetchNewsFromTest } from './test-fetch';
 import { NewsFetchError } from './error-handler';
 
 // Define missing types
@@ -71,13 +70,8 @@ export async function fetchNews(options: FetchNewsOptions = {}): Promise<ImportR
   try {
     console.log(`🚀 Starting news fetch - limit: ${limit}, offset: ${offset}`);
 
-    // Test mode kontrolü
-    const testMode = process.env.TEST_MODE === 'true';
-
     // API'den haberleri çek
-    const apiResponse: NewsApiResponse = testMode
-      ? await fetchNewsFromTest()
-      : await fetchNewsFromApi(limit, offset);
+    const apiResponse: NewsApiResponse = await fetchNewsFromApi({ limit, offset });
     result.totalProcessed = apiResponse.items.length;
 
     if (result.totalProcessed === 0) {

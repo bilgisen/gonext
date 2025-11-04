@@ -6,7 +6,6 @@ import { useNews } from '@/hooks/useNews';
 import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
 import Link from 'next/link';
-import { format } from 'date-fns';
 import { Clock, Heart, Bookmark } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import BlobImage from '@/components/BlobImage';
@@ -48,7 +47,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   const categorySlug = getCategorySlug();
 
-  const formatDate = (dateString?: string | null): string => {
+  const formatDateAgo = (dateString?: string | null): string => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
@@ -57,7 +56,10 @@ const NewsCard: React.FC<NewsCardProps> = ({
           (date.getFullYear() === 2001 && date.getMonth() === 0 && date.getDate() === 1)) {
         return '';
       }
-      return format(date, 'MMMM d \'at\' HH:mm');
+      const timeAgo = formatDistanceToNow(date, { 
+        addSuffix: false, 
+      });
+      return `${timeAgo} ago`;
     } catch (error) {
       console.error('Error formatting date:', error);
       return '';
@@ -72,7 +74,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
     if (result) return result;
     if (!date) return '';
     const d = new Date(date);
-    return (d.getFullYear() > 2001) ? formatDate(date) : '';
+    return (d.getFullYear() > 2001) ? formatDateAgo(date) : '';
   }, '');
 
   // Paylaşılacak tam URL
@@ -122,18 +124,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
       {/* --- Content --- */}
       <div className="relative z-10 p-4 flex-1 flex flex-col">
-        {/* Moved Time to Top */}
-        {showDate && formattedDate && (
-          <div className="mb-1">
-            <span className="text-xs text-muted-foreground/80">
-              ~{formatDistanceToNow(new Date(item.published_at || item.created_at || item.updated_at || new Date()), {
-                addSuffix: true,
-                includeSeconds: false
-              }).replace('about ', '')}
-            </span>
-          </div>
-        )}
-
         {showCategory && item.category && (
           <span className="text-sm uppercase font-medium text-primary mb-1">
             {item.category}
@@ -141,19 +131,25 @@ const NewsCard: React.FC<NewsCardProps> = ({
         )}
 
         {compactTitle ? (
-          <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
+          <Link 
+            href={`/${categorySlug}/${item.slug}`}
+            className="hover:underline"
+          >
             <h3 className="text-2xl sm:text-xl md:text-xl font-medium line-height-tight line-clamp-2">
               {item.seo_title || item.title}
             </h3>
             {showDescription && (item.seo_description || item.description) && compactTitle && (
-              <p className="text-xl mt-2 text-muted-foreground/90 line-clamp-5 md:hidden">
+              <p className="text-xl text-muted-foreground/90 line-clamp-5 md:hidden">
                 {item.seo_description || item.description}
               </p>
             )}
           </Link>
         ) : (
-          <Link href={`/${categorySlug}/${item.slug}`} className="hover:underline">
-            <h2 className="text-3xl py-1 sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
+          <Link 
+            href={`/${categorySlug}/${item.slug}`}
+            className="hover:underline"
+          >
+            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
               {item.seo_title || item.title}
             </h2>
           </Link>
@@ -165,29 +161,29 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </p>
         )}
 
-        {/* Buttons - Moved to bottom left */}
-        <div className="mt-auto pt-2 border-t border-border/20">
-          <div className="flex items-center gap-3 text-muted-foreground/80">
-            <button
-              type="button"
-              className="p-1 rounded-full hover:text-primary transition-colors"
-              aria-label="Like"
-            >
-              <Heart className="w-3.5 h-3.5" />
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          {(showDate && formattedDate) ? (
+            <div className="text-xs text-muted-foreground flex items-center">
+              <span className="flex items-center">
+                <Clock className="w-3 h-3 mr-1" />
+                {formattedDate}
+              </span>
+            </div>
+          ) : null}
+          
+          <div className="flex items-center gap-2">
+            <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
+              <Heart className="w-4 h-4" />
             </button>
-            <button
-              type="button"
-              className="p-1 rounded-full hover:text-primary transition-colors"
-              aria-label="Save"
-            >
-              <Bookmark className="w-3.5 h-3.5" />
+            <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
+              <Bookmark className="w-4 h-4" />
             </button>
-            {/* ShareButton prop hatası düzeltildi */}
-            <ShareButton
+            <ShareButton 
+              title={item.seo_title || item.title || 'News Article'}
               url={shareUrl}
-              title={item.seo_title || item.title || ''}
-              text={item.seo_description || item.description || ''}
-              className="p-1 hover:text-primary transition-colors"
+              text={item.seo_description || item.description}
+              className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
+              iconClassName="w-4 h-4"
             />
           </div>
         </div>

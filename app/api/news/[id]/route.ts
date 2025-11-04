@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getNewsById } from '@/lib/api/externalApiClient';
+import { databaseApiClient } from '@/lib/api/externalApiClient';
 
 export const runtime = 'nodejs';
 
@@ -15,7 +15,22 @@ export async function GET(
   try {
     const { id } = params;
 
-    const result = await getNewsById(id);
+    const result = await databaseApiClient.getNewsById(id);
+    
+    if (!result) {
+      throw new Error('News item not found');
+    }
+    
+    // Debug log to check the content of the result
+    console.log('News item data:', {
+      id: result.id,
+      hasContentHtml: !!result.content_html,
+      contentLength: result.content?.length,
+      contentHtmlLength: result.content_html?.length,
+      hasContentMd: !!result.content,
+      contentSample: result.content?.substring(0, 50) + '...',
+      contentHtmlSample: result.content_html?.substring(0, 50) + '...'
+    });
 
     return NextResponse.json({
       success: true,

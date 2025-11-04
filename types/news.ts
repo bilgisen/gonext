@@ -63,21 +63,35 @@ export type NewsApiResponse = z.infer<typeof NewsApiResponseSchema>;
 // 3. News Item Types
 // ====================================
 
-export interface NewsItem extends Omit<NewsApiItem, 'category' | 'categories'> {
+export interface NewsItem {
   id: string;
-  title?: string;
-  category: NewsCategory;
-  categories: NewsCategory[];
   source_id: string;
   source_guid: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  content_html?: string; // Pre-rendered HTML content
   seo_title: string;
   seo_description: string;
-  image: string;
-  slug: string;
+  status: 'draft' | 'published' | 'archived';
+  featured: boolean;
+  view_count: number;
   read_time: number;
+  published_at: string;
   created_at: string;
   updated_at: string;
-  published_at: string;
+  image_url: string;
+  image_alt: string;
+  image_caption: string;
+  author_id: number | null;
+  source_url: string | null;
+  categories: NewsCategory[];
+  tags: string[];
+  meta: Record<string, any>;
+  // For backward compatibility
+  image: string;
+  category: NewsCategory;
   // Add other properties as needed
   [key: string]: any; // For any additional dynamic properties
 }
@@ -139,6 +153,8 @@ export interface NewsFilters extends BaseFilters {
   type?: 'category' | 'tag' | 'search' | 'featured';
   excludeId?: string;
   offset?: number;
+  featured?: boolean;
+  status?: 'draft' | 'published' | 'archived';
 }
 
 export interface SearchFilters extends BaseFilters {

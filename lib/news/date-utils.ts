@@ -1,30 +1,72 @@
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+
+// Istanbul timezone (UTC+3)
+const ISTANBUL_TIMEZONE = 'Europe/Istanbul';
+
 /**
- * Generates sequential timestamps for news articles
+ * Gets the current time in Istanbul timezone
+ * @returns Current date in Istanbul timezone
+ */
+function getCurrentIstanbulTime(): Date {
+  return toZonedTime(new Date(), ISTANBUL_TIMEZONE);
+}
+
+/**
+ * Formats a date to a string in Istanbul timezone
+ * @param date - Date to format
+ * @param format - Format string
+ * @returns Formatted date string
+ */
+function formatInIstanbul(date: Date, format: string): string {
+  return formatInTimeZone(date, ISTANBUL_TIMEZONE, format);
+}
+
+/**
+ * Generates sequential timestamps for news articles in Istanbul timezone
  * Ensures each article gets a unique, sequential timestamp
  * 
  * @param previousDate Optional previous date to base the next timestamp on
- * @returns Object containing created_at and published_at dates
+ * @returns Object containing created_at and published_at dates in Istanbul timezone
  */
 export function generateNewsTimestamps(previousDate?: Date): {
   created_at: Date;
   published_at: Date;
 } {
-  const now = new Date();
+  const now = getCurrentIstanbulTime();
   
-  // If we have a previous date, use it as the base, otherwise use current time
-  const baseDate = previousDate ? new Date(previousDate) : now;
+  // If we have a previous date that's in the future, use current time instead
+  const baseDate = (previousDate && previousDate <= now) ? 
+    new Date(previousDate) : 
+    new Date(now.getTime() - 60000); // 1 minute before now
   
-  // Add 1 minute to the base date for the next article
-  const nextDate = new Date(baseDate.getTime() + 60000);
+  // Add 1 second to the base date for the next article
+  const nextDate = new Date(Math.max(
+    baseDate.getTime() + 1000, // Add 1 second
+    now.getTime() - 300000     // But not more than 5 minutes in the past
+  ));
   
-  // Create dates with 1 minute intervals for created_at and published_at
-  const createdDate = new Date(nextDate);
-  const publishedDate = new Date(nextDate.getTime() + 60000); // 1 minute after created
+  // Ensure the date is in Istanbul timezone
+  const istanbulDate = toZonedTime(nextDate, ISTANBUL_TIMEZONE);
+  
+  // For debugging: Log the generated dates
+  console.log('Generated date in Istanbul timezone:', 
+    formatInIstanbul(istanbulDate, 'yyyy-MM-dd HH:mm:ssXXX'));
   
   return {
-    created_at: createdDate,
-    published_at: publishedDate
+    created_at: istanbulDate,
+    published_at: istanbulDate
   };
+}
+
+/**
+ * Formats a date to a human-readable string in Turkish locale and Istanbul timezone
+ * @param date - Date to format
+ * @returns Formatted date string in Turkish
+ */
+export function formatTurkishDate(date: Date): string {
+  return formatInTimeZone(date, ISTANBUL_TIMEZONE, 'MMMM d, yyyy h:mm a', {
+    // No locale specified, will use English by default
+  }) + ' (UTC+3)';
 }
 
 /**

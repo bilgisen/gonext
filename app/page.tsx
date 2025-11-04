@@ -1,4 +1,4 @@
-import FrontCategoryLayoutOne from '@/components/front-category/front-cat-layout-one';
+import FrontCategoryLayoutOne from '@/components/front-category/headlines';
 import { getFrontPageHeadlines } from '@/lib/headline-fetching';
 import FrontPageSections from '@/components/frontPageSections';
 

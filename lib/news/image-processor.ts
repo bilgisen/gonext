@@ -1,3 +1,4 @@
+// lib/news/image-processor.ts
 import sharp from 'sharp';
 import { createSlug } from './slug-utils';
 import { NewsFetchError } from './types';

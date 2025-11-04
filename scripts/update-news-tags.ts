@@ -38,7 +38,7 @@ async function processNewsItem(newsItem: DatabaseNewsItem) {
     }
 
     // Get the latest version of the news from the API
-    const apiResponse = await fetchNewsFromApi(1, 0);
+    const apiResponse = await fetchNewsFromApi({ limit: 1, offset: 0 });
     const latestNews = apiResponse.items.find(item => 
       (item.source_guid && item.source_guid === newsItem.source_guid) ||
       (item.original_url && item.original_url === newsItem.canonical_url)

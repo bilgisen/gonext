@@ -8,6 +8,20 @@
       "when": 1761265915702,
       "tag": "0000_perpetual_roxanne_simpson",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1762226952477,
+      "tag": "0001_amusing_starfox",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762293170891,
+      "tag": "0002_unique_azazel",
+      "breakpoints": true
     }
   ]
 }

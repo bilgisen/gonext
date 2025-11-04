@@ -3,9 +3,9 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Calendar, Clock, ArrowLeft  } from 'lucide-react';
+import { Clock, ArrowLeft, Heart, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+// MarkdownRenderer is no longer needed as we're using pre-rendered HTML
 import ShareButton from '@/components/ui/share-button';
 import BlobImage from '@/components/BlobImage';
 import { useRouter } from 'next/navigation';
@@ -70,38 +70,28 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
     }
 
     try {
-      // Handle the case where the date string might have a timezone offset
-      let date: Date;
+      // Parse the date string - the server sends dates in UTC
+      const date = new Date(dateString);
       
-      // If the date string ends with Z (UTC) or has a timezone offset
-      if (dateString.endsWith('Z') || dateString.includes('+')) {
-        date = new Date(dateString);
-      } else {
-        // For dates without timezone, assume they're in local time
-        date = new Date(dateString);
-        // If the date is invalid, try parsing it as ISO string
-        if (isNaN(date.getTime())) {
-          date = new Date(dateString + 'Z'); // Try appending Z for UTC
-        }
-      }
-
       // Check if the date is valid and not the default date (January 1, 0001)
       if (isNaN(date.getTime()) || date.getFullYear() <= 1) {
         console.log('Invalid or default date:', dateString);
         return '';
       }
 
-      const currentYear = new Date().getFullYear();
-      // Check for obviously invalid future dates (more than 1 year in future)
-      if (date.getFullYear() > currentYear + 1) {
-        console.log('Suspicious future date:', date);
-        return '';
-      }
-
       // Format as "Month Day, Year at HH:MM" (e.g., "October 30, 2025 at 14:30")
-      // Convert to local time for display
-      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-      return format(localDate, 'MMMM d, yyyy \'at\' HH:mm');
+      // Use the UTC methods to avoid timezone conversion
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const day = date.getUTCDate();
+      const hours = date.getUTCHours();
+      const minutes = date.getUTCMinutes();
+      
+      // Create a new date object with the UTC values to avoid timezone issues
+      const utcDate = new Date(Date.UTC(year, month, day, hours, minutes));
+      
+      // Format the date using the local timezone for display
+      return format(utcDate, 'MMMM d, yyyy \'at\' HH:mm');
     } catch (error) {
       console.error('Error formatting date:', error, 'Date string:', dateString);
       return '';
@@ -174,36 +164,31 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           <p className="text-xl text-muted-foreground mb-4">{newsItem.seo_description}</p>
         )}
 
-        {/* Share Buttons - Large */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="flex-1 border-t border-border/50"></div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Share:</span>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted/50 hover:bg-muted transition-colors">
-              <ShareButton 
-                url={`${typeof window !== 'undefined' ? window.location.href : ''}`}
-                title={newsItem.seo_title || newsItem.title || ''}
-                text={newsItem.seo_description || ''}
-                className="h-8 w-8 flex items-center justify-center hover:bg-primary/10 rounded-full transition-colors"
-              />
-            </div>
-          </div>
-          <div className="flex-1 border-t border-border/50"></div>
-        </div>
 
       
-        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-6 space-x-2">
-          {formattedDate && (
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
-              <span>{formattedDate.split(' at ')[0]}</span>
-              <Clock className="h-4 w-4 ml-2" />
-              <time dateTime={bestDate || ''}>
-                {formattedDate.split(' at ')[1]}
-              </time>
-            </div>
-          )}
+        <div className="flex items-center justify-between text-sm text-muted-foreground mb-6">
+        {formattedDate && (
+          <div className="flex items-center">
+            <Clock className="h-3 w-3 mr-1" />
+            <span>{formattedDate}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
+            <Heart className="w-4 h-4" />
+          </button>
+          <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
+            <Bookmark className="w-4 h-4" />
+          </button>
+          <ShareButton 
+            url={`${typeof window !== 'undefined' ? window.location.href : ''}`}
+            title={newsItem.seo_title || newsItem.title || ''}
+            text={newsItem.seo_description || ''}
+            className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
+            iconClassName="w-4 h-4"
+          />
         </div>
+      </div>
       </header>
 
       {/* Article Image */}
@@ -230,9 +215,16 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
 
       {/* Article Content */}
       <div className="prose dark:prose-invert max-w-none text-md mb-8">
-        <MarkdownRenderer>
-          {newsItem.content_md || newsItem.seo_description || 'No content available'}
-        </MarkdownRenderer>
+        {newsItem.content_html || newsItem.content ? (
+          <div 
+            className="prose dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ 
+              __html: newsItem.content_html || newsItem.content || '' 
+            }} 
+          />
+        ) : (
+          <p>{newsItem.seo_description || 'No content available'}</p>
+        )}
       </div>
 
 

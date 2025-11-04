@@ -85,8 +85,8 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         );
     }
 
-    const allNews = data?.pages.flatMap(page => page.data.items) || [];
-    const totalResults = data?.pages[0]?.data.total || 0;
+    const allNews = data?.pages.flatMap(page => page.items) || [];
+    const totalResults = data?.pages[0]?.total || 0;
 
     if (allNews.length === 0) {
         return (

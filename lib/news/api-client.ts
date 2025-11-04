@@ -1,5 +1,5 @@
-import type { NewsItem } from '@/types/news';
-import { NewsFetchError } from '@/lib/news/error-handler';
+import { NewsFetchError } from './error-handler';
+import type { NewsApiItem, NewsApiResponse, NewsApiOptions } from './types';
 
 /**
  * News API URL - Environment variable'dan alınır
@@ -34,26 +34,37 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   ]);
 }
 
+/**
+ * Retry wrapper with exponential backoff
+ */
 async function withRetry<T>(
   operation: () => Promise<T>,
   maxRetries: number = MAX_RETRIES,
   delay: number = RETRY_DELAY
 ): Promise<T> {
   let lastError: Error;
+  let attempt = 1;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  while (attempt <= maxRetries) {
     try {
       return await operation();
     } catch (error) {
       lastError = error as Error;
-
+      
       if (attempt === maxRetries) {
         throw lastError;
       }
 
-      // Exponential backoff
-      const waitTime = delay * Math.pow(2, attempt - 1);
+      // Exponential backoff with jitter
+      const jitter = Math.random() * 0.5 + 0.75; // 0.75 - 1.25
+      const waitTime = Math.min(
+        delay * Math.pow(2, attempt - 1) * jitter,
+        30000 // Max 30 seconds
+      );
+      
+      console.warn(`Attempt ${attempt} failed, retrying in ${Math.round(waitTime)}ms...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
+      attempt++;
     }
   }
 
@@ -61,31 +72,41 @@ async function withRetry<T>(
 }
 
 /**
- * News API'den haberleri çeker
- * @param limit - Maksimum haber sayısı
- * @param offset - Offset
- * @returns API response
+ * Fetch news from the external API with pagination and filtering
  */
-export interface NewsApiResponse {
-  items: NewsItem[];
-  page?: number;
-  page_size?: number;
-  total?: number;
-}
-
 export async function fetchNewsFromApi(
-  limit: number = 50,
-  offset: number = 0,
-  _syncImages: boolean = true // Prefix with underscore to indicate it's intentionally unused
+  options: NewsApiOptions = {}
 ): Promise<NewsApiResponse> {
+  const {
+    limit = 50,
+    offset = 0,
+    category,
+    tag,
+    search,
+    status = 'published',
+    sortBy = 'published_at',
+    sortOrder = 'desc',
+  } = options;
+
   const url = new URL(NEWS_API_URL);
+  
+  // Set query parameters
   url.searchParams.set('limit', limit.toString());
   url.searchParams.set('offset', offset.toString());
-
-  // API key'i query parameter olarak da ekle (fallback için)
-  if (NEWS_API_KEY) {
-    url.searchParams.set('api_key', NEWS_API_KEY);
-    url.searchParams.set('key', NEWS_API_KEY);
+  url.searchParams.set('status', status);
+  url.searchParams.set('sort_by', sortBy);
+  url.searchParams.set('sort_order', sortOrder);
+  
+  if (category) {
+    url.searchParams.set('category', Array.isArray(category) ? category.join(',') : category);
+  }
+  
+  if (tag) {
+    url.searchParams.set('tag', Array.isArray(tag) ? tag.join(',') : tag);
+  }
+  
+  if (search) {
+    url.searchParams.set('search', search);
   }
 
   try {
@@ -96,9 +117,7 @@ export async function fetchNewsFromApi(
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'User-Agent': 'GoNext-NewsFetcher/1.0',
-          'Authorization': `Bearer ${NEWS_API_KEY}`,
         },
-        // Timeout için AbortController
         signal: AbortSignal.timeout(API_TIMEOUT),
       });
 
@@ -106,54 +125,80 @@ export async function fetchNewsFromApi(
     });
 
     if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // Ignore JSON parse error
+      }
+
+      const error = new Error(`HTTP ${response.status}`);
       throw new NewsFetchError(
-        `API request failed: ${response.status} ${response.statusText}`,
+        errorData?.message || `API request failed: ${response.status} ${response.statusText}`,
         'API_ERROR',
-        new Error(`HTTP ${response.status}`)
+        error
       );
     }
 
     const data: NewsApiResponse = await response.json();
 
-    // Basic validation
+    // Validate response format
     if (!data || typeof data !== 'object') {
-      throw new NewsFetchError('Invalid API response format', 'API_ERROR');
+      throw new NewsFetchError('Invalid API response format', 'INVALID_RESPONSE');
     }
 
-    if (!data.items || !Array.isArray(data.items)) {
-      throw new NewsFetchError('Invalid API response: items array missing', 'API_ERROR');
+    if (!Array.isArray(data.items)) {
+      throw new NewsFetchError('Invalid API response: items array missing', 'INVALID_RESPONSE');
     }
 
-    return data;
+    // Ensure we have a valid response structure
+    const result: NewsApiResponse = {
+      items: data.items || [],
+      total: data.total ?? data.items?.length ?? 0,
+      page: data.page ?? Math.floor(offset / limit) + 1,
+      limit: data.limit ?? limit,
+      has_more: (data.items?.length ?? 0) >= limit,
+    };
+    
+    return result;
   } catch (error) {
     if (error instanceof NewsFetchError) {
       throw error;
     }
 
+    // Handle different types of errors
     if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
+      if (error.name === 'AbortError' || error.message.includes('timeout')) {
         throw new NewsFetchError('API request timeout', 'TIMEOUT_ERROR', error);
       }
-      if (error.message.includes('fetch')) {
+      
+      if (error.message.includes('fetch') || error.message.includes('network')) {
         throw new NewsFetchError('Network error while fetching news', 'NETWORK_ERROR', error);
+      }
+      
+      if (error.message.includes('JSON')) {
+        throw new NewsFetchError('Invalid JSON response from server', 'INVALID_JSON', error);
       }
     }
 
+    // Fallback for unknown errors
     throw new NewsFetchError(
-      'Unknown error while fetching news',
+      'An unknown error occurred while fetching news',
       'UNKNOWN_ERROR',
-      error as Error
+      error instanceof Error ? error : new Error(String(error))
     );
   }
 }
 
+
 /**
- * Tek bir haberin detayını çeker (eğer API destekliyorsa)
- * @param newsId - Haber ID
- * @returns Haber detayı
+ * Fetches a single news item by ID or slug
+ * @param id - News ID or slug
+ * @returns The news item or null if not found
  */
-export async function fetchNewsById(newsId: string): Promise<NewsItem | null> {
-  const url = new URL(`${NEWS_API_URL}/${newsId}`);
+export async function fetchNewsById(id: string | number): Promise<NewsApiItem | null> {
+  const url = new URL(NEWS_API_URL);
+  url.pathname = `${url.pathname}/${id}`.replace('//', '/');
 
   try {
     const response = await withRetry(async () => {
@@ -197,7 +242,7 @@ export async function fetchNewsById(newsId: string): Promise<NewsItem | null> {
       }
     }
 
-    return data as NewsItem;
+    return data as NewsApiItem;
   } catch (error) {
     if (error instanceof NewsFetchError) {
       throw error;
@@ -212,8 +257,8 @@ export async function fetchNewsById(newsId: string): Promise<NewsItem | null> {
 }
 
 /**
- * API health check
- * @returns API'nin erişilebilir olup olmadığı
+ * Checks if the API is healthy and accessible
+ * @returns True if the API is healthy, false otherwise
  */
 export async function checkApiHealth(): Promise<boolean> {
   try {

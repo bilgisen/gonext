@@ -4,10 +4,11 @@
 import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
 import Link from 'next/link';
-import { format } from 'date-fns';
-import { Calendar, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Calendar, Clock, Heart, Bookmark } from 'lucide-react';
 import BlobImage from '@/components/BlobImage';
 import { useQuery } from '@tanstack/react-query';
+import ShareButton from '@/components/ui/share-button';
 import { fetchNewsFromDatabase } from '@/hooks/queries/useExternalQueries';
 
 interface FrontCategoryFeatNewsCardProps {
@@ -43,7 +44,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
 
   const categorySlug = getCategorySlug();
 
-  const formatDate = (dateString?: string | null): string => {
+  const formatDateAgo = (dateString?: string | null): string => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
@@ -52,7 +53,10 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
           (date.getFullYear() === 2001 && date.getMonth() === 0 && date.getDate() === 1)) {
         return '';
       }
-      return format(date, 'MMMM d \'at\' HH:mm');
+      const timeAgo = formatDistanceToNow(date, { 
+        addSuffix: false, 
+      });
+      return `${timeAgo} ago`;
     } catch (error) {
       console.error('Error formatting date:', error);
       return '';
@@ -67,23 +71,26 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
     if (result) return result;
     if (!date) return '';
     const d = new Date(date);
-    return (d.getFullYear() > 2001) ? formatDate(date) : '';
+    return (d.getFullYear() > 2001) ? formatDateAgo(date) : '';
   }, '');
 
   return (
     <div
       className={cn(
-        'relative group flex flex-col rounded-xl overflow-hidden backdrop-blur-sm',
-        'bg-gradient-to-b from-transparent via-card/90 to-transparent',
-        'border border-border/50 shadow-md transition-all duration-200 hover:shadow-lg',
+        'relative group flex flex-col rounded-md overflow-hidden backdrop-blur-sm',
+        'bg-linear-to-b from-transparent via-card/90 to-transparent',
+        'border border-border/50 transition-all duration-200 hover:shadow-lg',
         className
       )}
     >
-      {/* --- Background Shimmer Effect (Teal) --- */}
-      <div className="absolute inset-0 bg-[radial-gradient(100%_100%_at_0%_0%,theme(colors.teal.700/10),transparent_70%)] z-0" />
-
       {/* --- Image --- */}
       <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden z-10">
+        {showReadTime && item.read_time && (
+          <div className="absolute top-2 right-2 z-20 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center">
+            <Clock className="w-3 h-3 mr-1" />
+            {item.read_time} min
+          </div>
+        )}
         {imageKey ? (
           <BlobImage
             imageKey={imageKey}
@@ -107,7 +114,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
       </div>
 
       {/* --- Content --- */}
-      <div className="relative z-10 p-4 mt-0 mb-4 flex-1 flex flex-col">
+      <div className="relative z-10 p-4 pt-3 pb-2 flex-1 flex flex-col">
         {showCategory && item.category && (
           <span className="text-sm uppercase font-medium text-primary mb-2">
             {item.category}
@@ -145,22 +152,32 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
           </p>
         )}
 
-        {(showDate && formattedDate) || showReadTime ? (
-          <div className="mt-auto pt-2 text-xs text-muted-foreground flex items-center gap-4">
-            {showDate && formattedDate && (
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          {(showDate && formattedDate) ? (
+            <div className="text-xs text-muted-foreground flex items-center">
               <span className="flex items-center">
                 <Calendar className="w-3 h-3 mr-1" />
                 {formattedDate}
               </span>
-            )}
-            {showReadTime && item.read_time && (
-              <span className="flex items-center">
-                <Clock className="w-3 h-3 mr-1" />
-                {item.read_time} min read
-              </span>
-            )}
+            </div>
+          ) : null}
+          
+          <div className="flex items-center gap-2">
+            <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
+              <Heart className="w-4 h-4" />
+            </button>
+            <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
+              <Bookmark className="w-4 h-4" />
+            </button>
+            <ShareButton 
+              title={item.seo_title || item.title || 'News Article'}
+              url={`${process.env.NEXT_PUBLIC_SITE_URL || ''}/${categorySlug}/${item.slug}`}
+              text={item.seo_description || item.description}
+              className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
+              iconClassName="w-4 h-4"
+            />
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );

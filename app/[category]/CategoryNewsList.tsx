@@ -158,7 +158,7 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
     );
   }
 
-  const allNews = data?.pages.flatMap((p) => p.data?.items || []) || [];
+  const allNews = data?.pages.flatMap((p) => p.items || []) || [];
 
   if (allNews.length === 0)
     return (

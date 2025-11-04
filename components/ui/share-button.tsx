@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { 
   Share2, 
-  Check, 
-  Copy,
+  Link as LinkIcon,
+  Facebook, 
+  Twitter, 
+  Linkedin, 
   MessageSquare,
-  Twitter,
-  Facebook,
-  Linkedin,
   Send
 } from 'lucide-react';
 import {
@@ -20,17 +19,52 @@ import {
 } from './dropdown-menu';
 
 interface ShareButtonProps {
-  title: string;
+  className?: string;
+  iconClassName?: string;
+  title?: string;
   text?: string;
   url?: string;
-  className?: string;
 }
 
+const socialPlatforms = [
+  { 
+    platform: 'twitter', 
+    label: 'Twitter', 
+    icon: <Twitter size={16} className="text-blue-400" />,
+    className: 'hover:bg-blue-50 dark:hover:bg-blue-900/20'
+  },
+  { 
+    platform: 'facebook', 
+    label: 'Facebook', 
+    icon: <Facebook size={16} className="text-blue-600" />,
+    className: 'hover:bg-blue-50 dark:hover:bg-blue-900/20'
+  },
+  { 
+    platform: 'linkedin', 
+    label: 'LinkedIn', 
+    icon: <Linkedin size={16} className="text-blue-700" />,
+    className: 'hover:bg-blue-50 dark:hover:bg-blue-900/20'
+  },
+  { 
+    platform: 'whatsapp', 
+    label: 'WhatsApp', 
+    icon: <MessageSquare size={16} className="text-green-500" />,
+    className: 'hover:bg-green-50 dark:hover:bg-green-900/20'
+  },
+  { 
+    platform: 'telegram', 
+    label: 'Telegram', 
+    icon: <Send size={16} className="text-blue-400" />,
+    className: 'hover:bg-blue-50 dark:hover:bg-blue-900/20'
+  },
+];
+
 export default function ShareButton({ 
-  title, 
-  text, 
-  url,
-  className = '' 
+  className = '',
+  iconClassName = 'w-4 h-4 text-muted-foreground hover:text-primary transition-colors',
+  title = '',
+  text = '',
+  url = ''
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
@@ -39,11 +73,9 @@ export default function ShareButton({
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Kopyalama hatası:', err);
+      console.error('Copy failed:', err);
     }
   };
 
@@ -69,73 +101,42 @@ export default function ShareButton({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button 
-          className={`inline-flex items-center justify-center h-9 w-9 rounded-full hover:bg-accent transition-colors ${className}`}
+          className={`p-0.5 ${className}`}
           aria-label="Share"
         >
-          <Share2 className="h-5 w-5 text-foreground/80 hover:text-foreground" />
+          <Share2 className={iconClassName} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 p-2" align="end">
-        {/* Link Kopyalama */}
+      <DropdownMenuContent className="w-48 p-1.5 text-sm" align="end">
         <DropdownMenuItem 
           onClick={copyToClipboard}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
+          className="flex items-center gap-2 px-3 py-1.5 rounded cursor-pointer hover:bg-primary/10"
         >
           {copied ? (
             <>
-              <Check size={20} className="text-green-600" />
-              <span className="text-green-600 dark:text-green-500">Copied!</span>
+              <LinkIcon size={16} className="text-green-600" />
+              <span className="text-green-600">Copied!</span>
             </>
           ) : (
             <>
-              <Copy size={20} className="text-foreground/80" />
-              <span className="text-foreground">Copy Link</span>
+              <LinkIcon size={16} className="text-muted-foreground" />
+              <span>Copy Link</span>
             </>
           )}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
-        {/* Sosyal Medya Butonları */}
-        <DropdownMenuItem 
-          onClick={() => shareToSocial('whatsapp')}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
-        >
-          <MessageSquare className="w-5 h-5 text-green-500" />
-          <span className="text-foreground">WhatsApp</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem 
-          onClick={() => shareToSocial('twitter')}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
-        >
-          <Twitter className="w-5 h-5 text-black" />
-          <span className="text-foreground">X (Twitter)</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem 
-          onClick={() => shareToSocial('facebook')}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
-        >
-          <Facebook className="w-5 h-5 text-blue-600" />
-          <span className="text-foreground">Facebook</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem 
-          onClick={() => shareToSocial('linkedin')}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
-        >
-          <Linkedin className="w-5 h-5 text-blue-700" />
-          <span className="text-foreground">LinkedIn</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem 
-          onClick={() => shareToSocial('telegram')}
-          className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-accent text-foreground"
-        >
-          <Send className="w-5 h-5 text-blue-400" />
-          <span className="text-foreground">Telegram</span>
-        </DropdownMenuItem>
+        {socialPlatforms.map(({ platform, label, icon, className: itemClassName }) => (
+          <DropdownMenuItem 
+            key={platform}
+            onClick={() => shareToSocial(platform)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded cursor-pointer ${itemClassName}`}
+          >
+            {icon}
+            <span>{label}</span>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

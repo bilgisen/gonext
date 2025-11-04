@@ -1,23 +1,15 @@
 // app/news/NewsListClient.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
-import FrontCategoryMainNewsCard from '@/components/cards/front-cat-main-newscard';
-
-// Helper function to clean filters
-const cleanFilters = (filters: Record<string, any>): Record<string, any> => {
-  const result: Record<string, any> = {};
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      result[key] = value;
-    }
-  });
-  return result;
-};
+import FrontCategoryLayoutOne from '@/components/front-category/headlines';
+import { Button } from '@/components/ui/button';
+import BlobImage from '@/components/BlobImage';
+import { Calendar, Clock } from 'lucide-react';
 
 interface NewsListClientProps {
-  initialFilters: {
+  initialFilters?: {
     category?: string;
     limit?: number;
     page?: number;
@@ -25,30 +17,20 @@ interface NewsListClientProps {
   };
 }
 
-export function NewsListClient({ initialFilters }: NewsListClientProps) {
-  const [filters] = useState(initialFilters);
-  // Prefetch functionality is currently not used
-  // const { prefetchNewsDetail } = usePrefetchNews();
+type SortOption = 'newest' | 'oldest' | 'popular';
 
-  type SortOption = 'newest' | 'oldest' | 'popular';
-  
+export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
-  // Map UI sort options to API sort options
+
   const getApiSortOption = (): { sortBy: SortOption; sortOrder: 'asc' | 'desc' } => {
     switch (sortBy) {
-      case 'newest':
-        return { sortBy: 'newest', sortOrder: 'desc' };
-      case 'oldest':
-        return { sortBy: 'oldest', sortOrder: 'asc' };
-      case 'popular':
-        return { sortBy: 'popular', sortOrder: 'desc' };
-      default:
-        return { sortBy: 'newest', sortOrder: 'desc' };
+      case 'newest': return { sortBy: 'newest', sortOrder: 'desc' };
+      case 'oldest': return { sortBy: 'oldest', sortOrder: 'asc' };
+      case 'popular': return { sortBy: 'popular', sortOrder: 'desc' };
+      default: return { sortBy: 'newest', sortOrder: 'desc' };
     }
   };
-  
+
   const apiSort = getApiSortOption();
 
   const {
@@ -61,17 +43,22 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
     error,
     refetch,
   } = useInfiniteNews({
-    ...filters,
+    ...initialFilters,
     sortBy: apiSort.sortBy,
     sortOrder: apiSort.sortOrder,
   });
+
+  // Flatten all pages of items
+  const allItems = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page) => page.items || []);
+  }, [data]);
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
-
 
   // Handle error state
   if (isError) {
@@ -80,192 +67,156 @@ export function NewsListClient({ initialFilters }: NewsListClientProps) {
         <div className="text-destructive mb-4">
           Error loading news: {error?.message || 'Unknown error'}
         </div>
-        <button
+        <Button
           onClick={() => refetch()}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          variant="default"
+          className="mt-4"
         >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
 
-  if (isLoading) {
+  // Loading state
+  if (isLoading && !allItems.length) {
     return (
       <div className="space-y-6">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <NewsCardSkeleton key={i} />
         ))}
       </div>
     );
   }
 
-  if (error && typeof error === 'object' && 'message' in error) {
+  // No results
+  if (!allItems.length) {
     return (
       <div className="text-center py-12">
-        <div className="text-destructive mb-4">
-          An error occurred while loading news
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+        <p className="text-muted-foreground mb-4">No news articles found.</p>
+        <Button
+          onClick={() => refetch()}
+          variant="default"
         >
-          Try Again
-        </button>
+          Refresh
+        </Button>
       </div>
     );
   }
 
-  const renderNewsList = () => {
-    if (!data?.pages?.length) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No news found matching your criteria.</p>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+  return (
+    <div className="space-y-8">
+      {/* Sort controls */}
+      <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">Sort by:</span>
+          <Button
+            variant={sortBy === 'newest' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('newest')}
           >
-            Refresh
-          </button>
-        </div>
-      );
-    }
-
-    // Check if any page has items
-    const hasItems = data.pages.some(page => page?.data?.items?.length > 0);
-    if (!hasItems) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No news articles found.</p>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+            Newest
+          </Button>
+          <Button
+            variant={sortBy === 'oldest' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('oldest')}
           >
-            Refresh
-          </button>
+            Oldest
+          </Button>
+          <Button
+            variant={sortBy === 'popular' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('popular')}
+          >
+            Most Popular
+          </Button>
         </div>
-      );
-    }
+      </div>
 
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.pages.flatMap(page => 
-          page.data?.items?.map((news: any) => {
-            const processedNews = processNewsItem(news);
-            return (
-              <div key={processedNews.id} className="h-full">
-                <FrontCategoryMainNewsCard
-                  item={processedNews}
-                  showCategory={true}
-                  showDate={true}
-                  showReadTime={true}
-                  className="h-full"
-                />
+      {/* News grid */}
+      <div className="space-y-8">
+        {allItems.length > 0 && (
+          <FrontCategoryLayoutOne
+            initialData={{
+              mainItem: allItems[0],
+              leftItems: allItems.slice(1, 3),
+              rightItems: allItems.slice(3, 6)
+            }}
+          />
+        )}
+        {allItems.length > 6 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {allItems.slice(6).map((item) => (
+              <div key={item.id} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                {item.image && (
+                  <div className="aspect-video bg-gray-100 relative">
+                    <BlobImage
+                      imageKey={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm line-clamp-3">
+                    {item.excerpt}
+                  </p>
+                  <div className="mt-3 flex items-center text-xs text-gray-500">
+                    {item.published_at && (
+                      <time dateTime={item.published_at} className="flex items-center">
+                        <Calendar className="w-3.5 h-3.5 mr-1" />
+                        {new Date(item.published_at).toLocaleDateString('tr-TR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </time>
+                    )}
+                    {item.read_time > 0 && (
+                      <span className="flex items-center ml-4">
+                        <Clock className="w-3.5 h-3.5 mr-1" />
+                        {item.read_time} dk
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            );
-          })
+            ))}
+          </div>
         )}
       </div>
-    );
-  };
 
-  // Process news items for display
-  const processNewsItem = (item: any) => ({
-    ...item,
-    id: item.id?.toString() || '',
-    slug: item.slug || item.id?.toString() || '',
-    seo_title: item.seo_title || 'No title',
-    seo_description: item.seo_description || '',
-    category: item.category || 'general',
-    tags: Array.isArray(item.tags) ? item.tags : [],
-    image: item.image || '',
-    image_title: item.image_title || '',
-    published_at: item.published_at || new Date().toISOString(),
-    read_time: item.read_time || 0
-  });
-
-  return (
-    <div className="space-y-6">
-      {/* Filter and Sort Panel */}
-      <div className="bg-card p-4 rounded-lg border">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {data?.pages[0]?.data?.total ? `Total ${data.pages[0].data.total} news articles` : 'Loading news...'}
-            </span>
-            {Object.entries(cleanFilters(filters)).map(([key, value]) => 
-              value ? (
-                <span key={key} className="px-2 py-1 bg-primary/10 text-primary-foreground/90 rounded text-xs">
-                  {key}: {String(value)}
-                </span>
-              ) : null
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm bg-background border rounded px-2 py-1"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="popular">Most Popular</option>
-            </select>
-            
-            <button
-              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-              className="p-1 rounded hover:bg-muted"
-              title={sortOrder === 'asc' ? 'Sort ascending' : 'Sort descending'}
-            >
-              {sortOrder === 'asc' ? '↑' : '↓'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* News List */}
-      {renderNewsList()}
-
-      {/* Load More Button */}
+      {/* Load more button */}
       {hasNextPage && (
-        <div className="text-center py-8">
-          <button
+        <div className="flex justify-center mt-8">
+          <Button
             onClick={handleLoadMore}
             disabled={isFetchingNextPage}
-            className="px-6 py-3 bg-primary/90 text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="outline"
           >
-            {isFetchingNextPage ? 'Loading...' : 'Load More News'}
-          </button>
-        </div>
-      )}
-
-      {/* Loading indicator for infinite scroll */}
-      {isFetchingNextPage && (
-        <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            {isFetchingNextPage ? 'Loading...' : 'Load More'}
+          </Button>
         </div>
       )}
     </div>
   );
 }
 
-// Loading skeleton for news cards
-const NewsCardSkeleton = () => (
-  <div className="animate-pulse group relative flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-lg shadow">
-    <div className="w-full sm:w-40 h-40 bg-muted rounded-lg"></div>
-    <div className="flex-1 space-y-3">
-      <div className="h-4 bg-muted rounded w-24"></div>
-      <div className="h-6 bg-muted rounded w-3/4"></div>
+// Loading skeleton component
+function NewsCardSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="aspect-video bg-muted rounded-lg" />
       <div className="space-y-2">
-        <div className="h-4 bg-muted rounded"></div>
-        <div className="h-4 bg-muted rounded w-5/6"></div>
-        <div className="h-4 bg-muted rounded w-4/6"></div>
+        <div className="h-4 bg-muted rounded w-3/4" />
+        <div className="h-4 bg-muted rounded w-1/2" />
+        <div className="h-4 bg-muted rounded w-2/3" />
       </div>
-      <div className="flex gap-2">
-        <div className="h-6 w-16 bg-muted rounded-full"></div>
-        <div className="h-6 w-20 bg-muted rounded-full"></div>
-      </div>
+      <div className="h-3 bg-muted rounded w-1/4" />
     </div>
-  </div>
-);
+  );
+}

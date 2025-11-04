@@ -1,168 +1,180 @@
-import { eq, inArray, and, or, like } from 'drizzle-orm';
+import { eq, or, inArray } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { news } from '../../db/schema';
-import { NewsApiItem } from './types';
+import type { NewsApiItem } from './types';
 import { DuplicateError } from './error-handler';
 
+// Simple console logger if the logger module is not available
+const logger = {
+  error: (message: string, data?: any) => console.error(`[ERROR] ${message}`, data || ''),
+  info: (message: string, data?: any) => console.log(`[INFO] ${message}`, data || '')
+};
+
+
 /**
- * Haber duplicate olup olmadığını kontrol eder
- * @param apiItem - API'den gelen haber
- * @returns Duplicate ise true, değilse false
+ * Checks if a news item is a duplicate using source_guid and id fields
+ * @param apiItem - News item from API
+ * @returns Promise<boolean> - true if duplicate exists
  */
 export async function checkDuplicateNews(apiItem: NewsApiItem): Promise<boolean> {
   try {
-    // source_guid ile kontrol (primary duplicate check)
-    const guidCheck = await db
-      .select()
+    // Check for duplicates using source_guid and id
+    const [existing] = await db
+      .select({ id: news.id })
       .from(news)
-      .where(eq(news.source_guid, apiItem.source_guid))
-      .limit(1);
-
-    if (guidCheck.length > 0) {
-      return true;
-    }
-
-    // source_id ile kontrol (fallback)
-    if (apiItem.id) {
-      // Check for similar titles using source_id and title similarity
-      const titleCheck = await db
-        .select()
-        .from(news)
-        .where(
-          and(
-            eq(news.source_id, apiItem.source_id),
-            or(
-              eq(news.seo_title, apiItem.seo_title),
-              like(news.seo_title, `${apiItem.seo_title}%`),
-              like(news.seo_title, `%${apiItem.seo_title}`)
-            )
-          )
+      .where(
+        or(
+          // Match by source_guid (primary key)
+          eq(news.source_guid, apiItem.source_guid),
+          // Or match by source_id if available
+          ...(apiItem.id ? [eq(news.source_id, String(apiItem.id))] : [])
         )
-        .limit(1);
-
-      if (titleCheck.length > 0) {
-        return true;
-      }
-
-      const idCheck = await db
-        .select()
-        .from(news)
-        .where(eq(news.source_id, apiItem.id))
-        .limit(1);
-
-      if (idCheck.length > 0) {
-        return true;
-      }
-    }
-
-    return false;
+      )
+      .limit(1);
+    
+    return !!existing;
   } catch (error) {
-    console.error('Error checking duplicate news:', error);
-    // Database error durumunda false döneriz, duplicate olarak kabul etmeyiz
+    logger.error('Error checking duplicate news', {
+      error,
+      source_guid: apiItem.source_guid,
+      source_id: apiItem.id
+    });
+    
+    // In case of error, assume it's not a duplicate to avoid data loss
     return false;
   }
 }
 
 /**
- * Bulk duplicate check
- * @param apiItems - API'den gelen haberler array
- * @returns Duplicate olan haberlerin ID'leri
+ * Bulk duplicate check using source_guid and id fields
+ * @param apiItems - Array of news items from API
+ * @returns Array of duplicate item IDs
  */
 export async function checkBulkDuplicates(apiItems: NewsApiItem[]): Promise<string[]> {
+  if (apiItems.length === 0) return [];
+  
   try {
-    const duplicates: string[] = [];
-
-    // Tüm source_guid'leri topla
+    // Extract all source_guids and ids for batch checking
     const sourceGuids = apiItems.map(item => item.source_guid);
     const sourceIds = apiItems
-      .filter((item): item is NewsApiItem & { id: string } => Boolean(item.id))
-      .map((item) => item.id);
-
-    // Database query ile tüm duplicate'ları bir kerede kontrol et
-    let existingNews: any[] = [];
-
-    if (sourceGuids.length > 0) {
-      const guidResults = await db
-        .select({
-          source_guid: news.source_guid,
-          source_id: news.source_id,
-        })
-        .from(news)
-        .where(inArray(news.source_guid, sourceGuids));
-      existingNews.push(...guidResults);
-    }
-
-    if (sourceIds.length > 0) {
-      const existingNews = await db
-        .select({ source_id: news.source_id })
-        .from(news)
-        .where(inArray(news.source_id, sourceIds as string[]));
-
-      const existingSourceIds = new Set(
-        existingNews.map((item) => item.source_id)
+      .map(item => item.id)
+      .filter((id): id is string => id !== undefined && id !== null)
+      .map(String);
+    
+    // Find all potential duplicates in a single query
+    const duplicates = await db
+      .select({
+        source_guid: news.source_guid,
+        source_id: news.source_id
+      })
+      .from(news)
+      .where(
+        or(
+          inArray(news.source_guid, sourceGuids),
+          ...(sourceIds.length > 0 ? [inArray(news.source_id, sourceIds)] : [])
+        )
       );
-
-      return sourceIds.filter((id) => existingSourceIds.has(id));
-    }
-
-    // Her API item için duplicate kontrolü
-    for (const apiItem of apiItems) {
-      const isDuplicate = existingNews.some(existing =>
-        existing.source_guid === apiItem.source_guid ||
-        (apiItem.id && existing.source_id === apiItem.id)
-      );
-
-      if (isDuplicate) {
-        duplicates.push(apiItem.id || apiItem.source_guid);
-      }
-    }
-
-    return duplicates;
+    
+    // Convert to sets for O(1) lookups
+    const duplicateGuids = new Set(
+      duplicates.map(d => d.source_guid).filter(Boolean) as string[]
+    );
+    
+    const duplicateIds = new Set(
+      duplicates.map(d => d.source_id).filter(Boolean) as string[]
+    );
+    
+    // Find all items that match any duplicate identifier
+    return apiItems
+      .filter(item => {
+        const hasMatchingGuid = duplicateGuids.has(item.source_guid);
+        const hasMatchingId = item.id ? duplicateIds.has(String(item.id)) : false;
+        return hasMatchingGuid || hasMatchingId;
+      })
+      .map(item => item.id || item.source_guid);
   } catch (error) {
-    console.error('Error checking bulk duplicates:', error);
-    // Hata durumunda boş array döneriz
-    return [];
+    logger.error('Bulk duplicate check failed', { error });
+    throw new Error('Failed to check for duplicates in bulk');
   }
 }
 
 /**
- * Haber zaten varsa güncelleme yapar, yoksa hata fırlatır
- * @param apiItem - API'den gelen haber
- * @param throwOnDuplicate - Duplicate ise hata fırlat
- * @returns Duplicate kontrol sonucu
+ * Handles duplicate checking with proper error handling and logging
+ * @param apiItem - News item to check
+ * @param throwOnDuplicate - Whether to throw on duplicate
+ * @returns Object with duplicate status and existing news if found
  */
 export async function handleDuplicateCheck(
   apiItem: NewsApiItem,
   throwOnDuplicate: boolean = true
 ): Promise<{ isDuplicate: boolean; existingNews?: any }> {
-  const isDuplicate = await checkDuplicateNews(apiItem);
-
-  if (isDuplicate && throwOnDuplicate) {
-    throw new DuplicateError(
-      `News already exists with source_guid: ${apiItem.source_guid}`,
-      'source_guid'
+  try {
+    const existing = await findExistingNews(apiItem);
+    
+    if (existing) {
+      logger.info('Found duplicate news item', {
+        source_guid: apiItem.source_guid,
+        source_id: apiItem.id,
+        title: apiItem.seo_title?.substring(0, 100)
+      });
+      
+      if (throwOnDuplicate) {
+        throw new DuplicateError(
+          `News with source_guid ${apiItem.source_guid} already exists`,
+          'source_guid'
+        );
+      }
+      return { isDuplicate: true, existingNews: existing };
+    }
+    
+    return { isDuplicate: false };
+  } catch (error) {
+    logger.error('Error during duplicate check', {
+      error,
+      source_guid: apiItem.source_guid,
+      source_id: apiItem.id
+    });
+    
+    if (error instanceof DuplicateError) {
+      throw error;
+    }
+    
+    throw new Error(
+      `Duplicate check failed: ${error instanceof Error ? error.message : String(error)}`
     );
   }
-
-  return { isDuplicate };
 }
 
 /**
- * Veritabanında duplicate haber olup olmadığını kontrol eder ve detayları döner
- * @param apiItem - API'den gelen haber
- * @returns Duplicate haber bilgileri
+ * Finds an existing news item using source_guid and id
+ * @param apiItem - News item to find
+ * @returns The existing news item or null if not found
  */
 export async function findExistingNews(apiItem: NewsApiItem): Promise<any | null> {
   try {
-    const existing = await db
+    const conditions = [
+      // Match by source_guid (primary key)
+      eq(news.source_guid, apiItem.source_guid)
+    ];
+    
+    // Add source_id condition if available
+    if (apiItem.id) {
+      conditions.push(eq(news.source_id, String(apiItem.id)));
+    }
+    
+    const [existing] = await db
       .select()
       .from(news)
-      .where(eq(news.source_guid, apiItem.source_guid))
+      .where(or(...conditions))
       .limit(1);
-
-    return existing[0] || null;
+      
+    return existing || null;
   } catch (error) {
-    console.error('Error finding existing news:', error);
+    logger.error('Error finding existing news', {
+      error,
+      source_guid: apiItem.source_guid,
+      source_id: apiItem.id
+    });
     return null;
   }
 }
