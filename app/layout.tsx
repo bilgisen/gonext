@@ -9,6 +9,7 @@ import '../styles/globals.css';
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from '@/components/footer';
 import { GeistSans } from 'geist/font/sans';
+import UserProfile from "@/components/UserProfile.server";
 
 // Base metadata that provides sensible defaults but allows child routes to override
 export const metadata: Metadata = {
@@ -89,7 +90,7 @@ export default function RootLayout({
                   <NavMenu className="hidden md:block" />
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
-                  <ThemeToggle />
+                  <ThemeToggle />  <UserProfile mini={true} />
                   <div className="md:hidden">
                     <NavigationSheet />
                   </div>

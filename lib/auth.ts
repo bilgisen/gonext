@@ -1,3 +1,5 @@
+// lib/auth.ts
+
 import { db } from "@/db";
 import { account, session, subscription, user, verification } from "@/db/schema";
 import {
@@ -11,6 +13,7 @@ import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { admin } from "better-auth/plugins";
 
 // Utility function to safely parse dates
 function safeParseDate(value: string | Date | null | undefined): Date | null {
@@ -21,7 +24,7 @@ function safeParseDate(value: string | Date | null | undefined): Date | null {
 
 const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN,
-  server: "sandbox",
+  server: "production",
 });
 
 export const auth = betterAuth({
@@ -41,6 +44,7 @@ export const auth = betterAuth({
       subscription,
     },
   }),
+  // session: { includeUser: true }, // Bu satır HATALI, kaldırıldı
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -148,7 +152,7 @@ export const auth = betterAuth({
                   .onConflictDoUpdate({
                     target: subscription.id,
                     set: {
-                      modifiedAt: subscriptionData.modifiedAt || new Date(),
+                      modifiedAt: subscriptionData.modifiedAt,
                       amount: subscriptionData.amount,
                       currency: subscriptionData.currency,
                       recurringInterval: subscriptionData.recurringInterval,
@@ -180,7 +184,6 @@ export const auth = betterAuth({
                   "💥 Error processing subscription webhook:",
                   error,
                 );
-                // Don't throw - let webhook succeed to avoid retries
               }
             }
           },
@@ -188,5 +191,11 @@ export const auth = betterAuth({
       ],
     }),
     nextCookies(),
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin"],
+      adminUserIds: [], // Add admin user IDs here if needed
+      impersonationSessionDuration: 60 * 60 // 1 hour
+    })
   ],
 });

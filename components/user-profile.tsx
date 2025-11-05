@@ -9,11 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface UserInfo {
   id: string;
@@ -39,18 +39,18 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
       const result = await authClient.getSession();
 
       if (!result.data?.user) {
-        router.push("/sign-in");
-        return;
+        // Oturum açılmamışsa, kullanıcı bilgisi null olur, hata falan yok
+        setUserInfo(null);
+      } else {
+        setUserInfo(result.data?.user);
       }
-
-      setUserInfo(result.data?.user);
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError("Failed to load user profile. Please try refreshing the page.");
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     fetchUserData();
@@ -60,7 +60,8 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/sign-in"); // redirect to login page
+          setUserInfo(null); // Zustand veya client-side state'i temizle
+          router.push("/sign-in");
         },
       },
     });
@@ -78,11 +79,35 @@ export default function UserProfile({ mini }: { mini?: boolean }) {
     );
   }
 
+  // Oturum açılmamışsa, sadece Avatar ve tıklanınca /sign-in'e yönlendirme
+  if (!loading && !userInfo) {
+    return (
+      <div
+        className={`flex gap-2 justify-start items-center w-full rounded cursor-pointer ${mini ? "" : "px-4 pt-2 pb-3"}`}
+        onClick={() => router.push("/sign-in")}
+      >
+        <Avatar>
+          <AvatarFallback className="bg-gray-100 dark:bg-gray-800">
+            <UserIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          </AvatarFallback>
+        </Avatar>
+        {!mini && (
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-md text-gray-500 dark:text-gray-400">
+              Sign In
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Oturum açılmışsa, Dropdown menüsüyle birlikte Avatar
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div
-          className={`flex gap-2 justify-start items-center w-full rounded ${mini ? "" : "px-4 pt-2 pb-3"}`}
+          className={`flex gap-2 justify-start items-center w-full rounded cursor-pointer ${mini ? "" : "px-4 pt-2 pb-3"}`}
         >
           <Avatar>
             {loading ? (
