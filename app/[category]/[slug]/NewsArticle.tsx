@@ -3,7 +3,8 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Clock, ArrowLeft, Heart, Bookmark } from 'lucide-react';
+import { Clock, ArrowLeft, Heart } from 'lucide-react';
+import BookmarkButton from '@/components/BookmarkButton';
 import { Button } from '@/components/ui/button';
 // MarkdownRenderer is no longer needed as we're using pre-rendered HTML
 import ShareButton from '@/components/ui/share-button';
@@ -177,9 +178,12 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
           <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
             <Heart className="w-4 h-4" />
           </button>
-          <button className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
-            <Bookmark className="w-4 h-4" />
-          </button>
+          <BookmarkButton 
+            newsId={newsItem.id} 
+            showLabel={false}
+            className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
+            iconClassName="w-4 h-4"
+          />
           <ShareButton 
             url={`${typeof window !== 'undefined' ? window.location.href : ''}`}
             title={newsItem.seo_title || newsItem.title || ''}

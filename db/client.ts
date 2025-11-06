@@ -3,6 +3,7 @@
 import { config } from 'dotenv';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
+import * as schema from './schema';
 
 // Load environment variables safely (ignore isTTY errors)
 try {
@@ -44,8 +45,10 @@ console.log('🔌 Connecting to database:', databaseUrl.replace(/\/\/.*@/, '//**
 // Create a database connection with HTTP client
 const sql = neon(databaseUrl);
 
-// Create a drizzle instance with the HTTP client
-export const db = drizzle(sql);
+// Create a drizzle instance with the HTTP client and schema
+export const db = drizzle(sql, { schema });
+
+export type Database = typeof db;
 
 // Test the connection
 sql`SELECT 1`

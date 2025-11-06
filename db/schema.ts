@@ -262,6 +262,7 @@ export const news = pgTable("news", {
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at"),
   meta: json("meta"), // Indexing / misc metadata
+  view_count: integer("view_count").default(0).notNull(), // Varsayılan 0, null olamaz
 }, (table) => ({
   slug_idx: uniqueIndex("news_slug_idx").on(table.slug),
   source_guid_idx: uniqueIndex("news_source_guid_idx").on(table.source_guid),
@@ -271,6 +272,7 @@ export const news = pgTable("news", {
   source_idx: index("news_source_fk_idx").on(table.source_fk),
   editor_idx: index("news_editor_id_idx").on(table.editor_id),
   visibility_idx: index("news_visibility_idx").on(table.visibility),
+  view_count_idx: index("news_view_count_idx").on(table.view_count),
 }));
 
 /**
@@ -372,11 +374,11 @@ export const news_views = pgTable("news_views", {
 }));
 
 /**
- * news_reactions: Kullanıcı tepkileri (like/dislike)
+ * news_favorites: Kullanıcı favorileri (sadece favori/degil)
  * - Better-auth user_id ile ilişkili
- * - Bir kullanıcı bir habere sadece 1 reaction verebilir (UNIQUE constraint)
+ * - Bir kullanıcı bir haberi sadece 1 kez favori yapabilir (UNIQUE constraint)
  */
-export const news_reactions = pgTable("news_reactions", {
+export const news_favorites = pgTable("news_favorites", {
   id: serial("id").primaryKey(),
   news_id: integer("news_id")
     .references(() => news.id, { onDelete: "cascade" })
@@ -384,15 +386,12 @@ export const news_reactions = pgTable("news_reactions", {
   user_id: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  reaction_type: varchar("reaction_type", { length: 20 }).notNull(), // 'like' or 'dislike'
   created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
-  news_idx: index("news_reactions_news_id_idx").on(table.news_id),
-  user_idx: index("news_reactions_user_id_idx").on(table.user_id),
-  type_idx: index("news_reactions_type_idx").on(table.reaction_type),
-  news_type_idx: index("news_reactions_news_type_idx").on(table.news_id, table.reaction_type),
-  unique_user_news: unique("news_reactions_unique").on(table.news_id, table.user_id),
+  news_idx: index("news_favorites_news_id_idx").on(table.news_id),
+  user_idx: index("news_favorites_user_id_idx").on(table.user_id),
+  // news ve user kombinasyonu unique olmalı
+  unique_user_news: unique("news_favorites_unique").on(table.news_id, table.user_id),
 }));
 
 /**

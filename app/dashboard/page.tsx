@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { UserBookmarks } from '@/components/user/UserBookmarks';
 
 export default async function Dashboard() {
   const result = await auth.api.getSession({
@@ -18,9 +19,7 @@ export default async function Dashboard() {
           <h1 className="text-3xl font-semibold tracking-tight">
             Interactive Chart
           </h1>
-          <p className="text-muted-foreground">
-            Interactive chart with data visualization and interactive elements.
-          </p>
+      <UserBookmarks limit={5} />
         </div>
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

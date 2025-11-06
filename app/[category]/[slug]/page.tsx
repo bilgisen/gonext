@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { NewsArticle } from './NewsArticle';
 import { NewsItem } from '@/types/news';
+import { ViewTracker } from './ViewTracker';
 
 
 /**
@@ -204,6 +205,12 @@ export default async function Page(props: PageProps) {
           <section>
             <NewsArticle newsItem={newsItem} />
           </section>
+          {newsItem && (
+            <>
+              <ViewTracker newsId={newsItem.id} />
+              <JsonLd newsItem={newsItem} />
+            </>
+          )}
         </div>
       </main>
     </>

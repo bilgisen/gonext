@@ -24,7 +24,17 @@ const BlobImage = memo(function BlobImage({
   // Memoize the image URL to prevent recreation on every render
   const imageUrl = useMemo(() => {
     if (!imageKey) return '';
-    return `/api/images/${encodeURIComponent(imageKey)}`;
+    
+    // If it's already a full URL, extract just the filename
+    if (imageKey.startsWith('http')) {
+      const url = new URL(imageKey);
+      const filename = url.pathname.split('/').pop();
+      return `/api/images/${filename}`;
+    }
+    
+    // If it's a path, extract just the filename
+    const filename = imageKey.split('/').pop() || '';
+    return `/api/images/${encodeURIComponent(filename)}`;
   }, [imageKey]);
   
   // Handle image error

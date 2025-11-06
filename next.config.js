@@ -7,11 +7,13 @@ const nextConfig = {
   
   // Enable server actions
   experimental: {
-    serverActions: {}
+    serverActions: {},
+    // serverComponentsExternalPackages yerine serverExternalPackages kullanın
+    // serverComponentsExternalPackages: ['ioredis'], // Eski hali
   },
   
-  // Ensure proper module resolution for Netlify deployment
-  serverExternalPackages: ['@netlify/neon'],
+  // serverExternalPackages seçeneğini ana seviyeye taşıyın
+  serverExternalPackages: ['ioredis', '@netlify/neon'], // Redis ve Netlify için birleştirildi
   
   // Fix for module resolution in app directory
   transpilePackages: [],
@@ -58,6 +60,11 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      // Redis için gerekli domain
+      {
+        protocol: 'https',
+        hostname: 'clear-gnat-33879.upstash.io', // Redis sunucu adresiniz
+      },
     ],
     // Enable Netlify Image CDN in production
     loader: 'default',
@@ -77,6 +84,29 @@ const nextConfig = {
   
   // Configure page extensions
   pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mdx'],
+
+  // Güvenlik başlıklarını ekleyin
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
