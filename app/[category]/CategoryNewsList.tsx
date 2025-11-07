@@ -7,7 +7,7 @@ import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers, type NewsFilters } from '@/lib/urlFilters';
 import { cn } from '@/lib/utils';
 import { CATEGORY_MAPPINGS } from '@/types/news';
-import FrontCategoryFeatNewsCard from '@/components/cards/category-newscard';
+import NewsCard from '@/components/cards/NewsCard';
 import { CategoryHero } from './categoryHero';
 
 interface CategoryNewsListProps {
@@ -108,12 +108,24 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[400px] rounded-xl bg-muted/20 border border-border/30"
-          />
+          <div key={i} className="space-y-4">
+            <div className="h-48 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 animate-pulse" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse mt-2" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse" />
+            </div>
+            <div className="flex justify-between items-center pt-2">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse" />
+              <div className="flex space-x-2">
+                <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -173,11 +185,14 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
         {/* First 2 items as CategoryHero in 2/3 - 1/3 layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {allNews.slice(0, 2).map((newsItem, index) => (
-            <div key={newsItem.id} className={cn(
-              index === 0 ? 'md:col-span-2' : 'md:col-span-1',
-              index === 1 ? 'hidden md:block' : '',
-              'flex flex-col h-full'
-            )}>
+            <div 
+              key={newsItem.id} 
+              className={cn(
+                index === 0 ? 'md:col-span-2' : 'md:col-span-1',
+                index === 1 ? 'hidden md:block' : '',
+                'flex flex-col h-full'
+              )}
+            >
               <CategoryHero 
                 news={newsItem} 
                 variant={index === 0 ? 'large' : 'small'}
@@ -187,29 +202,33 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
           ))}
         </div>
         
-        {/* Remaining items as featured news cards */}
+        {/* Remaining items in a 3-column grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allNews.slice(2).map((newsItem) => (
-            <FrontCategoryFeatNewsCard 
-              key={newsItem.id} 
-              item={newsItem} 
+            <NewsCard 
+              key={newsItem.id}
+              item={newsItem}
+              variant="compact"
+              className="h-full"
               showCategory={false}
               showDate={true}
               showReadTime={true}
               showDescription={true}
+              showShare={true}
+              showFavorite={true}
             />
           ))}
         </div>
       </div>
 
       {hasNextPage && (
-        <div className="text-center">
+        <div className="flex justify-center mt-8">
           <button
             onClick={handleLoadMore}
             disabled={isFetchingNextPage}
-            className="px-6 py-3 bg-primary/60 text-foreground rounded-lg hover:bg-primary disabled:opacity-50"
+            className="px-8 py-2 bg-primary/60 text-foreground rounded-lg hover:bg-primary disabled:opacity-50"
           >
-            {isFetchingNextPage ? 'Loading...' : 'Load More News'}
+            {isFetchingNextPage ? 'Loading...' : 'Load More'}
           </button>
         </div>
       )}

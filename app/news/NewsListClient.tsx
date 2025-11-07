@@ -3,10 +3,10 @@
 
 import { useState, useMemo } from 'react';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
-import FrontCategoryLayoutOne from '@/components/front-category/headlines';
 import { Button } from '@/components/ui/button';
-import BlobImage from '@/components/BlobImage';
-import { Calendar, Clock } from 'lucide-react';
+import NewsCard from '@/components/cards/NewsCard';
+import NewsLayout from '@/components/cards/NewsLayout';
+import type { NewsItem } from '@/types/news';
 
 interface NewsListClientProps {
   initialFilters?: {
@@ -48,10 +48,33 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
     sortOrder: apiSort.sortOrder,
   });
 
-  // Flatten all pages of items
-  const allItems = useMemo(() => {
-    if (!data?.pages) return [];
-    return data.pages.flatMap((page) => page.items || []);
+  // Flatten all pages of items and group them for layouts
+  const { featuredItems, layoutItems } = useMemo(() => {
+    if (!data?.pages) return { featuredItems: [], layoutItems: [] };
+    
+    const allItems = data.pages.flatMap((page) => page.items || []) as NewsItem[];
+    const featured = allItems.slice(0, 2);
+    const remaining = allItems.slice(2);
+    
+    // Group remaining items into chunks of 3 for layout patterns
+    const layoutGroups: Array<{
+      main: NewsItem;
+      side: [NewsItem, NewsItem];
+      variant: 'a' | 'b';
+    }> = [];
+    
+    for (let i = 0; i < remaining.length; i += 3) {
+      const group = remaining.slice(i, i + 3);
+      if (group.length === 3) {
+        layoutGroups.push({
+          main: group[0],
+          side: [group[1], group[2]] as [NewsItem, NewsItem],
+          variant: (Math.floor(i / 3) % 2 === 0 ? 'a' : 'b') as 'a' | 'b'
+        });
+      }
+    }
+    
+    return { featuredItems: featured, layoutItems: layoutGroups };
   }, [data]);
 
   const handleLoadMore = () => {
@@ -79,7 +102,7 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
   }
 
   // Loading state
-  if (isLoading && !allItems.length) {
+  if (isLoading && !featuredItems.length && !layoutItems.length) {
     return (
       <div className="space-y-6">
         {Array.from({ length: 3 }).map((_, i) => (
@@ -90,7 +113,7 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
   }
 
   // No results
-  if (!allItems.length) {
+  if (!featuredItems.length && !layoutItems.length) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground mb-4">No news articles found.</p>
@@ -135,57 +158,52 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
       </div>
 
       {/* News grid */}
-      <div className="space-y-8">
-        {allItems.length > 0 && (
-          <FrontCategoryLayoutOne
-            initialData={{
-              mainItem: allItems[0],
-              leftItems: allItems.slice(1, 3),
-              rightItems: allItems.slice(3, 6)
-            }}
-          />
+      <div className="space-y-12">
+        {/* Featured section */}
+        {featuredItems.length > 0 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Featured Stories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {featuredItems.map((item) => (
+                <NewsCard 
+                  key={item.id} 
+                  item={item} 
+                  variant="medium"
+                  className="h-full"
+                  showDescription={true}
+                />
+              ))}
+            </div>
+          </div>
         )}
-        {allItems.length > 6 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allItems.slice(6).map((item) => (
-              <div key={item.id} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-                {item.image && (
-                  <div className="aspect-video bg-gray-100 relative">
-                    <BlobImage
-                      imageKey={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
+
+        {/* Latest News with alternating layouts */}
+        {layoutItems.length > 0 && (
+          <div className="space-y-12">
+            <h2 className="text-2xl font-bold">Latest News</h2>
+            <div className="space-y-8">
+              {layoutItems.map((layout, index) => {
+                // Ensure we have exactly 2 side items
+                const sideNews: [NewsItem, NewsItem] = [
+                  layout.side[0],
+                  layout.side[1] || layout.side[0] // Fallback to first item if second is missing
+                ];
+                
+                return (
+                  <div key={index} className="space-y-2">
+                    <NewsLayout
+                      mainNews={layout.main}
+                      sideNews={sideNews}
+                      variant={layout.variant}
+                      showCategory={true}
+                      showDate={true}
+                      showReadTime={true}
+                      showDescription={true}
                     />
                   </div>
-                )}
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm line-clamp-3">
-                    {item.excerpt}
-                  </p>
-                  <div className="mt-3 flex items-center text-xs text-gray-500">
-                    {item.published_at && (
-                      <time dateTime={item.published_at} className="flex items-center">
-                        <Calendar className="w-3.5 h-3.5 mr-1" />
-                        {new Date(item.published_at).toLocaleDateString('tr-TR', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </time>
-                    )}
-                    {item.read_time > 0 && (
-                      <span className="flex items-center ml-4">
-                        <Clock className="w-3.5 h-3.5 mr-1" />
-                        {item.read_time} dk
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -209,14 +227,24 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
 // Loading skeleton component
 function NewsCardSkeleton() {
   return (
-    <div className="animate-pulse space-y-4">
-      <div className="aspect-video bg-muted rounded-lg" />
-      <div className="space-y-2">
-        <div className="h-4 bg-muted rounded w-3/4" />
-        <div className="h-4 bg-muted rounded w-1/2" />
-        <div className="h-4 bg-muted rounded w-2/3" />
+    <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
+      <div className="relative w-full pt-[56.25%] bg-gray-200 dark:bg-gray-800 animate-pulse" />
+      <div className="p-4 space-y-3">
+        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/4 mb-2 animate-pulse" />
+        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-3 animate-pulse" />
+        <div className="space-y-2">
+          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-5/6 animate-pulse" />
+        </div>
+        <div className="flex justify-between items-center mt-4 pt-3 border-t border-border">
+          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/4 animate-pulse" />
+          <div className="flex space-x-2">
+            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+          </div>
+        </div>
       </div>
-      <div className="h-3 bg-muted rounded w-1/4" />
     </div>
   );
 }

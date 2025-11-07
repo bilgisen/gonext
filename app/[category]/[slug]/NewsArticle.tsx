@@ -162,7 +162,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         <h1 className="text-4xl md:text-5xl sm:text-2xl font-medium tracking-tight mb-4">{newsItem.seo_title || 'No Title'}</h1>
 
         {newsItem.seo_description && (
-          <p className="text-xl text-muted-foreground mb-4">{newsItem.seo_description}</p>
+          <h3 className="text-2xl text-muted-foreground mb-4">{newsItem.seo_description}</h3>
         )}
 
 
@@ -218,7 +218,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       )}
 
       {/* Article Content */}
-      <div className="prose dark:prose-invert max-w-none text-md mb-8">
+      <div className="article dark:prose-invert max-w-none text-md mb-8">
         {newsItem.content_html || newsItem.content ? (
           <div 
             className="prose dark:prose-invert max-w-none"

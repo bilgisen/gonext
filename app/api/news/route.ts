@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
   
   try {
     const { searchParams } = new URL(request.url);
+    // Get offset first to avoid declaration order issues
+    const offset = searchParams.get('offset');
     const page = getNumberParam(searchParams, 'page', 1);
     const limit = Math.min(getNumberParam(searchParams, 'limit', 10), 100);
     const category = searchParams.get('category');
@@ -42,7 +44,7 @@ export async function GET(request: NextRequest) {
     const tags = splitAndTrim(searchParams.get('tags'));
 
     console.log('📋 Request Parameters:', {
-      page,
+      ...(offset !== null ? { offset } : { page }),
       limit,
       category,
       tag,
@@ -56,9 +58,10 @@ export async function GET(request: NextRequest) {
       tags
     });
 
+    // Offset is already declared at the top
+    
     // Build the filters object
-    const filters = {
-      page,
+    const filters: any = {
       limit,
       ...(category ? { category } : {}),
       ...(tag ? { tag } : {}),
@@ -71,6 +74,13 @@ export async function GET(request: NextRequest) {
       ...(categories.length > 0 ? { categories } : {}),
       ...(tags.length > 0 ? { tags } : {}),
     };
+    
+    // Use either offset or page-based pagination
+    if (offset !== null) {
+      filters.offset = parseInt(offset, 10);
+    } else {
+      filters.page = page;
+    }
 
     console.log('🔍 Database query filters:', JSON.stringify(filters, null, 2));
 

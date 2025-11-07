@@ -78,9 +78,11 @@ export function useNews(options: UseNewsOptions = {}) {
     const queryKey = newsKeys.list(finalQueryKey);
     
     const params = new URLSearchParams();
+    // Always use offset-based pagination if offset is provided
     if (offset !== undefined) {
       params.append('offset', offset.toString());
       params.append('limit', limit.toString());
+      // Make sure we don't include page parameter when using offset
     } else {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
@@ -105,31 +107,34 @@ export function useNews(options: UseNewsOptions = {}) {
     console.log('useNews - Offset:', offset);
   }, [queryKey, queryParams, offset]);
 
-  // Always use useQuery, and handle the response format
+  // Use the query with proper typing
   const queryResult = useQuery({
     queryKey,
     queryFn: async () => {
-      try {
-        const response = await fetch(`/api/news?${queryParams.toString()}`);
-        const data = await response.json();
-        
-        if (!response.ok) {
-          const errorMessage = data?.error || 'Network response was not ok';
-          const errorDetails = data?.details || '';
-          throw new Error(`${errorMessage}${errorDetails ? `: ${errorDetails}` : ''}`);
-        }
-        
-        // Ensure the response has the expected structure
-        if (!data || !data.data) {
-          console.error('Invalid API response format:', data);
-          throw new Error('Invalid API response format');
-        }
-        
-        return data;
-      } catch (error) {
-        console.error('Error fetching news:', error);
-        throw error;
+      const url = `/api/news?${queryParams.toString()}`;
+      console.log('🌐 Fetching news from:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to fetch news');
       }
+      
+      const result = await response.json();
+      console.log('📦 News API Response:', {
+        success: result.success,
+        count: result.data?.items?.length,
+        total: result.data?.total,
+        hasMore: result.data?.has_more,
+        offset: offset,
+        limit: limit
+      });
+      
+      return {
+        ...result.data,
+        offset: offset !== undefined ? offset : undefined,
+        limit: limit
+      };
     },
     enabled,
     staleTime: 5 * 60 * 1000,
@@ -146,9 +151,9 @@ export function useNews(options: UseNewsOptions = {}) {
     
     try {
       // Handle different response formats
-      if (Array.isArray(queryResult.data.data?.items)) {
-        items = queryResult.data.data.items;
-        total = queryResult.data.data.total || 0;
+      if (Array.isArray(queryResult.data.items)) {
+        items = queryResult.data.items;
+        total = queryResult.data.total || 0;
       } else if (Array.isArray(queryResult.data.data)) {
         items = queryResult.data.data;
         total = queryResult.data.total || items.length;

@@ -35,7 +35,7 @@ export default function DashboardTopNav({ children }: { children: ReactNode }) {
                 <SheetTitle>Pass Builder</SheetTitle>
               </Link>
             </SheetHeader>
-            <div className="flex flex-col space-y-3 mt-[1rem]">
+            <div className="flex flex-col space-y-3 mt-4">
               <DialogClose asChild>
                 <Link prefetch={true} href="/dashboard">
                   <Button variant="outline" className="w-full">

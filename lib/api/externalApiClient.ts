@@ -120,9 +120,14 @@ class DatabaseApiClient {
 
   async getNews(filters: NewsFilters = {}): Promise<NewsListResponse> {
     console.log('🔍 getNews filters:', JSON.stringify(filters, null, 2));
-    const page = filters.page || 1;
     const limit = Math.min(filters.limit || 20, 100);
-    const offset = (page - 1) * limit;
+    
+    // Use provided offset if available, otherwise calculate from page
+    const offset = filters.offset !== undefined 
+      ? parseInt(filters.offset.toString(), 10) 
+      : ((filters.page || 1) - 1) * limit;
+      
+    console.log('📊 Pagination:', { offset, limit, page: filters.page });
     const whereConditions: SQL[] = [];
     
     // Log all categories in the database
@@ -238,18 +243,27 @@ class DatabaseApiClient {
       ? baseQuery.where(whereExpr)
       : baseQuery;
 
-    const items = await queryWithConditions
+    // Execute the query with proper typing
+    const query = queryWithConditions
       .orderBy(desc(news.published_at))
-      .limit(limit)
-      .offset(offset);
-
+      .offset(offset)
+      .limit(limit);
+    
+    console.log('📊 Query executed with:', { offset, limit });
+    
+    // Execute count query first
     const countQuery = db.select({ count: sql<number>`count(*)`.as('count') }).from(news);
     const countResult = whereExpr 
       ? await countQuery.where(whereExpr)
       : await countQuery;
 
     const total = Number(countResult[0]?.count) || 0;
-    const has_more = page * limit < total;
+    
+    // Execute the main query
+    const items = await query;
+    
+    // Calculate if there are more items
+    const has_more = offset + limit < total;
 
     const newsItems = await Promise.all(
       items.map((item) => {
@@ -263,7 +277,17 @@ class DatabaseApiClient {
       })
     );
 
-    return { items: newsItems, total, page, limit, has_more };
+    // Calculate page number from offset and limit
+    const currentPage = Math.floor(offset / limit) + 1;
+
+    return { 
+      items: newsItems, 
+      total, 
+      page: currentPage, 
+      limit, 
+      has_more,
+      offset
+    };
   }
 
   async getNewsById(id: string): Promise<NewsItem | null> {

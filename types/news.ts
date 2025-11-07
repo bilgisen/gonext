@@ -265,6 +265,7 @@ export interface NewsListResponse {
   page: number;
   limit: number;
   has_more: boolean;
+  offset: number;
 }
 
 /**

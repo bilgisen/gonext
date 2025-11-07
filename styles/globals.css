@@ -1,10 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* keep your custom variant for .dark: utilities */
 @custom-variant dark (&:is(.dark *));
 
-/* Inline theme variables mapping (unchanged structure) */
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -45,247 +43,160 @@
     --radius-xl: 20px;
 }
 
+/* Açık Tema */
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.98 0 0); /* #F8F9FA */
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.421 0.095 180); /* teal-700 */
-  --primary-foreground: oklch(0.7 0.18 70); /* amber for light mode */
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.795 0.184 86.047);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.795 0.184 86.047);
-  --sidebar-primary-foreground: oklch(0.421 0.095 57.708);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.795 0.184 86.047);
+    /* Apple Light Theme Colors */
+    --background: #f2f8ec;
+    --foreground: #000000;
+    --card: #ffffff;
+    --card-foreground: #000000;
+    --popover: #ffffff;
+    --popover-foreground: #000000;
+    --primary: #0071e3; /* Apple Blue */
+    --primary-foreground: #ffffff;
+    --secondary: #f5f5f7; /* Apple Light Gray */
+    --secondary-foreground: #1d1d1f;
+    --muted: #f5f5f7;
+    --muted-foreground: #86868b;
+    --accent: #0071e3; /* Apple Blue */
+    --accent-foreground: #ffffff;
+    --destructive: #ff3b30; /* Apple Red */
+    --destructive-foreground: #ffffff;
+    --border: #e2e2e7; /* Lighter, more subtle border */
+    --input: #f5f5f7;
+    --ring: #0071e3;
+    --chart-1: #0071e3; /* Apple Blue */
+    --chart-2: #34c759; /* Apple Green */
+    --chart-3: #ff9500; /* Apple Orange */
+    --chart-4: #ffcc00; /* Apple Yellow */
+    --chart-5: #af52de; /* Apple Purple */
+    --sidebar: #f5f5f7;
+    --sidebar-foreground: #1d1d1f;
+    --sidebar-primary: #0071e3;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e8e8ed;
+    --sidebar-accent-foreground: #1d1d1f;
+    --sidebar-border: #e2e2e7; /* Lighter border */
+    --sidebar-ring: #0071e3;
+    /* Apple Fonts */
+    --font-apple-system:
+        -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue",
+        Helvetica, sans-serif;
+    --font-sf-mono: "SF Mono", Menlo, monospace;
+    --font-sans: var(--font-apple-system);
+    --font-serif: "New York", Georgia, serif;
+    --font-mono: var(--font-sf-mono);
+    /* Apple uses more rounded corners */
+    --radius: 10px;
+    /* Apple-style shadows */
+    --shadow-2xs: 0px 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-xs: 0px 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0px 12px 24px rgba(0, 0, 0, 0.1);
+    --shadow-2xl: 0px 16px 32px rgba(0, 0, 0, 0.1);
 }
 
+/* Koyu Tema */
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.15 175); /* teal-500 */
-  --primary-foreground: oklch(0.8 0.15 175); /* teal for dark mode */
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.554 0.135 66.442);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.795 0.184 86.047);
-  --sidebar-primary-foreground: oklch(0.421 0.095 57.708);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.554 0.135 66.442);
+    /* Apple Dark Theme Colors */
+    --background: #09090B;
+    --foreground: #f5f5f7;
+    --card: #1d1d1f;
+    --card-foreground: #f5f5f7;
+    --popover: #1d1d1f;
+    --popover-foreground: #f5f5f7;
+    --primary: #0a84ff; /* Apple Blue (darker theme version) */
+    --primary-foreground: #ffffff;
+    --secondary: #2c2c2e; /* Apple Dark Gray */
+    --secondary-foreground: #f5f5f7;
+    --muted: #2c2c2e;
+    --muted-foreground: #8e8e93;
+    --accent: #0a84ff; /* Apple Blue */
+    --accent-foreground: #ffffff;
+    --destructive: #ff453a; /* Apple Red (darker theme version) */
+    --destructive-foreground: #ffffff;
+    --border: #3a3a3c; /* Darker, more subtle border */
+    --input: #2c2c2e;
+    --ring: #0a84ff;
+    --chart-1: #0a84ff; /* Apple Blue */
+    --chart-2: #30d158; /* Apple Green */
+    --chart-3: #fd9f2d; /* Apple Orange */
+    --chart-4: #ffdc51; /* Apple Yellow */
+    --chart-5: #bf5af2; /* Apple Purple */
+    --sidebar: #1d1d1f;
+    --sidebar-foreground: #f5f5f7;
+    --sidebar-primary: #0a84ff;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #3a3a3c;
+    --sidebar-accent-foreground: #f5f5f7;
+    --sidebar-border: #3a3a3c; /* Darker border */
+    --sidebar-ring: #0a84ff;
+    /* Apple-style shadows */
+    --shadow-2xs: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-xs: 0px 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0px 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow: 0px 2px 6px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0px 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0px 8px 16px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0px 12px 24px rgba(0, 0, 0, 0.3);
+    --shadow-2xl: 0px 16px 32px rgba(0, 0, 0, 0.3);
 }
 
-
-
-/* If user's system prefers dark, set data-theme automatically (non-invasive) */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    color-scheme: dark;
-  }
-}
-
-/* ---------- Layered base utilities & accessibility improvements ---------- */
 @layer base {
     * {
-        /* Apply theme-aware border + outline defaults using variables */
-        box-sizing: border-box;
-        /* border color uses variable --border, fallbacks for safety */
-        border-color: var(--border, rgba(0,0,0,0.1));
+        @apply border-border outline-ring/50;
     }
-
-    /* global page */
-    html, body {
-        height: 100%;
-    }
-
     body {
-        background-color: var(--background);
-        color: var(--foreground);
-        font-family: var(--font-sans);
+        @apply bg-background text-foreground font-sans;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        transition: background-color 180ms ease, color 180ms ease;
-        /* sensible default text-rendering */
-        text-rendering: optimizeLegibility;
     }
-
-    /* form elements: use variables for backgrounds and borders */
-    input, textarea, select {
-        background-color: var(--input);
-        color: var(--foreground);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        transition: box-shadow 140ms ease, border-color 140ms ease, background-color 140ms ease;
+    button,
+    input,
+    select,
+    textarea {
+        @apply focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200;
     }
-
-    /* focus management (prefers-reduced-motion respected) */
-    :focus {
-        outline: none;
-    }
-    :focus-visible {
-        box-shadow: 0 0 0 4px var(--ring);
-        border-color: var(--primary);
-    }
-
     button {
-        background-color: transparent;
-        color: var(--foreground);
-        border: 1px solid transparent;
-        transition: transform 120ms ease, box-shadow 120ms ease;
+        @apply hover:cursor-pointer;
     }
-    button:hover { transform: translateY(-1px); }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-medium tracking-tight;
+    }
+    .article p {
+        
+        margin-bottom:1rem;
+        font-size: 1.2rem;
+        line-height:2rem;
+        font-family: var(--font-serif);
+    };
 
-    /* headings */
-    h1,h2,h3,h4,h5,h6 {
-        color: var(--foreground);
+    .article h2 {
+        
+        margin-bottom:1rem;
+        margin-top:1rem;
+        font-size: 1.5rem;
+        line-height:2rem;
+        font-family: var(--font-serif);
+    };
+
+     .article h1 {
+        
+        margin-bottom:1rem;
+        margin-top:1rem;
+        font-size: 1.5rem;
+        line-height:2rem;
         font-weight: 600;
-        letter-spacing: -0.01em;
-    }
+        font-family: var(--font-serif);
+    };
 
-    /* links: accessible contrast and underline on focus */
-    a {
-        color: var(--primary);
-        text-decoration: none;
-    }
-    a:focus, a:focus-visible {
-        text-decoration: underline;
-    }
-
-    /* selection color */
-    ::selection {
-        background: color-mix(in srgb, var(--primary) 20%, transparent);
-        color: var(--primary-foreground);
-    }
-
-    /* subtle scrollbars for WebKit */
-    ::-webkit-scrollbar {
-        width: 12px;
-        height: 12px;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: rgba(0,0,0,0.12);
-        border-radius: 999px;
-        border: 3px solid transparent;
-        background-clip: padding-box;
-    }
-    :is(.dark) ::-webkit-scrollbar-thumb,
-    :root[data-theme="dark"] ::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.06);
-    }
-
-    /* reduce motion for users who prefer it */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.001ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.001ms !important;
-            scroll-behavior: auto !important;
-        }
-    }
-
-    /* small helper classes via custom properties (you can use these in components) */
-    .card {
-        background: var(--card);
-        color: var(--card-foreground);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .muted {
-        color: var(--muted-foreground);
-    }
-
-     .prose p {
-        margin-bottom: 1.3rem;
-        line-height: 1.7rem;
-        font-size: 1rem;
     
-    }
-
-.prose ul li,
-.prose ol li {
-    margin-bottom: 2rem;
-    line-height: 2rem;
-    font-size: 1.2rem;
-    /* Madde işaretlerini görünür yap */
-    list-style-type: disc; /* Veya "decimal" gibi diğer stiller */
-    padding-left: 1rem; /* Gerekirse madde işaretlerinin konumunu ayarlayın */
-}
-
-/* Varsa sıralı listeler için */
-.prose ol li {
-    list-style-type: decimal;
-}
-
-     .prose h2 {
-        margin-bottom: 1rem;
-        margin-top: 2rem;
-        font-weight: 500;
-        font-size: 1.5rem;
-    }
-
-      .prose h3 {
-        margin-bottom: 1rem;
-        margin-top: 2rem;
-        font-weight: 500;
-        font-size: 1.5rem;
-    }
-
-    .prose h1 {
-        margin-bottom: 18px;
-        margin-top: -8px;
-        font-weight: 400;
-        font-size: 1rem;
-        font-style: italic;
-        color: grey;
-    }
-
-    /* high-contrast accessible variant when user requests */
-    @media (forced-colors: active) {
-        :root {
-            --border: WindowText;
-            --foreground: WindowText;
-            --background: Window;
-        }
-    }
 }

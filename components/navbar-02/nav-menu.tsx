@@ -28,8 +28,12 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link href="/business" className="text-foreground hover:text-foreground/80">
-            Business & Economy
+          <Link 
+            href="/business" 
+            className="text-foreground hover:text-foreground/80"
+            onClick={onNavItemClick}
+          >
+            Business
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
@@ -55,28 +59,7 @@ export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
           </Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/world" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            World
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/business" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            Business
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
+
       <NavigationMenuItem>
         <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
           <Link 

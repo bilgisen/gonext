@@ -77,14 +77,14 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
   return (
     <div
       className={cn(
-        'relative group flex flex-col rounded-md overflow-hidden',
-        'bg-card/50',
-        'transition-all duration-200 hover:shadow-lg',
+        'relative group flex flex-col rounded-md overflow-hidden backdrop-blur-sm',
+        'bg-linear-to-b from-transparent via-card/90 to-transparent',
+        'border border-border/50 transition-all duration-200 hover:shadow-lg',
         className
       )}
     >
       {/* --- Image --- */}
-      <div className="relative w-full pt-[60%] md:pt-[65%] overflow-hidden z-10">
+      <div className="relative w-full pt-[75%] md:pt-[65%] overflow-hidden z-10">
         {showReadTime && item.read_time && (
           <div className="absolute top-2 right-2 z-20 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center">
             <Clock className="w-3 h-3 mr-1" />
@@ -140,7 +140,7 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
             href={`/${categorySlug}/${item.slug}`}
             className="hover:underline"
           >
-            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-semibold mb-2 line-clamp-2 ">
+            <h2 className="text-4xl sm:text-xl md:text-2xl lg:text-4xl font-medium mb-2 spacing-tight">
               {item.seo_title || item.title}
             </h2>
           </Link>
@@ -186,205 +186,113 @@ const FrontCategoryFeatNewsCard: React.FC<FrontCategoryFeatNewsCardProps> = ({
 // Prop type definition for the layout component
 interface FrontCategoryLayoutOneProps {
   className?: string;
-  initialData?: {
-    mainItem?: NewsItem | null;
-    leftItems?: (NewsItem | null)[];
-    rightItems?: (NewsItem | null)[];
-    businessItems?: (NewsItem | null)[];
-    worldItems?: (NewsItem | null)[];
-    turkeyItems?: (NewsItem | null)[];
+  initialData: {
+    mainItem: NewsItem | null;
+    leftItems: (NewsItem | null)[];
+    rightItems: (NewsItem | null)[];
   };
 }
 
 const FrontCategoryLayoutOne = ({
   className = '',
-  initialData = {},
+  initialData,
 }: FrontCategoryLayoutOneProps) => {
-  // Destructure with default empty values
-  const {
-    mainItem = null,
-    businessItems = [],
-    worldItems = [],
-    turkeyItems = [],
-  } = initialData;
-
-  // Business news - fetch only 1 item
-  const { data: businessNewsData } = useQuery({
-    queryKey: ['news', { category: 'business', limit: 1, sort: 'newest' }],
-    queryFn: () => fetchNewsFromDatabase({ category: 'business', limit: 1, sort: 'newest' }),
-    staleTime: 0,
-    refetchInterval: 30000,
-    initialData: businessItems.length > 0 ? { 
-      items: businessItems.filter(Boolean).slice(0, 1) as NewsItem[], 
-      total: 1, 
-      has_more: false, 
-      offset: 0, 
-      limit: 1
-    } : undefined,
-  });
-
-  // World news - fetch only 1 item
-  const { data: worldNewsData } = useQuery({
-    queryKey: ['news', { category: 'world', limit: 1, sort: 'newest' }],
-    queryFn: () => fetchNewsFromDatabase({ category: 'world', limit: 1, sort: 'newest' }),
-    staleTime: 0,
-    refetchInterval: 30000,
-    initialData: worldItems.length > 0 ? { 
-      items: worldItems.filter(Boolean).slice(0, 1) as NewsItem[], 
-      total: 1, 
-      has_more: false, 
-      offset: 0, 
-      limit: 1
-    } : undefined,
-  });
-
-  // Turkey news (main content) - fetch only 1 item
-  const { data: turkeyNewsData } = useQuery({
+  // Ana haber (Turkey)
+  const { data: mainNewsData } = useQuery({
     queryKey: ['news', { category: 'turkiye', limit: 1, sort: 'newest' }],
     queryFn: () => fetchNewsFromDatabase({ category: 'turkiye', limit: 1, sort: 'newest' }),
-    staleTime: 0,
-    refetchInterval: 30000,
-    initialData: (turkeyItems.length > 0) || mainItem ? { 
-      items: (turkeyItems.length > 0) 
-        ? [turkeyItems[0]].filter(Boolean) as NewsItem[]
-        : mainItem ? [mainItem] : [],
-      total: 1,
-      has_more: false, 
-      offset: 0, 
-      limit: 1
-    } : undefined,
+    staleTime: 0, // initialData ile başlatıldıktan sonra hemen yenile
+    refetchInterval: 30000, // 30 saniyede bir otomatik yenile
+    initialData: initialData.mainItem ? { items: [initialData.mainItem], total: 1, has_more: false, offset: 0, limit: 1 } : undefined,
+    // initialDataUpdatedAt kaldırıldı
   });
 
-  // Get the data from queries
-  const businessNewsItems = businessNewsData?.items || [];
-  const worldNewsItems = worldNewsData?.items || [];
-  const turkeyNewsItems = turkeyNewsData?.items || [];
+  // Sol kolon (Business) - 2 haber
+  const { data: leftNewsData } = useQuery({
+    queryKey: ['news', { category: 'business', limit: 2, sort: 'newest' }],
+    queryFn: () => fetchNewsFromDatabase({ category: 'business', limit: 2, sort: 'newest' }),
+    staleTime: 0,
+    refetchInterval: 30000,
+    initialData: initialData.leftItems.length > 0 ? { items: initialData.leftItems.filter(Boolean) as NewsItem[], total: initialData.leftItems.length, has_more: false, offset: 0, limit: 2 } : undefined,
+    // initialDataUpdatedAt kaldırıldı
+  });
 
-  // Show loading state if no data
-  if (turkeyItems.length === 0 && businessItems.length === 0 && worldItems.length === 0) {
+  // Sağ kolon (World) - 2 haber
+  const { data: rightNewsData } = useQuery({
+    queryKey: ['news', { category: 'world', limit: 2, sort: 'newest' }],
+    queryFn: () => fetchNewsFromDatabase({ category: 'world', limit: 2, sort: 'newest' }),
+    staleTime: 0,
+    refetchInterval: 30000,
+    initialData: initialData.rightItems.length > 0 ? { items: initialData.rightItems.filter(Boolean) as NewsItem[], total: initialData.rightItems.length, has_more: false, offset: 0, limit: 2 } : undefined,
+    // initialDataUpdatedAt kaldırıldı
+  });
+
+  // Verileri uygun formatta al
+  const mainItem = mainNewsData?.items?.[0] || null;
+  const leftItems = leftNewsData?.items || [];
+  const rightItems = rightNewsData?.items || [];
+
+  // Eğer ana öğe yoksa, loading state göster (initialData ile başlatılmışsa bu nadiren olur)
+  if (!mainItem) {
     return (
-      <div className={cn('grid grid-cols-1 gap-6', className)}>
-        <p className="text-muted-foreground text-center py-4">Loading content...</p>
+      <div className={cn('grid grid-cols-1 gap-6 md:grid-cols-3', className)}>
+        <p className="text-muted-foreground text-center py-4">Loading initial content...</p>
+        {/* veya skeleton loader */}
       </div>
     );
   }
 
   return (
-    <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-6 w-full', className)}>
-      {/* Left Column - 1/3 width */}
-      <div className="lg:col-span-1 space-y-0">
-        {/* Business Section */}
-        <div className="space-y-4">
-          <div className="space-y-4">
-            {businessNewsItems.length > 0 ? (
-              businessNewsItems
-                .filter((item: NewsItem | null): item is NewsItem => item !== null)
-                .slice(0, 2)
-                .map((item: NewsItem, index: number) => (
-                <div key={item?.id || `business-${index}`} className="border-b border-border pb-4 last:border-0 last:pb-0">
-                  <FrontCategoryFeatNewsCard
-                    item={item!}
-                    showCategory={true}
-                    compactTitle={true}
-                    showDescription={false}
-                    className="h-full"
-                  />
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground">No business news available</p>
-            )}
-          </div>
-        </div>
-
-        {/* World Section */}
-        <div className="space-y-4 pt-6 border-t border-border">
-          <div className="space-y-4">
-            {worldNewsItems.length > 0 ? (
-              worldNewsItems
-                .filter((item: NewsItem | null): item is NewsItem => item !== null)
-                .slice(0, 2)
-                .map((item: NewsItem, index: number) => (
-                <div key={item?.id || `world-${index}`} className="border-b border-border pb-4 last:border-0 last:pb-0">
-                  <FrontCategoryFeatNewsCard
-                    item={item!}
-                    showCategory={true}
-                    compactTitle={true}
-                    showDescription={false}
-                    className="h-full"
-                  />
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground">No world news available</p>
-            )}
-          </div>
-        </div>
+    <div className={cn('grid grid-cols-1 md:grid-cols-12 gap-5 w-full', className)}>
+      {/* Sol kolon - Mobilde 2. sırada */}
+      <div className="md:col-span-3 flex flex-col gap-4 order-2 md:order-0">
+        {leftItems.slice(0, 2).map((item: NewsItem | null, index: number) => (
+          item ? (
+            <FrontCategoryFeatNewsCard
+              key={item.id || `left-${index}`}
+              item={item}
+              showCategory
+              compactTitle
+              showDescription={true}
+              className="h-full"
+            />
+          ) : null
+        ))}
       </div>
 
-      {/* Right Column - 2/3 width */}
-      <div className="lg:col-span-2">
-        <div className="space-y-6">
-          {turkeyNewsItems.length > 0 ? (
-            turkeyNewsItems
-              .filter((item: NewsItem | null): item is NewsItem => item !== null)
-              .slice(0, 4)
-              .map((item: NewsItem, index: number) => (
-              <div key={item?.id || `turkey-${index}`} className={cn(
-                'border-b border-border pb-6',
-                index === turkeyNewsItems.length - 1 ? 'border-0 pb-0' : ''
-              )}>
-                <FrontCategoryFeatNewsCard
-                  item={item!}
-                  showCategory={true}
-                  compactTitle={index > 0}
-                  showDescription={index === 0}
-                  className="h-full"
-                />
-              </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground">No Turkey news available</p>
-          )}
-        </div>
+      {/* Orta kolon - Mobilde 1. sırada (Main) */}
+      <div className="md:col-span-6 order-1 md:order-0">
+        {mainItem && (
+          <FrontCategoryFeatNewsCard
+            item={mainItem}
+            showCategory
+            showDescription
+            compactTitle={false}
+            className="h-full"
+          />
+        )}
       </div>
+
+      {/* Sağ kolon - Mobilde 3. sırada */}
+      <div className="md:col-span-3 flex flex-col gap-4 order-3 md:order-0">
+        {rightItems.slice(0, 2).map((item: NewsItem | null, index: number) => (
+          item ? (
+            <FrontCategoryFeatNewsCard
+              key={item.id || `right-${index}`}
+              item={item}
+              showCategory
+              compactTitle
+              showDescription={true}
+              className="h-full"
+            />
+          ) : null
+        ))}
+      </div>
+
     </div>
   );
 };
 
 FrontCategoryLayoutOne.displayName = 'FrontCategoryLayoutOne';
-
-// Layout B: Side cards on left, main card on right
-export const LayoutB: React.FC<{
-  mainItem: NewsItem;
-  sideItems: [NewsItem, NewsItem];
-  className?: string;
-}> = ({ mainItem, sideItems, className }) => {
-  return (
-    <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-6', className)}>
-      {/* Side cards (left) */}
-      <div className="lg:col-span-1 flex flex-col gap-4">
-        {sideItems.map((item ) => (
-          <FrontCategoryFeatNewsCard 
-            key={item.id} 
-            item={item} 
-            compactTitle={true}
-            showDescription={false}
-            className="h-full"
-          />
-        ))}
-      </div>
-      
-      {/* Main card (right) */}
-      <div className="lg:col-span-2">
-        <FrontCategoryFeatNewsCard 
-          item={mainItem}
-          showDescription={true}
-          className="h-full"
-        />
-      </div>
-    </div>
-  );
-};
 
 export default FrontCategoryLayoutOne;
