@@ -1,9 +1,7 @@
 import {
   NavigationMenu,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import Link from "next/link";
 import { ComponentProps } from "react";
@@ -12,75 +10,71 @@ interface NavMenuProps extends ComponentProps<typeof NavigationMenu> {
   onNavItemClick?: () => void;
 }
 
-export const NavMenu = ({ onNavItemClick, ...props }: NavMenuProps) => (
-  <NavigationMenu {...props}>
-    <NavigationMenuList className="gap-1 data-[orientation=vertical]:-ms-2 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start data-[orientation=vertical]:justify-start">
+export const NavMenu = ({ onNavItemClick, className, ...props }: NavMenuProps) => (
+  <NavigationMenu {...props} className={className}>
+    <NavigationMenuList className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-1 w-full">
       <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/turkiye" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            Türkiye
-          </Link>
-        </NavigationMenuLink>
+        <Link 
+          href="/turkiye" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Türkiye
+        </Link>
       </NavigationMenuItem>
       <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/business" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            Business
-          </Link>
-        </NavigationMenuLink>
+        <Link 
+          href="/business" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Economy
+        </Link>
       </NavigationMenuItem>
       <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/world" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            World
-          </Link>
-        </NavigationMenuLink>
+        <Link 
+          href="/world" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          World
+        </Link>
       </NavigationMenuItem>
       <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/technology" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            Technology
-          </Link>
-        </NavigationMenuLink>
+        <Link 
+          href="/business" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Business
+        </Link>
       </NavigationMenuItem>
-
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/cultre" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            Arts & Culture
-          </Link>
-        </NavigationMenuLink>
+            <NavigationMenuItem>
+        <Link 
+          href="/technology" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Technology
+        </Link>
       </NavigationMenuItem>
       <NavigationMenuItem>
-        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-          <Link 
-            href="/sports" 
-            className="text-foreground hover:text-foreground/80"
-            onClick={onNavItemClick}
-          >
-            Sports
-          </Link>
-        </NavigationMenuLink>
+        <Link 
+          href="/culture" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Arts & Culture
+        </Link>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <Link 
+          href="/sports" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Sports
+        </Link>
       </NavigationMenuItem>
     </NavigationMenuList>
   </NavigationMenu>

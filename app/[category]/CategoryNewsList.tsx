@@ -5,10 +5,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers, type NewsFilters } from '@/lib/urlFilters';
-import { cn } from '@/lib/utils';
 import { CATEGORY_MAPPINGS } from '@/types/news';
-import NewsCard from '@/components/cards/NewsCard';
-import { CategoryHero } from './categoryHero';
+import { NewsLayout } from '@/components/cards/NewsLayout';
+
+type LayoutVariant = 'a' | 'b';
 
 interface CategoryNewsListProps {
   category: string;
@@ -179,46 +179,40 @@ export function CategoryNewsList({ category, searchParams }: CategoryNewsListPro
       </div>
     );
 
+  // Group news items into chunks of 3 for the NewsLayout (1 main + 2 side)
+  const newsGroups: Array<{
+    main: typeof allNews[0];
+    side: [typeof allNews[0], typeof allNews[0]];
+    variant: LayoutVariant;
+  }> = [];
+
+  for (let i = 0; i < allNews.length; i += 3) {
+    const group = allNews.slice(i, i + 3);
+    if (group.length >= 3) {
+      newsGroups.push({
+        main: group[0],
+        side: [group[1], group[2]] as [typeof group[1], typeof group[2]],
+        variant: (i / 3) % 2 === 0 ? 'a' : 'b'
+      });
+    }
+  }
+
   return (
     <div className="space-y-10">
-      <div className="space-y-6">
-        {/* First 2 items as CategoryHero in 2/3 - 1/3 layout */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {allNews.slice(0, 2).map((newsItem, index) => (
-            <div 
-              key={newsItem.id} 
-              className={cn(
-                index === 0 ? 'md:col-span-2' : 'md:col-span-1',
-                index === 1 ? 'hidden md:block' : '',
-                'flex flex-col h-full'
-              )}
-            >
-              <CategoryHero 
-                news={newsItem} 
-                variant={index === 0 ? 'large' : 'small'}
-                className="h-full" 
-              />
-            </div>
-          ))}
-        </div>
-        
-        {/* Remaining items in a 3-column grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allNews.slice(2).map((newsItem) => (
-            <NewsCard 
-              key={newsItem.id}
-              item={newsItem}
-              variant="compact"
-              className="h-full"
-              showCategory={false}
-              showDate={true}
-              showReadTime={true}
-              showDescription={true}
-              showShare={true}
-              showFavorite={true}
-            />
-          ))}
-        </div>
+      <div className="space-y-12">
+        {newsGroups.map((group, index) => (
+          <NewsLayout
+            key={`${group.main.id}-${index}`}
+            mainNews={group.main}
+            sideNews={group.side as [any, any]}
+            variant={group.variant}
+            className="w-full"
+            showCategory={true}
+            showDate={true}
+            showReadTime={true}
+            showDescription={true}
+          />
+        ))}
       </div>
 
       {hasNextPage && (

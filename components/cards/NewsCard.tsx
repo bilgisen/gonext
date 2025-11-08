@@ -132,8 +132,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const titleClasses = cn(
     'font-semibold line-clamp-2',
     variant === 'medium'
-      ? 'text-base md:text-4xl mb-1.5'
-      : 'text-sm md:text-base mb-1'
+      ? 'text-base sm:text-xl md:text-4xl mb-1.5'
+      : 'text-md md:text-base mb-1'
   );
 
   // Description classes
@@ -141,8 +141,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
     'text-muted-foreground line-clamp-3',
     variant === 'medium'
       ? 'text-md'
-      : 'text-sm',
-    variant === 'compact' ? 'hidden md:block' : '' // Hide on mobile for compact
+      : 'text-md',
+    variant === 'compact' ? 'block md:hidden' : '' // Show on mobile, hide on desktop for compact
   );
 
   return (

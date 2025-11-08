@@ -142,6 +142,8 @@ export interface PaginatedResponse<T> {
 export interface BaseFilters {
   page?: number;
   limit?: number;
+  sort?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface NewsFilters extends BaseFilters {

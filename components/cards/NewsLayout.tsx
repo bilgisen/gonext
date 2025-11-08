@@ -58,7 +58,7 @@ export function NewsLayout({
   );
 
   return (
-    <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-6', className)}>
+    <div className={cn('flex flex-col lg:grid lg:grid-cols-3 gap-6', className)}>
       {/* Variant A: Main card on left, side cards on right */}
       {isVariantA && (
         <>
@@ -67,11 +67,18 @@ export function NewsLayout({
         </>
       )}
 
-      {/* Variant B: Side cards on left, main card on right */}
+      {/* Variant B: Side cards on left (desktop), main card on right (desktop) */}
       {isVariantB && (
         <>
-          <div className="lg:col-span-1">{sideCards}</div>
-          <div className="lg:col-span-2">{mainCard}</div>
+          {/* Main card - first on mobile, right side on desktop */}
+          <div className="lg:col-span-2 lg:col-start-2">
+            {mainCard}
+          </div>
+          
+          {/* Side cards - second on mobile, left side on desktop */}
+          <div className="lg:row-start-1 lg:col-start-1 lg:row-span-2">
+            {sideCards}
+          </div>
         </>
       )}
     </div>

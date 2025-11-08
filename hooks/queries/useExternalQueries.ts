@@ -148,7 +148,7 @@ type SortOption = 'newest' | 'oldest' | 'popular';
 export function useInfiniteNews({
   category,
   tag,
-  limit = 10,
+  limit = 15,
   excludeId,
   sortBy = 'newest',
   sortOrder = 'desc',
@@ -170,9 +170,10 @@ export function useInfiniteNews({
           category,
           tag,
           page: pageParam as number,
-          limit,
+          limit, // Pass the limit parameter
           sort: sortBy,
-          status: 'published', // Explicitly request published news
+          sortOrder, // Add sortOrder to the filters
+          status: 'published',
           ...(excludeId && { excludeId }),
         });
 

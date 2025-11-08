@@ -1,7 +1,18 @@
-import { Metadata } from 'next';
-import { Suspense } from 'react';
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { CategoryNewsList } from './CategoryNewsList';
 import { getDisplayName } from '@/lib/utils/category-utils';
+
+// Client-side only component for trending articles
+const TrendingArticlesWrapper = dynamic(
+  () => import('@/components/front-category/TrendingArticlesWrapper'),
+  { 
+    ssr: false, 
+    loading: () => <div className="h-64 bg-muted/20 rounded-lg animate-pulse" /> 
+  }
+);
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -10,42 +21,68 @@ interface CategoryPageProps {
   };
 }
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-  const { category: urlSlug } = await params;
-  const normalizedSlug = urlSlug.toLowerCase();
-  const displayName = getDisplayName(normalizedSlug);
+// We can't use generateMetadata in client components,
+// so we'll handle metadata in the parent layout if needed
 
-  return {
-    title: `${displayName} News | Latest ${displayName} Updates`,
-    description: `Latest ${displayName} news and updates.`,
-    openGraph: { 
-      title: `${displayName} News`, 
-      description: `${displayName} updates` 
-    },
-  };
-}
+export default function CategoryPage({ params, searchParams }: CategoryPageProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [query, setQuery] = useState<{ [key: string]: string | string[] | undefined }>({});
+  const [displayName, setDisplayName] = useState('');
+  const [normalizedSlug, setNormalizedSlug] = useState('');
 
-export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  const { category: urlSlug } = await params;
-  const query = await searchParams;
+  useEffect(() => {
+    // Handle params and searchParams on client side
+    const init = async () => {
+      try {
+        const resolvedParams = await params;
+        const resolvedSearchParams = await searchParams;
+        
+        const slug = resolvedParams.category;
+        const normalized = slug.toLowerCase();
+        
+        setNormalizedSlug(normalized);
+        setDisplayName(getDisplayName(normalized));
+        setQuery(
+          typeof resolvedSearchParams === 'object' && !('then' in resolvedSearchParams)
+            ? resolvedSearchParams
+            : {}
+        );
+      } catch (error) {
+        console.error('Error initializing page:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    init();
+  }, [params, searchParams]);
   
-  // Ensure the URL slug is in lowercase and normalized
-  const normalizedSlug = urlSlug.toLowerCase();
-  
-  // Get the display name for the category
-  const displayName = getDisplayName(normalizedSlug);
+  if (isLoading) {
+    return <div className="min-h-screen" />;
+  }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <header className="text-center mb-10">
-        <h1 className="text-4xl font-bold mb-2">{displayName} News</h1>
+    <div className="container mx-auto px-4 py-6 md:py-10">
+      <header className="text-center mb-6 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">{displayName} News</h1>
         <p className="text-gray-500">Stay updated with the latest in {displayName}</p>
       </header>
 
-      <Suspense fallback={<SkeletonGrid />}>
-        {/* Pass the normalized slug to CategoryNewsList to maintain consistent URLs */}
-        <CategoryNewsList category={normalizedSlug} searchParams={query} />
-      </Suspense>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Left column - Main content (2/3 width on large screens) */}
+        <div className="w-full lg:w-3/4">
+          <Suspense fallback={<SkeletonGrid />}>
+            <CategoryNewsList category={normalizedSlug} searchParams={query} />
+          </Suspense>
+        </div>
+
+        {/* Right column - Sidebar (1/3 width on large screens) */}
+        <div className="w-full lg:w-1/4 space-y-6">
+          <div className="sticky top-24">
+            <TrendingArticlesWrapper limit={5} period="daily" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

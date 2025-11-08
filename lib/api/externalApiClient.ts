@@ -120,7 +120,8 @@ class DatabaseApiClient {
 
   async getNews(filters: NewsFilters = {}): Promise<NewsListResponse> {
     console.log('🔍 getNews filters:', JSON.stringify(filters, null, 2));
-    const limit = Math.min(filters.limit || 20, 100);
+    // Use the provided limit or default to 15, with a max of 100
+    const limit = Math.min(filters.limit || 15, 100);
     
     // Use provided offset if available, otherwise calculate from page
     const offset = filters.offset !== undefined 

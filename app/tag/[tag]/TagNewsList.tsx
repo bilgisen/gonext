@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { urlHelpers } from '@/lib/urlFilters';
-import { NewsCard } from '@/app/[category]/NewsCard';
+import NewsCard from '@/components/cards/NewsCard';
+import { NewsLayout } from '@/components/cards/NewsLayout';
 import type { NewsFilters } from '@/lib/urlFilters';
+import type { NewsItem } from '@/types/news';
 
 interface TagNewsListProps {
     tag: string;
@@ -44,23 +46,33 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         }
     };
 
+    // Group news items for layout (first 3 items in a layout, rest as cards)
+    const { layoutItems, remainingItems } = useMemo(() => {
+        if (!data?.pages?.length) return { layoutItems: [], remainingItems: [] };
+        
+        const allItems = data.pages.flatMap(page => page.items || []) as NewsItem[];
+        
+        // First 3 items for the layout
+        const layoutItems = allItems.length >= 3 ? allItems.slice(0, 3) : [];
+        // Remaining items for individual cards
+        const remainingItems = allItems.slice(3);
+        
+        return { layoutItems, remainingItems };
+    }, [data]);
+
     if (isLoading) {
         return (
-            <div className="space-y-6">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                        <div className="bg-card rounded-lg border p-6">
-                            <div className="flex gap-4">
-                                <div className="shrink-0 w-32 h-24 bg-muted rounded-lg"></div>
-                                <div className="flex-1 space-y-3">
-                                    <div className="h-6 bg-muted rounded w-3/4"></div>
-                                    <div className="h-4 bg-muted rounded w-full"></div>
-                                    <div className="h-4 bg-muted rounded w-2/3"></div>
-                                    <div className="flex gap-2">
-                                        <div className="h-5 bg-muted rounded w-16"></div>
-                                        <div className="h-4 bg-muted rounded w-20"></div>
-                                    </div>
-                                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="animate-pulse bg-card rounded-lg overflow-hidden border">
+                        <div className="w-full aspect-video bg-muted" />
+                        <div className="p-4 space-y-3">
+                            <div className="h-6 bg-muted rounded w-3/4"></div>
+                            <div className="h-4 bg-muted rounded w-full"></div>
+                            <div className="h-4 bg-muted rounded w-5/6"></div>
+                            <div className="flex justify-between items-center pt-2">
+                                <div className="h-4 bg-muted rounded w-20"></div>
+                                <div className="h-4 bg-muted rounded w-16"></div>
                             </div>
                         </div>
                     </div>
@@ -121,14 +133,34 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
             </div>
 
             {/* News List */}
-            <div className="space-y-6">
-                {allNews.map((news) => (
-                    <NewsCard
-                        key={news.id}
-                        news={news}
+            <div className="space-y-8">
+                {/* Layout for first 3 items if available */}
+                {layoutItems.length >= 3 && (
+                    <NewsLayout
+                        mainNews={layoutItems[0]}
+                        sideNews={[layoutItems[1], layoutItems[2]]}
+                        variant="a"
                         showCategory={true}
+                        showDate={true}
+                        showReadTime={true}
+                        showDescription={true}
                     />
-                ))}
+                )}
+
+                {/* Remaining news items */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {remainingItems.map((news) => (
+                        <NewsCard
+                            key={news.id}
+                            item={news}
+                            variant="medium"
+                            showCategory={true}
+                            showDate={true}
+                            showReadTime={true}
+                            showDescription={true}
+                        />
+                    ))}
+                </div>
             </div>
 
             {/* Load More Button */}

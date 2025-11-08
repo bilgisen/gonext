@@ -1,7 +1,7 @@
 // app/news/NewsListClient.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useInfiniteNews } from '@/hooks/queries/useExternalQueries';
 import { Button } from '@/components/ui/button';
 import NewsCard from '@/components/cards/NewsCard';
@@ -17,21 +17,8 @@ interface NewsListClientProps {
   };
 }
 
-type SortOption = 'newest' | 'oldest' | 'popular';
-
-export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-
-  const getApiSortOption = (): { sortBy: SortOption; sortOrder: 'asc' | 'desc' } => {
-    switch (sortBy) {
-      case 'newest': return { sortBy: 'newest', sortOrder: 'desc' };
-      case 'oldest': return { sortBy: 'oldest', sortOrder: 'asc' };
-      case 'popular': return { sortBy: 'popular', sortOrder: 'desc' };
-      default: return { sortBy: 'newest', sortOrder: 'desc' };
-    }
-  };
-
-  const apiSort = getApiSortOption();
+export function NewsListClient({ initialFilters = { limit: 15 } }: NewsListClientProps) {
+  const sortOptions = { sortBy: 'newest' as const, sortOrder: 'desc' as const };
 
   const {
     data,
@@ -44,76 +31,70 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
     refetch,
   } = useInfiniteNews({
     ...initialFilters,
-    sortBy: apiSort.sortBy,
-    sortOrder: apiSort.sortOrder,
+    ...sortOptions,
   });
 
-  // Flatten all pages of items and group them for layouts
-  const { featuredItems, layoutItems } = useMemo(() => {
-    if (!data?.pages) return { featuredItems: [], layoutItems: [] };
+  // Get all items from all pages
+  const allItems = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page?.items || []) as NewsItem[];
+  }, [data]);
+
+  // Group items for layout - 1 main + 2 side items per group
+  const groupedItems = useMemo(() => {
+    if (!allItems || allItems.length === 0) return [];
+    const groups = [];
     
-    const allItems = data.pages.flatMap((page) => page.items || []) as NewsItem[];
-    const featured = allItems.slice(0, 2);
-    const remaining = allItems.slice(2);
-    
-    // Group remaining items into chunks of 3 for layout patterns
-    const layoutGroups: Array<{
-      main: NewsItem;
-      side: [NewsItem, NewsItem];
-      variant: 'a' | 'b';
-    }> = [];
-    
-    for (let i = 0; i < remaining.length; i += 3) {
-      const group = remaining.slice(i, i + 3);
-      if (group.length === 3) {
-        layoutGroups.push({
+    // Create groups of 3 items (1 main + 2 side)
+    for (let i = 0; i < allItems.length; i += 3) {
+      const group = allItems.slice(i, i + 3);
+      if (group.length >= 3) {
+        groups.push({
           main: group[0],
           side: [group[1], group[2]] as [NewsItem, NewsItem],
           variant: (Math.floor(i / 3) % 2 === 0 ? 'a' : 'b') as 'a' | 'b'
         });
+      } else {
+        // If we have less than 3 items left, just add them as regular cards
+        groups.push(...group.map(item => ({ single: item })));
       }
     }
     
-    return { featuredItems: featured, layoutItems: layoutGroups };
-  }, [data]);
-
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
-
-  // Handle error state
-  if (isError) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-destructive mb-4">
-          Error loading news: {error?.message || 'Unknown error'}
-        </div>
-        <Button
-          onClick={() => refetch()}
-          variant="default"
-          className="mt-4"
-        >
-          Retry
-        </Button>
-      </div>
-    );
-  }
+    return groups;
+  }, [allItems]);
 
   // Loading state
-  if (isLoading && !featuredItems.length && !layoutItems.length) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <NewsCardSkeleton key={i} />
+        {Array.from({ length: initialFilters?.limit || 15 }).map((_, i) => (
+          <NewsCardSkeleton key={`skeleton-${i}`} />
         ))}
       </div>
     );
   }
 
+  // Error state
+  if (isError) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-destructive">
+          Error loading news: {error?.message || 'Unknown error'}
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => refetch()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage ? 'Retrying...' : 'Retry'}
+        </Button>
+      </div>
+    );
+  }
+
   // No results
-  if (!featuredItems.length && !layoutItems.length) {
+  if (allItems.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground mb-4">No news articles found.</p>
@@ -129,92 +110,28 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
 
   return (
     <div className="space-y-8">
-      {/* Sort controls */}
-      <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">Sort by:</span>
-          <Button
-            variant={sortBy === 'newest' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('newest')}
-          >
-            Newest
-          </Button>
-          <Button
-            variant={sortBy === 'oldest' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('oldest')}
-          >
-            Oldest
-          </Button>
-          <Button
-            variant={sortBy === 'popular' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('popular')}
-          >
-            Most Popular
-          </Button>
-        </div>
-      </div>
-
-      {/* News grid */}
-      <div className="space-y-12">
-        {/* Featured section */}
-        {featuredItems.length > 0 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Featured Stories</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {featuredItems.map((item) => (
-                <NewsCard 
-                  key={item.id} 
-                  item={item} 
-                  variant="medium"
-                  className="h-full"
-                  showDescription={true}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Latest News with alternating layouts */}
-        {layoutItems.length > 0 && (
-          <div className="space-y-12">
-            <h2 className="text-2xl font-bold">Latest News</h2>
-            <div className="space-y-8">
-              {layoutItems.map((layout, index) => {
-                // Ensure we have exactly 2 side items
-                const sideNews: [NewsItem, NewsItem] = [
-                  layout.side[0],
-                  layout.side[1] || layout.side[0] // Fallback to first item if second is missing
-                ];
-                
-                return (
-                  <div key={index} className="space-y-2">
-                    <NewsLayout
-                      mainNews={layout.main}
-                      sideNews={sideNews}
-                      variant={layout.variant}
-                      showCategory={true}
-                      showDate={true}
-                      showReadTime={true}
-                      showDescription={true}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Load more button */}
+      {groupedItems.map((group, index) => {
+        if ('single' in group) {
+          return <NewsCard key={`single-${index}`} item={group.single} />;
+        }
+        
+        return (
+          <NewsLayout
+            key={`layout-${index}`}
+            mainNews={group.main}
+            sideNews={group.side}
+            variant={group.variant}
+            className="mb-8"
+          />
+        );
+      })}
+      
       {hasNextPage && (
         <div className="flex justify-center mt-8">
           <Button
-            onClick={handleLoadMore}
+            onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
-            variant="outline"
+            className="min-w-[120px]"
           >
             {isFetchingNextPage ? 'Loading...' : 'Load More'}
           </Button>
@@ -224,27 +141,20 @@ export function NewsListClient({ initialFilters = {} }: NewsListClientProps) {
   );
 }
 
-// Loading skeleton component
+// Loading skeleton component for individual news card
 function NewsCardSkeleton() {
   return (
     <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
       <div className="relative w-full pt-[56.25%] bg-gray-200 dark:bg-gray-800 animate-pulse" />
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/4 mb-2 animate-pulse" />
-        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-3 animate-pulse" />
-        <div className="space-y-2">
-          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
-          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-5/6 animate-pulse" />
-        </div>
-        <div className="flex justify-between items-center mt-4 pt-3 border-t border-border">
-          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/4 animate-pulse" />
-          <div className="flex space-x-2">
-            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
-            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
-            <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
-          </div>
-        </div>
+      <div className="p-4">
+        <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2 animate-pulse" />
+        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/2 mb-3 animate-pulse" />
+        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full mb-2 animate-pulse" />
+        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-5/6 mb-2 animate-pulse" />
+        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-2/3 animate-pulse" />
       </div>
     </div>
   );
 }
+
+// NewsListSkeleton has been removed as it was unused
