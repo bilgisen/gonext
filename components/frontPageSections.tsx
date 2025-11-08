@@ -1,11 +1,15 @@
 // components/frontPageSections.tsx
 'use client';
 
-import { memo, useMemo } from 'react';
+import { memo, useMemo, Suspense, lazy } from 'react';
+import dynamic from 'next/dynamic';
 import { useNews } from '@/hooks/useNews';
 import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
-import NewsLayout from './cards/NewsLayout';
+
+// Lazy load components
+const NewsLayout = lazy(() => import('./cards/NewsLayout'));
+const BannerCTA = dynamic(() => import('./expostep'), { ssr: false });
 
 type LayoutVariant = 'a' | 'b';
 
@@ -17,11 +21,28 @@ interface FrontPageSectionProps {
   className?: string;
 }
 
+// Simple loading component
+const NewsLoading = () => (
+  <div className="space-y-4">
+    <div className="h-6 bg-muted/20 w-1/3 rounded"></div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-4">
+        <div className="h-64 bg-muted/20 rounded"></div>
+        <div className="h-4 bg-muted/20 w-3/4 rounded"></div>
+      </div>
+      <div className="space-y-4">
+        <div className="h-32 bg-muted/20 rounded"></div>
+        <div className="h-4 bg-muted/20 w-5/6 rounded"></div>
+      </div>
+    </div>
+  </div>
+);
+
 const FrontPageSection = memo<FrontPageSectionProps>(({
   category,
   limit = 3,
   offset = 0,
-  layoutVariant,
+  layoutVariant = 'a',
   className,
 }) => {
   const formatCategoryName = (cat: string) => {
@@ -32,88 +53,93 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
   const { data, isLoading, error } = useNews({
     category: formattedCategory,
     limit,
-    offset: offset || 0, // Ensure offset is always a number
+    offset,
     sort: 'newest',
   });
   
-  const currentVariant = layoutVariant || 'a';
   const layoutGroup = useMemo(() => {
-    const defaultGroup = {
-      main: {} as NewsItem,
-      side: [{} as NewsItem, {} as NewsItem] as [NewsItem, NewsItem],
-      variant: 'a' as const
+    // Create a default NewsItem to use as fallback
+    const defaultNewsItem: NewsItem = {
+      id: '',
+      source_id: '',
+      source_guid: '',
+      title: 'No news available',
+      slug: '',
+      excerpt: 'Check back later for updates',
+      content: '',
+      seo_title: 'No news available',
+      seo_description: 'No news items are currently available',
+      status: 'published',
+      featured: false,
+      view_count: 0,
+      read_time: 0,
+      published_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      image_url: '',
+      image_alt: '',
+      image_caption: '',
+      author_id: null,
+      source_url: null,
+      categories: [],
+      tags: [],
+      meta: {},
+      image: '',
+      category: 'turkiye',
+      tldr: [],
+      original_url: '',
+      file_path: '',
+      is_bookmarked: false
     };
 
-    if (!data?.pages?.[0]?.data?.items?.length) return defaultGroup;
+    if (!data?.pages?.[0]?.data?.items?.length) {
+      return { 
+        main: defaultNewsItem, 
+        side: [defaultNewsItem, defaultNewsItem] as [NewsItem, NewsItem] 
+      };
+    }
 
     const items = data.pages[0].data.items as NewsItem[];
-    const mainItems = items.slice(0, 3);
+    const mainItem = items[0] || defaultNewsItem;
+    const sideItems = items.slice(1, 3);
     
-    // Ensure we always have exactly 2 items for the side
-    const getSideItems = (): [NewsItem, NewsItem] => {
-      if (mainItems.length >= 3) return [mainItems[1], mainItems[2]];
-      if (mainItems.length === 2) return [mainItems[1], mainItems[1]];
-      return [mainItems[0], mainItems[0]]; // Fallback for when there's only 1 item
-    };
-
     return {
-      main: mainItems[0] || {} as NewsItem,
-      side: getSideItems(),
-      variant: 'a' as const
+      main: mainItem,
+      side: [
+        sideItems[0] || defaultNewsItem,
+        sideItems[1] || defaultNewsItem
+      ] as [NewsItem, NewsItem],
     };
   }, [data?.pages]);
 
   if (isLoading) {
-    return (
-      <div className={cn('space-y-8', className)}>
-        {[0, 1].map((i) => (
-          <div key={i} className="animate-pulse space-y-4">
-            <div className="h-6 bg-muted w-1/3 rounded"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-4">
-                <div className="h-64 bg-muted rounded"></div>
-                <div className="h-4 bg-muted w-3/4 rounded"></div>
-                <div className="h-4 bg-muted w-1/2 rounded"></div>
-              </div>
-              <div className="space-y-4">
-                <div className="h-32 bg-muted rounded"></div>
-                <div className="h-4 bg-muted w-5/6 rounded"></div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
+    return <NewsLoading />;
   }
 
   if (error || !data?.pages?.[0]?.data?.items?.length) {
     return (
       <div className={cn('p-4 bg-destructive/10 text-destructive rounded-md', className)}>
-        {error?.message || 'Failed to load news'}
+        {error?.message || 'No news available'}
       </div>
     );
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
-      <NewsLayout
-        mainNews={layoutGroup.main}
-        sideNews={layoutGroup.side}
-        variant={currentVariant}
-        showCategory={true}
-        showDate={true}
-        showReadTime={true}
-        showDescription={true}
-      />
-      
-      {data?.pages?.[0]?.data?.items && data.pages[0].data.items.length > 3 && (
-        <div className="flex justify-center mt-4">
-          <a
-            href={`/${formattedCategory}`}
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            View all {formattedCategory} news →
-          </a>
+    <div className="space-y-6">
+      <Suspense fallback={<NewsLoading />}>
+        <div className={cn('space-y-4', className)}>
+          {layoutGroup.main && (
+            <NewsLayout
+              mainNews={layoutGroup.main}
+              sideNews={layoutGroup.side}
+              variant={layoutVariant}
+            />
+          )}
+        </div>
+      </Suspense>
+      {formattedCategory === 'turkiye' && (
+        <div className="mt-8">
+          <BannerCTA />
         </div>
       )}
     </div>
@@ -130,26 +156,22 @@ interface FrontPageSectionsProps {
   className?: string;
 }
 
-const FrontPageSections: React.FC<FrontPageSectionsProps> = ({
+const FrontPageSections = ({
   categories,
   layout = 'a',
   offset = 0,
-  limit = 3, // Set default limit to 3
-}) => {
-  const getLayoutForIndex = (index: number): LayoutVariant => {
-    if (!layout) return 'a';
+  limit = 3,
+  className,
+}: FrontPageSectionsProps) => {
+  const getLayoutVariant = (index: number): LayoutVariant => {
     if (Array.isArray(layout)) {
       return layout[index % layout.length] || 'a';
     }
     return layout;
   };
 
-  const getOffsetForIndex = (index: number): number => {
+  const getOffset = (index: number): number => {
     if (Array.isArray(offset)) {
-      // Make sure we don't go out of bounds
-      if (index >= offset.length) {
-        return offset[offset.length - 1] || 0;
-      }
       return offset[index] || 0;
     }
     return offset || 0;
@@ -157,17 +179,18 @@ const FrontPageSections: React.FC<FrontPageSectionsProps> = ({
 
   return (
     <div className="space-y-12">
-      {categories.map((cat, index) => (
+      {categories.map((category, index) => (
         <FrontPageSection
-          key={cat}
-          category={cat}
+          key={`${category}-${index}`}
+          category={category}
           limit={limit}
-          offset={getOffsetForIndex(index)}
-          layoutVariant={getLayoutForIndex(index)}
+          offset={getOffset(index)}
+          layoutVariant={getLayoutVariant(index)}
+          className={className}
         />
       ))}
     </div>
   );
 };
 
-export default FrontPageSections;
+export default memo(FrontPageSections);

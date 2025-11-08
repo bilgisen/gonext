@@ -12,6 +12,7 @@ import BlobImage from '@/components/BlobImage';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { NewsItem } from '@/types/news';
+import { RelatedNews } from '@/components/related-news';
 
 interface NewsArticleProps {
   newsItem: NewsItem;
@@ -142,7 +143,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
   });
 
   return (
-    <article className="max-w-2xl mx-auto px-0">
+    <article className="w-full px-0">
 
 
       {/* Article Header */}
@@ -198,7 +199,7 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
       {/* Article Image */}
       {imageKey && (
         <div className="mb-8">
-          <div className="relative w-full aspect-4/3 rounded-lg overflow-hidden">
+          <div className="relative w-full aspect-16:9 rounded-lg overflow-hidden">
             <BlobImage
               imageKey={imageKey}
               alt={newsItem.image_title || newsItem.seo_title || 'News Image'}
@@ -217,39 +218,48 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
         </div>
       )}
 
-      {/* Article Content */}
-      <div className="article dark:prose-invert max-w-none text-md mb-8">
-        {newsItem.content_html || newsItem.content ? (
-          <div 
-            className="prose dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ 
-              __html: newsItem.content_html || newsItem.content || '' 
-            }} 
-          />
-        ) : (
-          <p>{newsItem.seo_description || 'No content available'}</p>
-        )}
-      </div>
-
-
-      {/* Tags Section */}
-      {newsItem.tags && newsItem.tags.length > 0 && (
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            {newsItem.tags
-              .filter(tag => tag && typeof tag === 'string')
-              .map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="px-3 py-1 hover:bg-accent transition-colors cursor-pointer rounded-md"
-                >
-                  {tag}
-                </Link>
-            ))}
+      {/* Article Content with Related News */}
+      <div className="flex flex-col lg:flex-row gap-8 mt-8">
+        {/* Related News - Left Side (1/3) - Shows after content on mobile */}
+        <div className="lg:w-1/3 order-2 lg:order-1">
+          <RelatedNews currentSlug={newsItem.slug} />
+        </div>
+        
+        {/* Article Content - Right Side (2/3) - Shows first on mobile */}
+        <div className="lg:w-2/3 order-1 lg:order-2">
+          <div className="article dark:prose-invert max-w-none text-md">
+            {newsItem.content_html || newsItem.content ? (
+              <div 
+                className="prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ 
+                  __html: newsItem.content_html || newsItem.content || '' 
+                }} 
+              />
+            ) : (
+              <p className="text-muted-foreground italic">No content available.</p>
+            )}
+            
+            {/* Tags Section */}
+            {newsItem.tags && newsItem.tags.length > 0 && (
+              <div className="mt-8">
+                <div className="flex flex-wrap gap-2">
+                  {newsItem.tags
+                    .filter(tag => tag && typeof tag === 'string')
+                    .map((tag, index) => (
+                      <Link
+                        key={index}
+                        href={`/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                      >
+                        {tag}
+                      </Link>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </article>
   );
 }

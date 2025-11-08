@@ -16,15 +16,27 @@ export default async function HomePage() {
             {/* Other categories */}
             <section className="mb-12">
               <FrontPageSections
-                categories={['turkiye', 'business', 'world', 'technology', 'sports', 'culture']}
+                categories={['turkiye', 'business', 'world', 'technology', 'sports']}
                 layout={['a', 'b']}
-                offset={[0, 0, 0, 0, 0, 0]}
+                offset={[0, 0, 0, 0, 0 ]}
               />
             </section>
           </div>
 
           {/* Sidebar - 1/4 width */}
           <div className="lg:w-1/4 space-y-8">
+            {/* Bookshall Logo - Not sticky */}
+            <div>
+              <a href="https://bookshall.com" target="_blank" rel="noopener noreferrer" className="block">
+                <img 
+                  src="/images/bookshall.png" 
+                  alt="Bookshall" 
+                  className="h-full w-full"
+                />
+              </a>
+            </div>
+            
+            {/* Sticky content below the logo */}
             <div className="sticky top-6">
               <TrendingArticlesWrapper />
             </div>

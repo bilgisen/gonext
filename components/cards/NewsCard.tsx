@@ -130,7 +130,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   // Title classes based on variant
   const titleClasses = cn(
-    'font-semibold line-clamp-2',
+    'font-semibold line-clamp-3',
     variant === 'medium'
       ? 'text-3xl md:text-4xl mb-1.5'
       : 'text-2xl md:text-base mb-1'
@@ -144,7 +144,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       : 'text-md',
     variant === 'compact' 
     ? 'hidden'
-    : 'block',
+    : '',
     // Always show on mobile, controlled by parent for other cases
   );
 

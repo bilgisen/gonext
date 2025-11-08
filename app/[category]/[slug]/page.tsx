@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { NewsArticle } from './NewsArticle';
 import { NewsItem } from '@/types/news';
 import { ViewTracker } from './ViewTracker';
+import TrendingArticlesWrapper from '@/components/front-category/TrendingArticlesWrapper';
 
 
 /**
@@ -197,22 +198,37 @@ export default async function Page(props: PageProps) {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
+      {/* Add JSON-LD structured data */}
       <JsonLd newsItem={newsItem} />
-      <main className="min-h-screen">
-        <div className="container mx-auto px-4 py-8 space-y-12">
-          {/* Main Article */}
-          <section>
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main content - 3/4 width */}
+          <div className="lg:w-3/4">
             <NewsArticle newsItem={newsItem} />
-          </section>
-          {newsItem && (
-            <>
-              <ViewTracker newsId={newsItem.id} />
-              <JsonLd newsItem={newsItem} />
-            </>
-          )}
+            <ViewTracker newsId={newsItem.id} />
+          </div>
+          
+          {/* Sidebar - 1/4 width */}
+          <div className="lg:w-1/4 space-y-8">
+            {/* Bookshall Logo - Not sticky */}
+            <div>
+              <a href="https://bookshall.com" target="_blank" rel="noopener noreferrer" className="block">
+                <img 
+                  src="/images/bookshall.png" 
+                  alt="Bookshall" 
+                  className="h-full w-full"
+                />
+              </a>
+            </div>
+            
+            {/* Sticky content below the logo */}
+            <div className="sticky top-6">
+              <TrendingArticlesWrapper />
+            </div>
+          </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }

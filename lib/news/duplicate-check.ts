@@ -2,7 +2,32 @@ import { eq, or, inArray } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { news } from '../../db/schema';
 import type { NewsApiItem } from './types';
+
+// Make all fields optional except id and source_guid to match the database schema
+type ExistingNewsItem = {
+  id: number;
+  source_guid: string;
+  source_id?: string | null;
+  source_fk?: number | null;
+  title?: string;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  excerpt?: string | null;
+  content?: string | null;
+  content_html?: string | null;
+  image_url?: string | null;
+  main_media_id?: number | null;
+  status?: string | null;
+  published_at?: Date | null;
+  created_at?: Date;
+  updated_at?: Date | null;
+  slug?: string;
+  view_count?: number;
+  // Allow any other properties that might come from the database
+  [key: string]: any;
+};
 import { DuplicateError } from './error-handler';
+import { updateNewsImageIfChanged } from './image-handler';
 
 // Simple console logger if the logger module is not available
 const logger = {
@@ -150,25 +175,31 @@ export async function handleDuplicateCheck(
  * @param apiItem - News item to find
  * @returns The existing news item or null if not found
  */
-export async function findExistingNews(apiItem: NewsApiItem): Promise<any | null> {
+export async function findExistingNews(apiItem: NewsApiItem): Promise<ExistingNewsItem | null> {
   try {
-    const conditions = [
-      // Match by source_guid (primary key)
-      eq(news.source_guid, apiItem.source_guid)
-    ];
-    
-    // Add source_id condition if available
-    if (apiItem.id) {
-      conditions.push(eq(news.source_id, String(apiItem.id)));
-    }
-    
     const [existing] = await db
       .select()
       .from(news)
-      .where(or(...conditions))
+      .where(
+        or(
+          eq(news.source_guid, apiItem.source_guid),
+          ...(apiItem.id ? [eq(news.source_id, String(apiItem.id))] : [])
+        )
+      )
       .limit(1);
-      
-    return existing || null;
+    
+    if (!existing) return null;
+
+    // Check if the image needs to be updated
+    if (apiItem.image) {
+      try {
+        await updateNewsImageIfChanged(existing, apiItem);
+      } catch (error) {
+        logger.error('Error updating news image', { error, newsId: existing.id });
+      }
+    }
+    
+    return existing;
   } catch (error) {
     logger.error('Error finding existing news', {
       error,

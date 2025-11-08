@@ -4,8 +4,8 @@
 import { useBookmarkStatus, useToggleBookmark } from '@/hooks/useArticleInteractions';
 import { Bookmark } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useSession } from '@/lib/auth-client'; // better-auth client session hook
-import { useState } from 'react';
+import { useSession } from '@/lib/auth-client';
+import { cn } from '@/lib/utils';
 
 interface BookmarkButtonProps {
   newsId: string | number;
@@ -14,70 +14,70 @@ interface BookmarkButtonProps {
   iconClassName?: string;
 }
 
-function BookmarkButton({
+const BookmarkButton = ({
   newsId,
   showLabel = true,
   className = '',
   iconClassName = ''
-}: BookmarkButtonProps) {
+}: BookmarkButtonProps) => {
   const router = useRouter();
-  const { data: sessionData } = useSession(); // better-auth client session hook
-  const [isMounted, setIsMounted] = useState(false);
-  const { data, isLoading: statusLoading } = useBookmarkStatus(newsId);
+  const { data: sessionData } = useSession();
   const toggleBookmark = useToggleBookmark();
   
-  // Using requestIdleCallback to defer non-critical work
-  if (typeof window !== 'undefined' && !isMounted) {
-    // This will run after the component mounts
-    requestIdleCallback(() => {
-      setIsMounted(true);
-    });
-  }
+  // Set up the query
+  const { data, isLoading: statusLoading } = useBookmarkStatus(newsId);
 
   const handleBookmark = async () => {
     if (typeof window === 'undefined') return;
 
-    // --- YENİ KISIM: useSession hook'u ile oturum kontrolü ---
-    if (!sessionData?.user) { // sessionData.user doğrudan kullanılabilir
+    if (!sessionData?.user) {
       router.push(`/sign-in?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
-    // --- YENİ KISIM BİTİŞ ---
     
     toggleBookmark.mutate(newsId);
   };
 
   const isBookmarked = data?.bookmarked;
   const isLoading = statusLoading || toggleBookmark.isPending;
-
-  if (!isMounted) {
+  
+  // On server-side, render a disabled button
+  if (typeof window === 'undefined') {
     return (
       <button
         disabled
-        className={`flex items-center gap-2 ${className} opacity-50`}
+        className={cn(
+          'inline-flex items-center gap-2 text-sm font-medium opacity-50',
+          className
+        )}
       >
-        <Bookmark className={iconClassName} />
+        <Bookmark className={cn('h-5 w-5', iconClassName)} />
+        {showLabel && <span>Bookmark</span>}
       </button>
     );
   }
-
+  
   return (
     <button
       onClick={handleBookmark}
       disabled={isLoading}
-      className={`flex items-center gap-2 ${className} ${
-        isLoading ? 'opacity-50' : ''
-      }`}
+      className={cn(
+        'inline-flex items-center gap-2 text-sm font-medium transition-colors',
+        'hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+        'disabled:opacity-50 disabled:cursor-not-allowed',
+        className
+      )}
+      aria-label={isBookmarked ? 'Remove bookmark' : 'Add to bookmarks'}
     >
       <Bookmark
-        className={`${iconClassName} ${
-          isBookmarked ? 'fill-current text-yellow-500' : ''
-        }`}
+        className={cn(
+          'h-5 w-5',
+          isBookmarked ? 'fill-current' : 'fill-none',
+          iconClassName
+        )}
       />
       {showLabel && (
-        <span className="font-medium">
-          {isBookmarked ? 'Saved' : 'Save'}
-        </span>
+        <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
       )}
     </button>
   );
