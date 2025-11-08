@@ -42,17 +42,18 @@ export function NewsLayout({
 
   const sideCards = (
     <div className="flex flex-col gap-4 h-full">
-      {sideNews.map((newsItem ) => (
-        <NewsCard
-          key={newsItem.id}
-          item={newsItem}
-          variant="compact"
-          className="flex-1"
-          showCategory={showCategory}
-          showDate={showDate}
-          showReadTime={showReadTime}
-          showDescription={false}
-        />
+      {sideNews.map((newsItem) => (
+        <div key={newsItem.id} className="flex-1">
+          <NewsCard
+            item={newsItem}
+            variant="compact"
+            className="h-full/90"
+            showCategory={showCategory}
+            showDate={showDate}
+            showReadTime={showReadTime}
+            showDescription={true}
+          />
+        </div>
       ))}
     </div>
   );

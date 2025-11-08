@@ -132,8 +132,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const titleClasses = cn(
     'font-semibold line-clamp-2',
     variant === 'medium'
-      ? 'text-xl md:text-4xl mb-1.5'
-      : 'text-lg md:text-base mb-1'
+      ? 'text-3xl md:text-4xl mb-1.5'
+      : 'text-2xl md:text-base mb-1'
   );
 
   // Description classes
