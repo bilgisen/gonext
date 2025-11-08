@@ -118,8 +118,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const imageContainerClasses = cn(
     'relative w-full overflow-hidden bg-gray-100 dark:bg-gray-800',
     variant === 'medium'
-      ? 'pt-[90%] md:pt-[68%]' // 16:9 for medium
-      : 'pt-[75%] md:pt-[56.25%]', // 4:3 on mobile, 16:9 on desktop for compact
+      ? 'pt-[80%] md:pt-[68%]' // 16:9 for medium
+      : 'pt-[65%] md:pt-[56.25%]', // 4:3 on mobile, 16:9 on desktop for compact
   );
 
   // Content container classes
@@ -132,8 +132,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const titleClasses = cn(
     'font-semibold line-clamp-2',
     variant === 'medium'
-      ? 'text-base sm:text-xl md:text-4xl mb-1.5'
-      : 'text-md md:text-base mb-1'
+      ? 'text-xl md:text-4xl mb-1.5'
+      : 'text-lg md:text-base mb-1'
   );
 
   // Description classes
@@ -142,7 +142,10 @@ const NewsCard: React.FC<NewsCardProps> = ({
     variant === 'medium'
       ? 'text-md'
       : 'text-md',
-    variant === 'compact' ? 'block md:hidden' : '' // Show on mobile, hide on desktop for compact
+    variant === 'compact' 
+    ? 'hidden'
+    : 'block',
+    // Always show on mobile, controlled by parent for other cases
   );
 
   return (
@@ -197,7 +200,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           {showCategory && item.category && (
             <Link 
               href={`/${item.category}`}
-              className="text-sm font-medium text-primary hover:text-foreground transition-colors uppercase inline-block"
+              className="text-sm pt-0 font-medium text-primary hover:text-foreground transition-colors uppercase inline-block"
               onClick={(e) => e.stopPropagation()}
             >
               {item.category}
