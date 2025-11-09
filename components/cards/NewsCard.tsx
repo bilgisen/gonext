@@ -120,7 +120,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const imageContainerClasses = cn(
     'relative w-full overflow-hidden bg-gray-100 dark:bg-gray-800',
     variant === 'medium'
-      ? 'pt-[80%] md:pt-[68%]' // 16:9 for medium
+      ? 'pt-[65%] md:pt-[68%]' // 16:9 for medium
       : 'pt-[65%] md:pt-[56.25%]', // 4:3 on mobile, 16:9 on desktop for compact
   );
 
@@ -134,13 +134,13 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const titleClasses = cn(
     'font-medium line-clamp-3',
     variant === 'medium'
-      ? 'text-3xl md:text-4xl mb-1.5'
-      : 'text-3xl md:text-base mb-1'
+      ? 'text-2xl md:text-4xl mb-1.5'
+      : 'text-2xl md:text-base mb-1'
   );
 
   // Description classes
   const descriptionClasses = cn(
-    'text-muted-foreground line-clamp-3',
+    'text-muted-foreground line-clamp-4',
     variant === 'medium'
       ? 'text-lg'
       : 'text-lg md:hidden',

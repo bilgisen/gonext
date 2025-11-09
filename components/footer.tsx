@@ -15,9 +15,10 @@ const footerSections = [
     title: "Türkiye",
     href: "/turkiye", // Adjusted for English
     links: [
-      { title: "Politics", href: "/topic/politics" },
       { title: "Istanbul", href: "/tag/istanbul" },
       { title: "Ankara", href: "/tag/ankara" },
+      { title: "Izmir", href: "/tag/izmir" },
+
     ],
   },
   {
