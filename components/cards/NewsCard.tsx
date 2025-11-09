@@ -132,21 +132,18 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   // Title classes based on variant
   const titleClasses = cn(
-    'font-semibold line-clamp-3',
+    'font-medium line-clamp-3',
     variant === 'medium'
       ? 'text-3xl md:text-4xl mb-1.5'
-      : 'text-2xl md:text-base mb-1'
+      : 'text-3xl md:text-base mb-1'
   );
 
   // Description classes
   const descriptionClasses = cn(
     'text-muted-foreground line-clamp-3',
     variant === 'medium'
-      ? 'text-md'
-      : 'text-md',
-    variant === 'compact' 
-    ? 'hidden'
-    : '',
+      ? 'text-lg'
+      : 'text-lg md:hidden',
     // Always show on mobile, controlled by parent for other cases
   );
 
@@ -234,6 +231,16 @@ const NewsCard: React.FC<NewsCardProps> = ({
               </div>
             )}
             <div className="flex items-center gap-1">
+              {showFavorite && (
+                <button
+                  onClick={handleFavorite}
+                  className={`p-1.5 ${isFavorite ? 'text-rose-500' : 'text-muted-foreground hover:text-rose-500'}`}
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
+                </button>
+              )}
+              
               {showBookmark && (
                 <BookmarkButton 
                   newsId={item.id}
@@ -250,16 +257,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
                   text={item.seo_description || ''}
                   className="p-1.5 text-muted-foreground hover:text-primary"
                 />
-              )}
-
-              {showFavorite && (
-                <button
-                  onClick={handleFavorite}
-                  className={`p-1.5 ${isFavorite ? 'text-rose-500' : 'text-muted-foreground hover:text-rose-500'}`}
-                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  <Heart className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-                </button>
               )}
             </div>
             

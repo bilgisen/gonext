@@ -1,5 +1,6 @@
 import FrontPageSections from '@/components/frontPageSections';
 import dynamic from 'next/dynamic';
+import BannerCTA from '@/components/expostep';
 
 // Dynamically import the TrendingArticlesServer component with no SSR
 const TrendingArticlesServer = dynamic(
@@ -30,18 +31,12 @@ export default async function HomePage() {
 
           {/* Sidebar - 1/4 width */}
           <div className="lg:w-1/4 space-y-8">
-            {/* Bookshall Logo - Not sticky */}
-            <div>
-              <a href="https://bookshall.com" target="_blank" rel="noopener noreferrer" className="block">
-                <img 
-                  src="/images/bookshall.png" 
-                  alt="Bookshall" 
-                  className="h-full w-full"
-                />
-              </a>
+            {/* ExpoStep Banner */}
+            <div className="bg-card/70 rounded-2xl shadow-md overflow-hidden">
+              <BannerCTA />
             </div>
             
-            {/* Sticky content below the logo */}
+            {/* Sticky content below */}
             <div className="sticky top-6 space-y-8">
               <TrendingArticlesServer />
             </div>

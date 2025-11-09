@@ -6,41 +6,49 @@ import { Button } from '@/components/ui/button';
 
 export default function BannerCTA() {
   return (
-    <section className="bg-card/70 text-foreground flex flex-col md:flex-row items-center justify-between overflow-hidden rounded-2xl shadow-lg">
-      {/* Left: Video */}
-      <div className="w-full md:w-1/2">
+    <section className="bg-card/20 text-foreground flex flex-col items-center overflow-hidden rounded-2xl shadow-lg">
+      {/* Video Section */}
+      <div className="w-full">
         <video
           src="https://res.cloudinary.com/daa8dnuhr/video/upload/v1758989057/turasas-n_mcx4lf.mp4"
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="w-full h-auto object-cover"
         />
       </div>
 
-      {/* Right: Text & CTA */}
-      <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col items-start justify-center space-y-6">
+      {/* Text & CTA Section */}
+      <div className="w-full p-6 flex flex-col items-center text-center space-y-4">
         <motion.h2
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           viewport={{ once: true }}
-          className="text-2xl md:text-3xl font-semibold leading-snug"
+          className="text-lg font-medium leading-snug mt-2"
         >
-          <span className="text-amber-600">Expostep</span> is your trusted partner for{' '}
-          <span className="text-amber-600">trade fairs</span> in Turkey, Europe
+          <span className="text-amber-500">Expostep</span> is your trusted partner for{' '}
+          trade fairs in Turkey, Europe
           and the MENA region.
         </motion.h2>
 
-        <Button
-          asChild
-          className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-6 py-3 rounded-xl shadow-md transition-all"
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+          viewport={{ once: true }}
+          className="w-full flex justify-center"
         >
-          <Link href="https://expostep.com" target="_blank">
-            Get Quote
-          </Link>
-        </Button>
+          <Button
+            asChild
+            className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-6 py-3 rounded-xl shadow-md transition-all w-full md:w-auto"
+          >
+            <Link href="https://expostep.com" target="_blank">
+              Get Quote
+            </Link>
+          </Button>
+        </motion.div>
       </div>
     </section>
   );

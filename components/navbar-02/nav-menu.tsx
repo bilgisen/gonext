@@ -28,7 +28,7 @@ export const NavMenu = ({ onNavItemClick, className, ...props }: NavMenuProps) =
           className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
           onClick={onNavItemClick}
         >
-          Economy
+          Business
         </Link>
       </NavigationMenuItem>
       <NavigationMenuItem>
@@ -40,15 +40,7 @@ export const NavMenu = ({ onNavItemClick, className, ...props }: NavMenuProps) =
           World
         </Link>
       </NavigationMenuItem>
-      <NavigationMenuItem>
-        <Link 
-          href="/business" 
-          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
-          onClick={onNavItemClick}
-        >
-          Business
-        </Link>
-      </NavigationMenuItem>
+     
             <NavigationMenuItem>
         <Link 
           href="/technology" 
