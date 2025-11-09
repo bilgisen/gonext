@@ -2,6 +2,9 @@ import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { TagNewsList } from './TagNewsList';
 
+// Import the TrendingArticlesWrapper component
+import TrendingArticlesWrapper from '@/components/front-category/TrendingArticlesWrapper';
+
 interface TagPageProps {
     params: Promise<{ tag: string }>;
     searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
@@ -12,10 +15,10 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     const formattedTag = tag.charAt(0).toUpperCase() + tag.slice(1).replace(/-/g, ' ');
 
     return {
-        title: `${formattedTag} News | Articles tagged with ${formattedTag}`,
+        title: `${formattedTag} News | Latest news about ${formattedTag}`,
         description: `Find all news articles tagged with ${formattedTag}. Stay updated with the latest stories and insights related to ${formattedTag}.`,
         openGraph: {
-            title: `${formattedTag} Tag`,
+            title: `${formattedTag} News`,
             description: `News tagged with ${formattedTag}`,
             type: 'website',
         },
@@ -30,29 +33,37 @@ export default async function TagPage({ params, searchParams }: TagPageProps) {
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="bg-card border-b">
-                <div className="container mx-auto px-4 py-8">
+            <div className="">
+                <div className="container mx-auto px-4 pt-6">
                     <div className="text-center">
-                        <h1 className="text-4xl font-bold text-foreground mb-4">
-                            #{formattedTag}
+                        <h1 className="text-4xl font-bold capitalize text-foreground mb-4">
+                            {formattedTag}
                         </h1>
                         <p className="text-xl text-muted-foreground mb-6">
-                            News articles tagged with &quot;{formattedTag}&quot;
+                            News articles about {formattedTag}
                         </p>
-                        <div className="flex justify-center">
-                            <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                                Tag: {formattedTag}
-                            </span>
-                        </div>
+                    
                     </div>
                 </div>
             </div>
 
-            {/* News List */}
+            {/* Main Content */}
             <div className="container mx-auto px-4 py-8">
-                <Suspense fallback={<TagNewsSkeleton />}>
-                    <TagNewsList tag={tag} searchParams={searchParamsObj} />
-                </Suspense>
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Main Content - 3/4 width on large screens */}
+                    <div className="w-full lg:w-3/4">
+                        <Suspense fallback={<TagNewsSkeleton />}>
+                            <TagNewsList tag={tag} searchParams={searchParamsObj} />
+                        </Suspense>
+                    </div>
+                    
+                    {/* Sidebar - 1/4 width on large screens, full width on mobile */}
+                    <div className="w-full lg:w-1/4 space-y-6">
+                        <div className="sticky top-4">
+                            <TrendingArticlesWrapper limit={5} period="daily" />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

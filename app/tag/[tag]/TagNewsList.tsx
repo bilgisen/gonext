@@ -26,7 +26,7 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
     // Create query params with explicit tag from props
     const queryParams = {
         tag: tag, // Use the tag from props directly to ensure it's always used
-        limit: filters.limit || 10,
+        limit: 15, // Show 15 news items
         ...(filters.excludeId && { excludeId: String(filters.excludeId) })
     };
 
@@ -46,19 +46,27 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
         }
     };
 
-    // Group news items for layout (first 3 items in a layout, rest as cards)
-    const { layoutItems, remainingItems } = useMemo(() => {
-        if (!data?.pages?.length) return { layoutItems: [], remainingItems: [] };
+    // Group news items into chunks of 3 for layouts and remaining items
+    const { layoutChunks, remainingItems } = useMemo(() => {
+        const currentPages = data?.pages || [];
+        const allItems = currentPages.flatMap(page => page.items || []);
+        const chunkSize = 3;
+        const result = {
+            layoutChunks: [] as NewsItem[][],
+            remainingItems: [] as NewsItem[]
+        };
         
-        const allItems = data.pages.flatMap(page => page.items || []) as NewsItem[];
+        for (let i = 0; i < allItems.length; i += chunkSize) {
+            const chunk = allItems.slice(i, i + chunkSize);
+            if (chunk.length === chunkSize) {
+                result.layoutChunks.push(chunk);
+            } else {
+                result.remainingItems = chunk;
+            }
+        }
         
-        // First 3 items for the layout
-        const layoutItems = allItems.length >= 3 ? allItems.slice(0, 3) : [];
-        // Remaining items for individual cards
-        const remainingItems = allItems.slice(3);
-        
-        return { layoutItems, remainingItems };
-    }, [data]);
+        return result;
+    }, [data?.pages]); // This will trigger a re-calculation when data?.pages changes
 
     if (isLoading) {
         return (
@@ -98,7 +106,6 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
     }
 
     const allNews = data?.pages.flatMap(page => page.items) || [];
-    const totalResults = data?.pages[0]?.total || 0;
 
     if (allNews.length === 0) {
         return (
@@ -120,47 +127,39 @@ export function TagNewsList({ tag, searchParams }: TagNewsListProps) {
 
     return (
         <div className="space-y-8">
-            {/* Filter Summary */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        Showing {totalResults} articles tagged with
-                    </span>
-                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm font-medium">
-                        #{tag.charAt(0).toUpperCase() + tag.slice(1).replace(/-/g, ' ')}
-                    </span>
-                </div>
-            </div>
-
             {/* News List */}
             <div className="space-y-8">
-                {/* Layout for first 3 items if available */}
-                {layoutItems.length >= 3 && (
-                    <NewsLayout
-                        mainNews={layoutItems[0]}
-                        sideNews={[layoutItems[1], layoutItems[2]]}
-                        variant="a"
-                        showCategory={true}
-                        showDate={true}
-                        showReadTime={true}
-                        showDescription={true}
-                    />
-                )}
-
-                {/* Remaining news items */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {remainingItems.map((news) => (
-                        <NewsCard
-                            key={news.id}
-                            item={news}
-                            variant="medium"
+                {/* Layout chunks with alternating variants */}
+                {layoutChunks.map((chunk, index) => (
+                    <div key={`layout-${index}`} className="mb-12 last:mb-0">
+                        <NewsLayout
+                            mainNews={chunk[0]}
+                            sideNews={[chunk[1], chunk[2]]}
+                            variant={index % 2 === 0 ? 'a' : 'b'}
                             showCategory={true}
                             showDate={true}
                             showReadTime={true}
                             showDescription={true}
                         />
-                    ))}
-                </div>
+                    </div>
+                ))}
+
+                {/* Remaining news items in a grid */}
+                {remainingItems.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+                        {remainingItems.map((news) => (
+                            <NewsCard
+                                key={news.id}
+                                item={news}
+                                variant="medium"
+                                showCategory={true}
+                                showDate={true}
+                                showReadTime={true}
+                                showDescription={true}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Load More Button */}

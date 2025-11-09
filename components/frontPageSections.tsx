@@ -137,11 +137,6 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
           )}
         </div>
       </Suspense>
-      {formattedCategory === 'turkiye' && (
-        <div className="mt-8">
-          <BannerCTA />
-        </div>
-      )}
     </div>
   );
 });
@@ -177,18 +172,37 @@ const FrontPageSections = ({
     return offset || 0;
   };
 
+  // Lazy load TrendingTopics with correct type
+  const TrendingTopics = dynamic<{}>(() => import('./TrendingTopics').then(mod => mod.TrendingTopics), { ssr: false });
+
   return (
     <div className="space-y-12">
-      {categories.map((category, index) => (
-        <FrontPageSection
-          key={`${category}-${index}`}
-          category={category}
-          limit={limit}
-          offset={getOffset(index)}
-          layoutVariant={getLayoutVariant(index)}
-          className={className}
-        />
-      ))}
+      {categories.map((category, index) => {
+        const isFirstSection = index === 0;
+        const isSecondSection = index === 1;
+        
+        return (
+          <div key={`${category}-${index}`} className="space-y-8">
+            <FrontPageSection
+              category={category}
+              limit={limit}
+              offset={getOffset(index)}
+              layoutVariant={getLayoutVariant(index)}
+              className={className}
+            />
+            
+            {/* Add TrendingTopics after first section */}
+            {isFirstSection && <TrendingTopics />}
+            
+            {/* Move BannerCTA after second section */}
+            {isSecondSection && category.toLowerCase() === 'turkiye' && (
+              <div className="mt-8">
+                <BannerCTA />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

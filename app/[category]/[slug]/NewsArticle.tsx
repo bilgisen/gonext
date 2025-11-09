@@ -248,7 +248,16 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
                     .map((tag, index) => (
                       <Link
                         key={index}
-                        href={`/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                        href={`/tag/${tag
+                          .toLowerCase()
+                          .replace(/\s+/g, '-')
+                          .replace(/[ğ]/g, 'g')
+                          .replace(/[ü]/g, 'u')
+                          .replace(/[ş]/g, 's')
+                          .replace(/[ı]/g, 'i')
+                          .replace(/[ö]/g, 'o')
+                          .replace(/[ç]/g, 'c')
+                          .replace(/[^a-z0-9-]/g, '')}`}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                       >
                         {tag}
