@@ -1,66 +1,49 @@
 // components/frontPageSections.tsx
-'use client';
-
-import { memo, useMemo, Suspense, lazy } from 'react';
-import dynamic from 'next/dynamic';
-import { useNews } from '@/hooks/useNews';
 import { cn } from '@/lib/utils';
+import NewsLayout from './cards/NewsLayout';
 import type { NewsItem } from '@/types/news';
 
-// Lazy load components
-const NewsLayout = lazy(() => import('./cards/NewsLayout'));
-const BannerCTA = dynamic(() => import('./expostep'), { ssr: false });
-
-type LayoutVariant = 'a' | 'b';
-
-interface FrontPageSectionProps {
-  category: string;
-  limit?: number;
-  offset?: number;
-  layoutVariant?: LayoutVariant;
-  className?: string;
-}
-
-// Simple loading component
-const NewsLoading = () => (
-  <div className="space-y-4">
-    <div className="h-6 bg-muted/20 w-1/3 rounded"></div>
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-4">
-        <div className="h-64 bg-muted/20 rounded"></div>
-        <div className="h-4 bg-muted/20 w-3/4 rounded"></div>
-      </div>
-      <div className="space-y-4">
-        <div className="h-32 bg-muted/20 rounded"></div>
-        <div className="h-4 bg-muted/20 w-5/6 rounded"></div>
-      </div>
-    </div>
-  </div>
-);
-
-const FrontPageSection = memo<FrontPageSectionProps>(({
-  category,
-  limit = 3,
-  offset = 0,
-  layoutVariant = 'a',
-  className,
-}) => {
-  const formatCategoryName = (cat: string) => {
-    return cat.toLowerCase() === 'türkiye' ? 'turkiye' : cat.toLowerCase();
-  };
-
-  const formattedCategory = formatCategoryName(category);
-  const { data, isLoading, error } = useNews({
-    category: formattedCategory,
-    limit,
-    offset,
+async function getNewsData(category: string, limit = 3) {
+  const params = new URLSearchParams({
+    category: category.toLowerCase() === 'türkiye' ? 'turkiye' : category.toLowerCase(),
+    limit: String(limit),
     sort: 'newest',
   });
-  
-  const layoutGroup = useMemo(() => {
-    // Create a default NewsItem to use as fallback
-    const defaultNewsItem: NewsItem = {
-      id: '',
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/news?${params}`, {
+    next: { revalidate: 180 }, // 3 dakikada bir yenile
+    cache: 'force-cache', // SSR cache'i agresif kullan
+  });
+
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json?.data?.items || [];
+}
+
+function CategoryBlock({
+  items,
+  category,
+  layoutVariant,
+  className,
+}: {
+  items: NewsItem[];
+  category: string;
+  layoutVariant: 'a' | 'b';
+  className?: string;
+}) {
+  if (!items?.length) {
+    return (
+      <div className={cn('p-4 bg-destructive/10 text-destructive rounded-md', className)}>
+        No news available for {category}.
+      </div>
+    );
+  }
+
+  // Ensure we have at least 3 items (1 main + 2 side)
+  const safeItems = [...items];
+  while (safeItems.length < 3) {
+    safeItems.push({
+      id: `placeholder-${safeItems.length}`,
       source_id: '',
       source_guid: '',
       title: 'No news available',
@@ -85,126 +68,59 @@ const FrontPageSection = memo<FrontPageSectionProps>(({
       tags: [],
       meta: {},
       image: '',
-      category: 'turkiye',
+      category: category.toLowerCase(),
       tldr: [],
       original_url: '',
       file_path: '',
       is_bookmarked: false
-    };
-
-    if (!data?.pages?.[0]?.data?.items?.length) {
-      return { 
-        main: defaultNewsItem, 
-        side: [defaultNewsItem, defaultNewsItem] as [NewsItem, NewsItem] 
-      };
-    }
-
-    const items = data.pages[0].data.items as NewsItem[];
-    const mainItem = items[0] || defaultNewsItem;
-    const sideItems = items.slice(1, 3);
-    
-    return {
-      main: mainItem,
-      side: [
-        sideItems[0] || defaultNewsItem,
-        sideItems[1] || defaultNewsItem
-      ] as [NewsItem, NewsItem],
-    };
-  }, [data?.pages]);
-
-  if (isLoading) {
-    return <NewsLoading />;
+    } as NewsItem);
   }
 
-  if (error || !data?.pages?.[0]?.data?.items?.length) {
-    return (
-      <div className={cn('p-4 bg-destructive/10 text-destructive rounded-md', className)}>
-        {error?.message || 'No news available'}
-      </div>
-    );
-  }
-
+  const [main, ...side] = safeItems;
+  
   return (
-    <div className="space-y-6">
-      <Suspense fallback={<NewsLoading />}>
-        <div className={cn('space-y-4', className)}>
-          {layoutGroup.main && (
-            <NewsLayout
-              mainNews={layoutGroup.main}
-              sideNews={layoutGroup.side}
-              variant={layoutVariant}
-            />
-          )}
-        </div>
-      </Suspense>
+    <div className={cn('space-y-6', className)}>
+      <NewsLayout 
+        mainNews={main} 
+        sideNews={[side[0], side[1] || side[0]]} 
+        variant={layoutVariant} 
+      />
     </div>
   );
-});
-
-FrontPageSection.displayName = 'FrontPageSection';
-
-interface FrontPageSectionsProps {
-  categories: string[];
-  layout?: LayoutVariant | LayoutVariant[];
-  offset?: number | number[];
-  limit?: number;
-  className?: string;
 }
 
-const FrontPageSections = ({
+export default async function FrontPageSections({
   categories,
   layout = 'a',
-  offset = 0,
   limit = 3,
   className,
-}: FrontPageSectionsProps) => {
-  const getLayoutVariant = (index: number): LayoutVariant => {
-    if (Array.isArray(layout)) {
-      return layout[index % layout.length] || 'a';
-    }
+}: {
+  categories: string[];
+  layout?: 'a' | 'b' | ('a' | 'b')[];
+  limit?: number;
+  className?: string;
+}) {
+  // 🔹 Tüm kategorileri paralel olarak çek
+  const newsResults = await Promise.all(categories.map(c => getNewsData(c, limit)));
+
+  const getLayoutVariant = (index: number): 'a' | 'b' => {
+    if (Array.isArray(layout)) return layout[index % layout.length] || 'a';
     return layout;
   };
 
-  const getOffset = (index: number): number => {
-    if (Array.isArray(offset)) {
-      return offset[index] || 0;
-    }
-    return offset || 0;
-  };
-
-  // Lazy load TrendingTopics with correct type
-  const TrendingTopics = dynamic<{}>(() => import('./TrendingTopics').then(mod => mod.TrendingTopics), { ssr: false });
-
   return (
     <div className="space-y-12">
-      {categories.map((category, index) => {
-        const isFirstSection = index === 0;
-        const isSecondSection = index === 1;
-        
-        return (
-          <div key={`${category}-${index}`} className="space-y-8">
-            <FrontPageSection
-              category={category}
-              limit={limit}
-              offset={getOffset(index)}
-              layoutVariant={getLayoutVariant(index)}
-              className={className}
-            />
-            
-            {/* Add TrendingTopics after first section */}
-            {isFirstSection && <TrendingTopics />}
-            
-            {/* Move BannerCTA after second section */}
-            {isSecondSection && category.toLowerCase() === 'turkiye' && (
-              <div className="mt-8">
-                <BannerCTA />
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {categories.map((category, index) => (
+        <div key={category} className="space-y-8">
+          <CategoryBlock
+            items={newsResults[index]}
+            category={category}
+            layoutVariant={getLayoutVariant(index)}
+            className={className}
+          />
+
+        </div>
+      ))}
     </div>
   );
-};
-
-export default memo(FrontPageSections);
+}

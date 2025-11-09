@@ -1,3 +1,4 @@
+// app/api/news/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { databaseApiClient } from '@/lib/api/externalApiClient';
 

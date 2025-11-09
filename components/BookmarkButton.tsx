@@ -41,17 +41,24 @@ const BookmarkButton = ({
   const isBookmarked = data?.bookmarked;
   const isLoading = statusLoading || toggleBookmark.isPending;
   
-  // On server-side, render a disabled button
+  // On server-side, render a disabled button with consistent classes
   if (typeof window === 'undefined') {
     return (
       <button
         disabled
         className={cn(
-          'inline-flex items-center gap-2 text-sm font-medium opacity-50',
+          'inline-flex items-center gap-2 text-sm font-medium transition-colors',
+          'opacity-50',
           className
         )}
+        aria-label="Add to bookmarks"
       >
-        <Bookmark className={cn('h-5 w-5', iconClassName)} />
+        <Bookmark 
+          className={cn(
+            'h-5 w-5 fill-none',
+            iconClassName
+          )} 
+        />
         {showLabel && <span>Bookmark</span>}
       </button>
     );

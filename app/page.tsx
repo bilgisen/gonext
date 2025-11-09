@@ -1,6 +1,12 @@
 import FrontPageSections from '@/components/frontPageSections';
-import TrendingArticlesWrapper from '@/components/front-category/TrendingArticlesWrapper';
+import dynamic from 'next/dynamic';
 
+// Dynamically import the TrendingArticlesServer component with no SSR
+const TrendingArticlesServer = dynamic(
+  () => import('@/components/front-category/TrendingArticlesServer'),
+  { ssr: true } // Keep SSR enabled for better initial load
+);
+export const revalidate = 300;
 // Server Component - No 'use client' needed
 export default async function HomePage() {
   // Fetch headlines on the server
@@ -18,7 +24,6 @@ export default async function HomePage() {
               <FrontPageSections
                 categories={['turkiye', 'business', 'world', 'technology', 'sports']}
                 layout={['a', 'b']}
-                offset={[0, 0, 0, 0, 0 ]}
               />
             </section>
           </div>
@@ -37,8 +42,8 @@ export default async function HomePage() {
             </div>
             
             {/* Sticky content below the logo */}
-            <div className="sticky top-6">
-              <TrendingArticlesWrapper />
+            <div className="sticky top-6 space-y-8">
+              <TrendingArticlesServer />
             </div>
           </div>
         </div>
