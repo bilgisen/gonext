@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+const config = {
   darkMode: ['class'],
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -7,7 +7,24 @@ export default {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    // Tailwind 4: tüm renkler ve değişkenler @theme inline içinde tanımlanmalı (globals.css)
+    extend: {
+      keyframes: {
+        'in': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        'out': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      animation: {
+        'in': 'in 0.2s ease-out',
+        'out': 'out 0.2s ease-in',
+      },
+    },
   },
   plugins: [],
 };
+
+export default config;

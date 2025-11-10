@@ -1,18 +1,110 @@
 // types/news.ts
 // Centralized type definitions for the application
 
-// Import types from category-utils first to avoid circular dependencies
-import { 
-  Category as NewsCategory, 
-  CATEGORY_MAPPINGS,
-  extractCategoryFromUrl as extractCategoryFromUrlUtil,
-  VALID_CATEGORIES,
-  type CategoryMapping
-} from '@/lib/news/category-utils';
+// Category related types and constants
+export const VALID_CATEGORIES = ['turkiye', 'business', 'world', 'entertainment', 'technology', 'travel', 'sports'] as const;
+export type Category = typeof VALID_CATEGORIES[number];
+export type NewsCategory = Category; // For backward compatibility
 
-// Re-export types and values with proper type exports
-export type { NewsCategory, CategoryMapping };
-export { CATEGORY_MAPPINGS, VALID_CATEGORIES, extractCategoryFromUrlUtil };
+export interface CategoryMapping {
+  [key: string]: Category;
+}
+
+export const CATEGORY_MAPPINGS: CategoryMapping = {
+  // Business & Finance
+  'sirketler': 'business',
+  'sektorler': 'business',
+  'finans': 'business',
+  'ekonomi': 'business',
+  'sirket-haberleri': 'business',
+  'spor-ekonomisi': 'business',
+  'borsa': 'business',
+  'piyasalar': 'business',
+  'otomotiv': 'business',
+  'altin': 'business',
+  'faiz': 'business',
+  'is-dunyasi': 'business',
+  'sigorta': 'business',
+  'emtia': 'business',
+  'girisim': 'business',
+  'veriler': 'business',
+  'enerji': 'business',
+  'gayrimenkul': 'business',
+  'emlak': 'business',
+  'business': 'business',
+  'finance': 'business',
+  'markets': 'business',
+
+  // Türkiye
+  'politika': 'turkiye',
+  'siyaset': 'turkiye',
+  'haberler': 'turkiye',
+  'gundem': 'turkiye',
+  'sondakika': 'turkiye',
+  'son-dakika': 'turkiye',
+  'turkiye': 'turkiye',
+  'türkiye': 'turkiye',
+  'haber': 'turkiye',
+  'gündem': 'turkiye',
+
+  // Technology
+  'teknoloji': 'technology',
+  'bilim': 'technology',
+  'technology': 'technology',
+  'bilim-teknoloji': 'technology',
+
+  // Sports
+  'spor': 'sports',
+  'sporskor': 'sports',
+  'futbol': 'sports',
+  'basketbol': 'sports',
+  'voleybol': 'sports',
+  'sports': 'sports',
+
+  // Travel
+  'gezi': 'travel',
+  'seyahat': 'travel',
+  'tatil': 'travel',
+  'travel': 'travel',
+  'turizm': 'travel',
+
+  // Entertainment
+  'kultur': 'entertainment',
+  'sanat': 'entertainment',
+  'kultur-sanat': 'entertainment',
+  'eğlence': 'entertainment',
+  'eglence': 'entertainment',
+  'magazin': 'entertainment',
+  'n-life': 'entertainment',
+  'yasam': 'entertainment',
+  'lifestyle': 'entertainment',
+  'life': 'entertainment',
+  'kültür': 'entertainment',
+  'yaşam': 'entertainment',
+  'entertainment': 'entertainment',
+  'culture': 'entertainment',
+  'kültür-sanat': 'entertainment',
+  
+  // World News
+  'dunya': 'world',
+  'world': 'world',
+  'dünya': 'world',
+  'ulke': 'world',
+  'ulkeler': 'world',
+  'ülke': 'world',
+  'ülkeler': 'world',
+  'avrupa': 'world',
+  'amerika': 'world',
+  'asya': 'world',
+  'afrika': 'world',
+  'europe': 'world',
+  'americas': 'world',
+  'asia': 'world',
+  'africa': 'world'
+};
+
+// Default category to use when no valid category is found
+export const DEFAULT_CATEGORY: Category = 'turkiye';
 
 // ====================================
 // 1. Core Types
@@ -324,41 +416,4 @@ export interface ReadingHistory {
 // 12. Utility Functions
 // ====================================
 
-/**
- * Extract the most common category from multiple URLs
- * @param urls - Array of URLs to analyze
- * @returns The most common category, or 'turkiye' if none found
- */
-export function extractCategoryFromUrls(urls: string[]): NewsCategory {
-  const categoryCounts = new Map<NewsCategory, number>();
-  
-  urls.forEach(url => {
-    const category = extractCategoryFromUrlUtil(url);
-    categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
-  });
-  
-  let mostCommonCategory: NewsCategory = 'turkiye';
-  let highestCount = 0;
-  
-  categoryCounts.forEach((count, category) => {
-    if (count > highestCount) {
-      highestCount = count;
-      mostCommonCategory = category;
-    }
-  });
-  
-  return mostCommonCategory;
-}
-
-/**
- * @deprecated Use the version from category-utils instead
- */
-export function createCategorySlug(category: string): string {
-  return category
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
-// Re-export the extractCategoryFromUrl function for backward compatibility
-export { extractCategoryFromUrlUtil as extractCategoryFromUrl };
+// Note: Category-related utility functions have been moved to @/lib/utils/string-utils.ts

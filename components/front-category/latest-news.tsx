@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { NewsItem } from '@/types/news';
-import { createCategorySlug } from '@/lib/news/category-utils';
+import { createSlug } from '@/lib/utils/string-utils';
 
 interface LatestNewsProps {
   items: NewsItem[];
@@ -22,7 +22,8 @@ export default function LatestNews({ items, className, limit = 10 }: LatestNewsP
     }
     
     if (typeof category === 'string') {
-      return createCategorySlug(category);
+      // Use createSlug for string categories
+      return createSlug(category);
     }
     
     return 'turkiye';

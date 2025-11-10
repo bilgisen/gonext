@@ -12,6 +12,8 @@ import {
   unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { relations } from 'drizzle-orm';
+import { createId } from '@paralleldrive/cuid2';
 
 // ============================================================================
 // AUTH TABLES (Better-Auth)
@@ -20,6 +22,38 @@ import {
 /**
  * user: Kullanıcılar
  */
+// ============================================================================
+// NOTIFICATION SUBSCRIPTIONS
+// ============================================================================
+
+export const notificationSubscriptions = pgTable(
+  'notification_subscriptions',
+  {
+    id: text('id').primaryKey().$defaultFn(() => createId()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull().unique(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('notification_subscriptions_user_id_idx').on(table.userId),
+    endpointIdx: index('notification_subscriptions_endpoint_idx').on(table.endpoint),
+  })
+);
+
+// ============================================================================
+// AUTH TABLES (Better-Auth)
+// ============================================================================
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -32,6 +66,8 @@ export const user = pgTable("user", {
   banned: boolean("banned").default(false).notNull(),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  isPremium: boolean("is_premium").default(false).notNull(),
+  pushNotifications: boolean("push_notifications").default(true).notNull(),
   createdAt: timestamp("created_at")
     .$defaultFn(() => new Date())
     .notNull(),
@@ -236,6 +272,28 @@ export const tags = pgTable("tags", {
  * - canonical_url: Bizim oluşturduğumuz SEO URL (slug + path) veya orijinal
  * - main_media_id: Haberin ana resmi (opsiyonel)
  */
+// ============================================================================
+// RELATIONS
+// ============================================================================
+
+export const userRelations = relations(user, ({ many }) => ({
+  notificationSubscriptions: many(notificationSubscriptions),
+}));
+
+export const notificationSubscriptionsRelations = relations(
+  notificationSubscriptions,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [notificationSubscriptions.userId],
+      references: [user.id],
+    }),
+  })
+);
+
+// ============================================================================
+// NEWS TABLES
+// ============================================================================
+
 export const news = pgTable("news", {
   id: serial("id").primaryKey(),
   source_guid: varchar("source_guid", { length: 255 }).notNull(),
@@ -433,3 +491,61 @@ export const import_logs = pgTable("import_logs", {
   source_idx: index("import_logs_source_id_idx").on(table.source_id),
   imported_at_idx: index("import_logs_imported_at_idx").on(table.imported_at),
 }));
+
+// ============================================================================
+// TYPE EXPORTS
+// ============================================================================
+
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;
+
+export type Session = typeof session.$inferSelect;
+export type NewSession = typeof session.$inferInsert;
+
+export type Account = typeof account.$inferSelect;
+export type NewAccount = typeof account.$inferInsert;
+
+export type Subscription = typeof subscription.$inferSelect;
+export type NewSubscription = typeof subscription.$inferInsert;
+
+export type Verification = typeof verification.$inferSelect;
+export type NewVerification = typeof verification.$inferInsert;
+
+export type NotificationSubscription = typeof notificationSubscriptions.$inferSelect;
+export type NewNotificationSubscription = typeof notificationSubscriptions.$inferInsert;
+
+export type Source = typeof sources.$inferSelect;
+export type NewSource = typeof sources.$inferInsert;
+
+export type Media = typeof media.$inferSelect;
+export type NewMedia = typeof media.$inferInsert;
+
+export type Editor = typeof editors.$inferSelect;
+export type NewEditor = typeof editors.$inferInsert;
+
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
+
+export type Tag = typeof tags.$inferSelect;
+export type NewTag = typeof tags.$inferInsert;
+
+export type News = typeof news.$inferSelect;
+export type NewNews = typeof news.$inferInsert;
+
+export type NewsCategory = typeof news_categories.$inferSelect;
+export type NewNewsCategory = typeof news_categories.$inferInsert;
+
+export type NewsTag = typeof news_tags.$inferSelect;
+export type NewNewsTag = typeof news_tags.$inferInsert;
+
+export type NewsMedia = typeof news_media.$inferSelect;
+export type NewNewsMedia = typeof news_media.$inferInsert;
+
+export type NewsFavorite = typeof news_favorites.$inferSelect;
+export type NewNewsFavorite = typeof news_favorites.$inferInsert;
+
+export type NewsBookmark = typeof news_bookmarks.$inferSelect;
+export type NewNewsBookmark = typeof news_bookmarks.$inferInsert;
+
+export type ImportLog = typeof import_logs.$inferSelect;
+export type NewImportLog = typeof import_logs.$inferInsert;

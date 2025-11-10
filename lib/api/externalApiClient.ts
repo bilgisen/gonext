@@ -10,7 +10,7 @@ import {
   editors
 } from '@/db/schema';
 import type { NewsItem, NewsListResponse, NewsFilters } from '@/types/news';
-import { CATEGORY_MAPPINGS, type Category as NewsCategory } from '@/lib/news/category-utils';
+import { CATEGORY_MAPPINGS, type Category as NewsCategory } from '@/types/news';
 
 // NewsWithViews type is now inferred from the query
 

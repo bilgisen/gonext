@@ -68,5 +68,5 @@ const fetchNewsScheduledFunction = async (_req: Request, context: { next_run?: s
 export default fetchNewsScheduledFunction;
 
 export const config: Config = {
-  schedule: "0,15,30,45 * * * *",
+  schedule: "0,30 * * * *",
 };

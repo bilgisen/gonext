@@ -20,7 +20,6 @@ import {
   ValidationError
 } from './types';
 import { createSlug, createUniqueSlug } from './slug-utils';
-import { extractCategoryFromUrls } from './category-utils';
 import { generateNewsTimestamps, formatTurkishDate } from './date-utils';
 import { processMarkdownContent } from './html-content';
 import { checkDuplicateNews } from './duplicate-check';
@@ -70,6 +69,25 @@ export async function findOrCreateSource(baseUrl: string): Promise<number> {
  * @param categoryName - Category name
  * @returns Category ID
  */
+// Normalizes Turkish characters in strings
+const normalizeTurkishChars = (str: string): string => {
+  if (!str) return '';
+  
+  return str
+    .toLowerCase()
+    .replace(/[ı]/g, 'i')
+    .replace(/[ğ]/g, 'g')
+    .replace(/[ü]/g, 'u')
+    .replace(/[ş]/g, 's')
+    .replace(/[ö]/g, 'o')
+    .replace(/[ç]/g, 'c')
+    .replace(/[âîû]/g, (match) => ({
+      'â': 'a',
+      'î': 'i',
+      'û': 'u'
+    }[match] || match));
+};
+
 export async function findOrCreateCategory(categoryName: string): Promise<number> {
   try {
     if (!categoryName || typeof categoryName !== 'string') {
@@ -86,11 +104,17 @@ export async function findOrCreateCategory(categoryName: string): Promise<number
       throw new Error('Default category not found');
     }
 
-    // First, try to find by name (case-insensitive)
+    // Normalize the category name for comparison
+    const normalizedCategoryName = normalizeTurkishChars(categoryName);
+    
+    // First, try to find by name (case-insensitive and Turkish character insensitive)
     const existingCategories = await db
       .select({ id: categories.id })
       .from(categories)
-      .where(sql`LOWER(${categories.name}) = LOWER(${categoryName})`)
+      .where(
+        sql`LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${categories.name},
+          'ü', 'u'), 'ğ', 'g'), 'ş', 's'), 'ö', 'o'), 'ç', 'c'), 'ı', 'i')) = LOWER(${normalizeTurkishChars(categoryName)})`
+      )
       .limit(1);
 
     if (existingCategories.length > 0) {
@@ -98,7 +122,7 @@ export async function findOrCreateCategory(categoryName: string): Promise<number
     }
 
     // If not found by name, try by slug
-    const slug = createSlug(categoryName, { maxLength: 50 });
+    const slug = createSlug(normalizedCategoryName, { maxLength: 50 });
     const existingBySlug = await db
       .select({ id: categories.id })
       .from(categories)
@@ -110,13 +134,13 @@ export async function findOrCreateCategory(categoryName: string): Promise<number
     }
 
     // If still not found, create a new category
-    console.log(`Creating new category: ${categoryName} (${slug})`);
+    console.log(`Creating new category: ${normalizedCategoryName} (${slug})`);
     
     try {
       const newCategory = await db
         .insert(categories)
         .values({
-          name: categoryName,
+          name: normalizedCategoryName, // Use normalized name for consistency
           slug,
           is_active: true, // Explicitly set is_active
           created_at: new Date(),
@@ -408,8 +432,8 @@ export async function insertNews(
     const sourceUrl = new URL(apiItem.original_url).origin;
     const sourceId = await findOrCreateSource(sourceUrl);
 
-    // Extract category from URL using category-utils
-    const categoryName = extractCategoryFromUrls([apiItem.original_url]);
+    // Get category from API response
+    const categoryName = apiItem.category || 'turkiye';
     const categoryId = await findOrCreateCategory(categoryName);
 
     // Process tags - ensure tags is an array of strings

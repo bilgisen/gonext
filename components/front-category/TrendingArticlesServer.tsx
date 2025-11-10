@@ -5,7 +5,14 @@ import { fetchTrendingArticles } from '@/lib/api/trending';
 import { formatDistanceToNow } from 'date-fns';
 
 export default async function TrendingArticlesServer() {
-  const articles = await fetchTrendingArticles(6);
+  let articles = [];
+  
+  try {
+    articles = await fetchTrendingArticles(6);
+  } catch (error) {
+    console.error('Error fetching trending articles:', error);
+    return null; // Return null or a fallback UI if the fetch fails
+  }
 
   if (!articles?.length) return null;
 

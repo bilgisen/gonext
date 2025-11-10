@@ -1,25 +1,21 @@
 // @ts-check
 import path from 'path';
+import type { NextConfig } from 'next';
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactCompiler: true,
   
   // Enable server actions
   experimental: {
     serverActions: {},
-    // serverComponentsExternalPackages yerine serverExternalPackages kullanın
-    // serverComponentsExternalPackages: ['ioredis'], // Eski hali
   },
   
-  // serverExternalPackages seçeneğini ana seviyeye taşıyın
-  serverExternalPackages: ['ioredis', '@netlify/neon'], // Redis ve Netlify için birleştirildi
-  
-  // Fix for module resolution in app directory
+  serverExternalPackages: ['ioredis', '@netlify/neon'],
   transpilePackages: [],
   
-  // Webpack configuration for path aliases
-  webpack: (config) => {
+  // Webpack configuration
+  webpack: (config, { isServer }) => {
     // Add path aliases
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -27,18 +23,24 @@ const nextConfig = {
       '@/db': path.resolve(process.cwd(), 'db'),
     };
     
-    // Important: return the modified config
+    // Ensure service worker is properly handled
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
     return config;
   },
   
   // Image optimization configuration
   images: {
-    // Define responsive image sizes
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Enable modern image formats
     formats: ['image/avif', 'image/webp'],
-    // Use remotePatterns instead of domains for better security
     remotePatterns: [
       {
         protocol: 'https',
@@ -85,9 +87,10 @@ const nextConfig = {
   // Configure page extensions
   pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mdx'],
 
-  // Güvenlik başlıklarını ekleyin
+  // Security headers
   async headers() {
     return [
+      // Global security headers for all routes
       {
         source: '/(.*)',
         headers: [
@@ -97,11 +100,61 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
+            value: 'DENY',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+      // Service Worker specific headers
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self'",
+          },
+        ],
+      },
+      // Manifest file headers
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Icon files caching
+      {
+        source: '/icons/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

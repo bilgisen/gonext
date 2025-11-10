@@ -58,8 +58,8 @@ const footerSections = [
     ],
   },
   {
-    title: "Culture",
-    href: "/culture",
+    title: "Entertainment",
+    href: "/entertainment",
     links: [
       { title: "Cinema", href: "/topic/cinema" },
       { title: "Music", href: "/topic/music" },
@@ -93,7 +93,7 @@ const Footer = () => {
             </div>
           </div>
           
-          <div className="py-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-x-8 gap-y-10 px-6 xl:px-0">
+          <div className="py-12 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-10 px-4 sm:px-6 xl:px-0">
 
             {/* Dynamic Footer Sections */}
             {footerSections.map((section) => (

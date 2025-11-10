@@ -1,13 +1,18 @@
 import FrontPageSections from '@/components/frontPageSections';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import BannerCTA from '@/components/expostep';
 
-// Dynamically import the TrendingArticlesServer component with no SSR
-const TrendingArticlesServer = dynamic(
+// Make the page dynamic to handle server-side data
+export const dynamic = 'force-dynamic';
+
+// Revalidate every 5 minutes
+export const revalidate = 300;
+
+// Dynamically import the TrendingArticlesServer component with SSR
+const TrendingArticlesServer = dynamicImport(
   () => import('@/components/front-category/TrendingArticlesServer'),
   { ssr: true } // Keep SSR enabled for better initial load
 );
-export const revalidate = 300;
 // Server Component - No 'use client' needed
 export default async function HomePage() {
   // Fetch headlines on the server
