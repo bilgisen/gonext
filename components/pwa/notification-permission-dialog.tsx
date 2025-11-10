@@ -53,8 +53,8 @@ export function NotificationPermissionDialog({ delay = 5000 }: NotificationPermi
         if (typeof window !== 'undefined') {
           const event = new CustomEvent('show-toast', {
             detail: {
-              title: 'Bildirimler Aktif',
-              description: 'Artık son dakika haberlerinden anında haberdar olacaksınız.',
+              title: 'Notifications Enabled',
+              description: 'You will now receive instant breaking news notifications.',
               variant: 'default',
             },
           });
@@ -65,8 +65,8 @@ export function NotificationPermissionDialog({ delay = 5000 }: NotificationPermi
         if (typeof window !== 'undefined') {
           const event = new CustomEvent('show-toast', {
             detail: {
-              title: 'Hata',
-              description: result?.error || 'Bildirim izni verilirken bir hata oluştu.',
+              title: 'Error',
+              description: result?.error || 'An error occurred while enabling notifications.',
               variant: 'destructive',
             },
           });
@@ -78,8 +78,8 @@ export function NotificationPermissionDialog({ delay = 5000 }: NotificationPermi
       if (typeof window !== 'undefined') {
         const event = new CustomEvent('show-toast', {
           detail: {
-            title: 'Hata',
-            description: 'Bildirim izni verilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
+            title: 'Error',
+            description: 'An error occurred while enabling notifications. Please try again later.',
             variant: 'destructive',
           },
         });
@@ -110,70 +110,55 @@ export function NotificationPermissionDialog({ delay = 5000 }: NotificationPermi
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
         className="fixed bottom-4 right-4 z-50 w-full max-w-sm px-4 sm:px-0"
       >
-        <Card className="border-2 border-primary/20 bg-background/95 backdrop-blur-sm p-4 shadow-2xl">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-primary/10 p-2 shrink-0">
-              <Bell className="h-5 w-5 text-primary" />
+        <Card className="relative max-w-md w-full mx-4 bg-background/95 backdrop-blur-sm border-2 border-primary/20 shadow-2xl overflow-hidden">
+          <div className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/10 p-2">
+                  <Bell className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Enable Notifications</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Allow notifications to receive instant breaking news updates.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 -mt-1 -mr-2"
+                onClick={handleDismiss}
+                disabled={isLoading}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start gap-2">
-                <h3 className="font-semibold text-sm mb-1">📢 Son Dakika Haberleri Kaçırmayın</h3>
-                <button
-                  onClick={handleDismiss}
-                  className="text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-2"
-                  aria-label="Kapat"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Önemli gelişmelerden anında haberdar olmak için bildirimlere izin verin. İstediğiniz zaman ayarlardan kapatabilirsiniz.
-              </p>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
-                  <span className="text-sm">Önemli gelişmeler</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
-                  <span className="text-sm">İlgi alanlarınıza özel içerikler</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">✓</span>
-                  <span className="text-sm">İstediğiniz zaman kapatabilirsiniz</span>
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-2">
-                <Button 
-                  onClick={handleAllow} 
-                  className="w-full" 
-                  size="sm"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center">
-                      <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                      İşleniyor...
-                    </span>
-                  ) : (
-                    <>
-                      <Bell className="h-4 w-4 mr-2" />
-                      Bildirimleri Aç
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleDismiss}
-                  variant="ghost"
-                  className="w-full"
-                  size="sm"
-                  disabled={isLoading}
-                >
-                  Daha Sonra
-                </Button>
-              </div>
+            <div className="flex gap-3 mt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleDismiss}
+                disabled={isLoading}
+              >
+                Later
+              </Button>
+              <Button
+                onClick={handleAllow}
+                className="flex-1"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  'Allow'
+                )}
+              </Button>
             </div>
           </div>
         </Card>

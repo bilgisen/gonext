@@ -41,50 +41,31 @@ const BookmarkButton = ({
   const isBookmarked = data?.bookmarked;
   const isLoading = statusLoading || toggleBookmark.isPending;
   
-  // On server-side, render a disabled button with consistent classes
-  if (typeof window === 'undefined') {
-    return (
-      <button
-        disabled
-        className={cn(
-          'inline-flex items-center gap-2 text-sm font-medium transition-colors',
-          'opacity-50',
-          className
-        )}
-        aria-label="Add to bookmarks"
-      >
-        <Bookmark 
-          className={cn(
-            'h-5 w-5 fill-none',
-            iconClassName
-          )} 
-        />
-        {showLabel && <span>Bookmark</span>}
-      </button>
-    );
-  }
+  // Always render the same structure, but with loading state for server-side
+  const isDisabled = typeof window === 'undefined' || isLoading;
+  const showBookmark = typeof window !== 'undefined' ? isBookmarked : false;
   
   return (
     <button
       onClick={handleBookmark}
-      disabled={isLoading}
+      disabled={isDisabled}
       className={cn(
         'inline-flex items-center gap-2 text-sm font-medium transition-colors',
         'hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         className
       )}
-      aria-label={isBookmarked ? 'Remove bookmark' : 'Add to bookmarks'}
+      aria-label={showBookmark ? 'Remove bookmark' : 'Add to bookmarks'}
     >
       <Bookmark
         className={cn(
           'h-5 w-5',
-          isBookmarked ? 'fill-current' : 'fill-none',
+          showBookmark ? 'fill-current' : 'fill-none',
           iconClassName
         )}
       />
       {showLabel && (
-        <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+        <span>{showBookmark ? 'Bookmarked' : 'Bookmark'}</span>
       )}
     </button>
   );

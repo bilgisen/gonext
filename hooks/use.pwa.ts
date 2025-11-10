@@ -115,7 +115,7 @@ export function usePWA() {
     setLoading(true);
 
     try {
-      // Request notification permission
+      // Request notification permission first
       const permission = await requestNotificationPermission();
 
       if (permission !== 'granted') {
@@ -139,7 +139,7 @@ export function usePWA() {
       // Convert VAPID key to Uint8Array
       const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
       
-      // Subscribe to push manager with proper type casting
+      // Subscribe to push manager
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey.buffer as ArrayBuffer

@@ -64,36 +64,29 @@ export function NewsArticle({ newsItem }: NewsArticleProps) {
 
   const imageKey = newsItem.image ? getImageKey(newsItem.image) : '';
 
-  // Format date for display in English with time
+  // Format ISO 8601 date string (e.g., "2025-11-10T21:59:59.997Z")
   const formatDate = (dateString?: string | null): string => {
     if (!dateString) {
-      console.log('No date string provided');
       return '';
     }
 
     try {
-      // Parse the date string - the server sends dates in UTC
-      const date = new Date(dateString);
+      // Handle both space and 'T' as separators, remove 'Z' if present
+      const normalizedDateStr = dateString.replace('T', ' ').replace('Z', '');
+      const [datePart, timePart] = normalizedDateStr.split(' ');
       
-      // Check if the date is valid and not the default date (January 1, 0001)
-      if (isNaN(date.getTime()) || date.getFullYear() <= 1) {
-        console.log('Invalid or default date:', dateString);
-        return '';
-      }
-
-      // Format as "Month Day, Year at HH:MM" (e.g., "October 30, 2025 at 14:30")
-      // Use the UTC methods to avoid timezone conversion
-      const year = date.getUTCFullYear();
-      const month = date.getUTCMonth();
-      const day = date.getUTCDate();
-      const hours = date.getUTCHours();
-      const minutes = date.getUTCMinutes();
+      if (!datePart || !timePart) return dateString;
       
-      // Create a new date object with the UTC values to avoid timezone issues
-      const utcDate = new Date(Date.UTC(year, month, day, hours, minutes));
+      // Extract date and time components
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [time] = timePart.split('.'); // Remove milliseconds if present
+      const [hours, minutes] = time.split(':').map(Number);
       
-      // Format the date using the local timezone for display
-      return format(utcDate, 'MMMM d, yyyy \'at\' HH:mm');
+      // Create a date object with the exact values
+      const date = new Date(year, month - 1, day, hours, minutes);
+      
+      // Format as "Month Day, Year at HH:MM"
+      return format(date, 'MMMM d, yyyy \'at\' HH:mm');
     } catch (error) {
       console.error('Error formatting date:', error, 'Date string:', dateString);
       return '';

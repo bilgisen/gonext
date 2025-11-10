@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { NewsItem } from '@/types/news';
-import { Clock, Heart } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { format } from 'date-fns';
 import ShareButton from '@/components/ui/share-button';
 import BookmarkButton from '@/components/BookmarkButton';
 import BlobImage from '@/components/BlobImage';
-import { useState } from 'react';
 
 type CardVariant = 'medium' | 'compact';
 
@@ -21,7 +21,6 @@ export interface NewsCardProps {
   showDescription?: boolean;
   showBookmark?: boolean;
   showShare?: boolean;
-  showFavorite?: boolean;
 }
 
 const NewsCard: React.FC<NewsCardProps> = ({
@@ -34,7 +33,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
   showDescription = true,
   showBookmark = true,
   showShare = true,
-  showFavorite = true,
 }) => {
   // Extract the image key from the URL if it's a full URL
   const imageKey = item.image ? item.image.split('/').pop() || '' : '';
@@ -55,37 +53,37 @@ const NewsCard: React.FC<NewsCardProps> = ({
   
   const categorySlug = getCategorySlug();
   
-  // Format the date as time ago, only if it's a valid and non-default date
-  const formatTimeAgo = (dateString?: string | null): string => {
-    if (!dateString) return '';
+  // Format ISO 8601 date string (e.g., "2025-11-10T21:59:59.997Z")
+  const formatDate = (dateString?: string | null): string => {
+    if (!dateString) {
+      return '';
+    }
+
     try {
-      const date = new Date(dateString);
-      // Check if the date is invalid, default (1970), or specifically January 1, 2001
-      if (isNaN(date.getTime()) || 
-          date.getFullYear() <= 1970 || 
-          (date.getFullYear() === 2001 && date.getMonth() === 0 && date.getDate() === 1)) {
-        return '';
-      }
+      // Handle both space and 'T' as separators, remove 'Z' if present
+      const normalizedDateStr = dateString.replace('T', ' ').replace('Z', '');
+      const [datePart, timePart] = normalizedDateStr.split(' ');
       
-      // Simple fallback format in English
-      const now = new Date();
-      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+      if (!datePart || !timePart) return dateString;
       
-      // Convert to appropriate time unit
-      if (diffInSeconds < 60) return 'just now';
-      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-      if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d`;
-      if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo`;
-      return `${Math.floor(diffInSeconds / 31536000)}y`;
+      // Extract date and time components
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [time] = timePart.split('.'); // Remove milliseconds if present
+      const [hours, minutes] = time.split(':');
+      
+      // Create a date object with the exact values
+      const date = new Date(year, month - 1, day, parseInt(hours), parseInt(minutes));
+      
+      // Format as "Month Day, HH:mm"
+      return format(date, 'MMMM d, HH:mm');
     } catch (error) {
-      console.error('Error formatting date:', error);
+      console.error('Error formatting date:', error, 'Date string:', dateString);
       return '';
     }
   };
   
-  // Try to get the most recent valid date
-  const timeAgo = [
+  // Get the most recent valid date
+  const formattedDate = [
     item.published_at,
     item.created_at,
     item.updated_at
@@ -95,17 +93,9 @@ const NewsCard: React.FC<NewsCardProps> = ({
     
     const d = new Date(date);
     // Only accept dates after 2001 (or any reasonable threshold)
-    return (d.getFullYear() > 2001) ? formatTimeAgo(date) : '';
+    return (d.getFullYear() > 2001) ? formatDate(date) : '';
   }, '');
   
-  const [isFavorite, setIsFavorite] = useState(false);
-  
-  const handleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsFavorite(!isFavorite);
-    console.log('Favorite clicked for:', item.id);
-  };
 
   // Base card classes
   const cardClasses = cn(
@@ -224,21 +214,14 @@ const NewsCard: React.FC<NewsCardProps> = ({
         {/* Footer with date and actions */}
         <div className="mt-3 pt-3 border-t border-border">
           <div className="flex items-center justify-between w-full">
-            {showDate && timeAgo && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3 shrink-0" />
-                <span className="whitespace-nowrap">{timeAgo}</span>
-              </div>
-            )}
             <div className="flex items-center gap-1">
-              {showFavorite && (
-                <button
-                  onClick={handleFavorite}
-                  className={`p-1.5 ${isFavorite ? 'text-rose-500' : 'text-muted-foreground hover:text-rose-500'}`}
-                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  <Heart className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-                </button>
+              {showShare && (
+                <ShareButton
+                  url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${categorySlug}/${item.slug}`}
+                  title={item.seo_title || ''}
+                  text={item.seo_description || ''}
+                  className="p-1.5 text-muted-foreground hover:text-primary"
+                />
               )}
               
               {showBookmark && (
@@ -249,18 +232,13 @@ const NewsCard: React.FC<NewsCardProps> = ({
                   iconClassName="w-4 h-4"
                 />
               )}
-
-              {showShare && (
-                <ShareButton
-                  url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${categorySlug}/${item.slug}`}
-                  title={item.seo_title || ''}
-                  text={item.seo_description || ''}
-                  className="p-1.5 text-muted-foreground hover:text-primary"
-                />
-              )}
             </div>
             
-            
+            {showDate && formattedDate && (
+              <div className="text-xs text-muted-foreground">
+                <span className="whitespace-nowrap">{formattedDate}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

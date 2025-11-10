@@ -15,6 +15,15 @@ export const NavMenu = ({ onNavItemClick, className, ...props }: NavMenuProps) =
     <NavigationMenuList className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-1 w-full">
       <NavigationMenuItem>
         <Link 
+          href="/news" 
+          className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={onNavItemClick}
+        >
+          Latest
+        </Link>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <Link 
           href="/turkiye" 
           className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
           onClick={onNavItemClick}
@@ -52,11 +61,11 @@ export const NavMenu = ({ onNavItemClick, className, ...props }: NavMenuProps) =
       </NavigationMenuItem>
       <NavigationMenuItem>
         <Link 
-          href="/culture" 
+          href="/entertainment" 
           className="block px-4 py-3 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
           onClick={onNavItemClick}
         >
-          Arts & Culture
+          Entertainment
         </Link>
       </NavigationMenuItem>
       <NavigationMenuItem>

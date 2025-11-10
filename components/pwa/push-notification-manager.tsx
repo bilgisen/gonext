@@ -33,8 +33,8 @@ export function PushNotificationManager() {
           });
         } else {
           toast({
-            title: '❌ Hata',
-            description: result.error || 'Bildirimler aktif edilemedi.',
+            title: '❌ Error',
+            description: result.error || 'Failed to enable notifications.',
             variant: 'destructive',
           });
         }
@@ -48,16 +48,16 @@ export function PushNotificationManager() {
           });
         } else {
           toast({
-            title: '❌ Hata',
-            description: result.error || 'Bildirimler kapatılamadı.',
+            title: '❌ Error',
+            description: result.error || 'Failed to disable notifications.',
             variant: 'destructive',
           });
         }
       }
     } catch (error) {
       toast({
-        title: '❌ Beklenmeyen Hata',
-        description: 'Bir şeyler yanlış gitti. Lütfen tekrar deneyin.',
+        title: '❌ Unexpected Error',
+        description: 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -78,12 +78,12 @@ export function PushNotificationManager() {
           </div>
           <div>
             <Label htmlFor="notifications" className="font-semibold cursor-pointer">
-              Anlık Bildirimler
+              Push Notifications
             </Label>
             <p className="text-xs text-muted-foreground">
               {isSubscribed
-                ? 'Son dakika haberlerden haberdar olun'
-                : 'Bildirimler kapalı'}
+                ? 'Get notified about breaking news'
+                : 'Notifications are disabled'}
             </p>
           </div>
         </div>

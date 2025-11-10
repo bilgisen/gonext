@@ -14,7 +14,20 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Footer from '@/components/footer';
 import Link from "next/link";
 
-// Base metadata that provides sensible defaults but allows child routes to override
+// Viewport configuration for the application
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8f9fa' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a365d' },
+  ],
+  colorScheme: 'light dark',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://newstr.netlify.app'),
   applicationName: 'NewsTR',
@@ -29,16 +42,34 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'NewsTR',
   },
-  referrer: 'origin-when-cross-origin',
-  keywords: ['news', 'breaking news', 'latest news', 'world news', 'politics', 'technology', 'sports', 'entertainment'],
-  authors: [{ name: 'NewsTR Team' }],
-  creator: 'NewsTR',
-  publisher: 'NewsTR',
+  icons: {
+    icon: [
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/icon-192x192.png' },
+      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'apple-touch-startup-image',
+        url: '/splash/iphone5_splash.png',
+        media: '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)',
+      },
+      // Add other splash screens as needed
+    ],
+  },
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
+  referrer: 'origin-when-cross-origin',
+  keywords: ['news', 'breaking news', 'latest news', 'world news', 'politics', 'technology', 'sports', 'entertainment'],
+  authors: [{ name: 'NewsTR Team' }],
+  creator: 'NewsTR',
+  publisher: 'NewsTR',
   // OpenGraph with minimal defaults that won't override child routes
   openGraph: {
     type: 'website',
@@ -77,17 +108,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8f9fa' },
-    { media: '(prefers-color-scheme: dark)', color: '#1a365d' },
-  ],
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  viewportFit: 'cover',
-  userScalable: false,
-};
 
 export default function RootLayout({
   children,
@@ -121,24 +141,15 @@ export default function RootLayout({
                     <Logo />
                     <NavMenu className="hidden md:block" />
                   </div>
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Link href="/news" className="p-2 text-foreground hover:text-foreground/80 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                      </svg>
-                    </Link>
-                    <button className="text-foreground hover:text-foreground/80 transition-colors">
-                      <svg width="24" height="24" viewBox="0 0 28 28" fill="currentColor" className="text-foreground">
-                        <path fillRule="evenodd" d="M17.5 9c0 1.14-.3 1.99-.79 2.54-.46.52-1.27.96-2.71.96s-2.25-.44-2.71-.96A3.74 3.74 0 0 1 10.5 9c0-1.14.3-1.99.79-2.54.46-.52 1.27-.96 2.71-.96s2.25.44 2.71.96c.5.55.79 1.4.79 2.54zM19 9c0 2.76-1.45 5-5 5s-5-2.24-5-5 1.45-5 5-5 5 2.24 5 5zm-8 8.5h6c2.04 0 3.1.5 3.76 1.1.69.63 1.11 1.55 1.5 2.8.13.42.04.95-.29 1.4-.33.46-.8.7-1.22.7H7.25c-.43 0-.89-.24-1.22-.7a1.61 1.61 0 0 1-.3-1.4 6.08 6.08 0 0 1 1.51-2.8c.65-.6 1.72-1.1 3.76-1.1zm6-1.5h-6c-4.6 0-5.88 2.33-6.7 4.96-.58 1.89.97 4.04 2.95 4.04h13.5c1.98 0 3.53-2.15 2.95-4.04C22.88 18.33 21.6 16 17 16z" fill="currentColor"/>
-                      </svg>
-                    </button>
+                  <div className="flex items-center gap-1 md:gap-1">
+                    
+                   
                     <ThemeToggle />
-                    <Link href="/dashboard" className="p-2 text-foreground hover:text-foreground/80 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <circle cx="12" cy="10" r="3"/>
-                        <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
-                      </svg>
+                    <Link href="/dashboard" className="p-0 text-foreground hover:text-foreground/80 transition-colors">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide-user">
+  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+  <circle cx="12" cy="7" r="4" />
+</svg>
                     </Link>
                     <div className="md:hidden">
                       <NavigationSheet />

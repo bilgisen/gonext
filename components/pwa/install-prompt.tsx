@@ -67,7 +67,7 @@ export function InstallPrompt() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm mb-1">
-                    Uygulamayı Ana Ekrana Ekle
+                    Add to Home Screen
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Get the best experience by installing our app on your device.
@@ -78,7 +78,7 @@ export function InstallPrompt() {
                       onClick={handleIOSPrompt}
                       className="flex-1"
                     >
-                      Nasıl Yapılır?
+                      How to Install
                     </Button>
                     <Button
                       size="sm"
@@ -109,7 +109,7 @@ export function InstallPrompt() {
                   <Download className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">
-                  iOS&apos;ta Nasıl Yüklenir
+                  How to Install on iOS
                 </h3>
                 <div className="space-y-3 text-left text-sm text-muted-foreground">
                   <div className="flex gap-3">
@@ -117,7 +117,7 @@ export function InstallPrompt() {
                       1
                     </span>
                     <p>
-                      Safari&apos;de <strong>Paylaş</strong> düğmesine dokunun{' '}
+                      Tap the <strong>Share</strong> button in Safari{' '}
                       <span className="inline-block" aria-hidden="true">
                         <svg className="inline h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
@@ -130,7 +130,7 @@ export function InstallPrompt() {
                       2
                     </span>
                     <p>
-                      <strong>&quot;Ana Ekrana Ekle&quot;</strong> seçeneğini bulun{' '}
+                      Find and select <strong>&quot;Add to Home Screen&quot;</strong>{' '}
                       <span className="inline-block text-lg" aria-hidden="true">➕</span>
                     </p>
                   </div>
@@ -139,7 +139,7 @@ export function InstallPrompt() {
                       3
                     </span>
                     <p>
-                      Sağ üst köşedeki <strong>&quot;Ekle&quot;</strong> düğmesine dokunun
+                      Tap <strong>&quot;Add&quot;</strong> in the top right corner
                     </p>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ export function InstallPrompt() {
                   }}
                   className="mt-6 w-full"
                 >
-                  Anladım
+                  Got it
                 </Button>
               </div>
             </Card>
@@ -180,7 +180,7 @@ export function InstallPrompt() {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-sm mb-1">
-                Uygulamayı Yükle
+                Install App
               </h3>
               <p className="text-sm text-muted-foreground">
                 Add this app to your home screen for a better experience. Tap the share
@@ -193,7 +193,7 @@ export function InstallPrompt() {
                   className="flex-1"
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Yükle
+                  Install
                 </Button>
                 <Button
                   size="sm"

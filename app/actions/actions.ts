@@ -17,19 +17,11 @@ webpush.setVapidDetails(
 
 /**
  * Subscribe user to push notifications
+ * @param subscription - Push subscription details
+ * @param userId - Optional user ID for authenticated users
  */
-export async function subscribeUser(subscription: PushSubscriptionJSON) {
+export async function subscribeUser(subscription: PushSubscriptionJSON, userId?: string) {
   try {
-    const session = await auth.api.getSession({
-      headers: await import('next/headers').then(h => h.headers()),
-    });
-
-    if (!session?.user?.id) {
-      return { success: false, error: 'User not authenticated' };
-    }
-
-    const userId = session.user.id;
-
     // Check if subscription already exists
     const existingSubscription = await db.query.notificationSubscriptions.findFirst({
       where: eq(notificationSubscriptions.endpoint, subscription.endpoint),
@@ -37,23 +29,35 @@ export async function subscribeUser(subscription: PushSubscriptionJSON) {
 
     if (existingSubscription) {
       // Update existing subscription
+      const updateData: any = {
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+        updatedAt: new Date(),
+      };
+
+      // Only include userId if it's provided
+      if (userId) {
+        updateData.userId = userId;
+      }
+
       await db
         .update(notificationSubscriptions)
-        .set({
-          userId,
-          p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(notificationSubscriptions.endpoint, subscription.endpoint));
     } else {
       // Create new subscription
-      await db.insert(notificationSubscriptions).values({
-        userId,
+      const insertData: any = {
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
-      });
+      };
+
+      // Only include userId if it's provided
+      if (userId) {
+        insertData.userId = userId;
+      }
+
+      await db.insert(notificationSubscriptions).values(insertData);
     }
 
     return { success: true };
