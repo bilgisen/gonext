@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "./navbar-02/logo";
+import { InstallButton } from "./pwa/install-button";
 
 const footerSections = [
   {
@@ -124,13 +125,16 @@ const Footer = () => {
           </div>
           <Separator />
           <div className="py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-x-2 gap-y-5 px-6 xl:px-0">
-            <span className="text-muted-foreground text-sm">
-              &copy; {new Date().getFullYear()}{" "}
-              <Link href="/" className="hover:underline">
-                News Portal
-              </Link>
-              . All rights reserved.
-            </span>
+            <div className="flex items-center gap-4">
+              <InstallButton />
+              <span className="text-muted-foreground text-sm">
+                &copy; {new Date().getFullYear()}{" "}
+                <Link href="/" className="hover:underline">
+                  News Portal
+                </Link>
+                . All rights reserved.
+              </span>
+            </div>
 
             <div className="flex items-center gap-5 text-muted-foreground">
               {socialLinks.map((social, index) => (
