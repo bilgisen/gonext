@@ -25,6 +25,11 @@
   to = "/_next/static/:splat"
   status = 200
 
+# Scheduled Functions
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/functions"]
+
 # Handle API routes
 [[redirects]]
   from = "/api/*"

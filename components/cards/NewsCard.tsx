@@ -169,15 +169,19 @@ const NewsCard: React.FC<NewsCardProps> = ({
               }
               loading="lazy"
               fallback={
-                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                  <span className="text-gray-400">No Image</span>
-                </div>
+                <img
+                  src="/breaking.jpg"
+                  alt="Breaking News"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
               }
             />
           ) : (
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <span className="text-gray-400">No Image</span>
-            </div>
+            <img
+              src="/breaking.jpg"
+              alt="Breaking News"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
           )}
         </div>
       </Link>
