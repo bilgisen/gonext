@@ -83,7 +83,7 @@ const Footer = () => {
     <div className="flex flex-col">
       <div className="grow bg-muted" />
       <footer className="border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-        <div className="w-full p-8">
+        <div className="w-full">
           {/* Logo and Description Section - Moved to top */}
           <div className="py-8 px-6 xl:px-0 border-b">
             <div className="max-w-2xl">
