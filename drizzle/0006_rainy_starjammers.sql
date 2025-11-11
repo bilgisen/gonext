@@ -1,0 +1,1 @@
+ALTER TABLE "news" ADD COLUMN "is_notified" boolean DEFAULT false NOT NULL;

@@ -321,6 +321,7 @@ export const news = pgTable("news", {
   updated_at: timestamp("updated_at"),
   meta: json("meta"), // Indexing / misc metadata
   view_count: integer("view_count").default(0).notNull(), // Varsayılan 0, null olamaz
+  is_notified: boolean("is_notified").default(false).notNull(), // Bildirim gönderildi mi?
 }, (table) => ({
   slug_idx: uniqueIndex("news_slug_idx").on(table.slug),
   source_guid_idx: uniqueIndex("news_source_guid_idx").on(table.source_guid),

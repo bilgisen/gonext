@@ -153,19 +153,12 @@ export async function sendNotificationToUser(
  */
 export async function sendNotificationToAll(payload: NotificationPayload) {
   try {
-    const session = await auth.api.getSession({
-      headers: await import('next/headers').then(h => h.headers()),
-    });
-
-    // Only admins can send to all users
-    if (!session?.user?.id || session.user.role !== 'admin') {
-      return { success: false, error: 'Unauthorized' };
-    }
-
+    // Get all active subscriptions
     const subscriptions = await db.query.notificationSubscriptions.findMany();
 
     if (subscriptions.length === 0) {
-      return { success: false, error: 'No subscriptions found' };
+      console.log('No active subscriptions found');
+      return { success: false, error: 'No active subscriptions found' };
     }
 
     const results = await Promise.allSettled(
