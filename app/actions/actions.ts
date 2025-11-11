@@ -72,14 +72,6 @@ export async function subscribeUser(subscription: PushSubscriptionJSON, userId?:
  */
 export async function unsubscribeUser(endpoint: string) {
   try {
-    const session = await auth.api.getSession({
-      headers: await import('next/headers').then(h => h.headers()),
-    });
-
-    if (!session?.user?.id) {
-      return { success: false, error: 'User not authenticated' };
-    }
-
     await db
       .delete(notificationSubscriptions)
       .where(eq(notificationSubscriptions.endpoint, endpoint));
